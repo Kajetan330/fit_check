@@ -1,7 +1,27 @@
 import type { Booking, ClosetItem, Creator, DesignerPiece, Post, QuizLook, Review, Service } from "./types";
 
-const image = (id: string, width = 1200) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=82`;
+const mediaMap: Record<string, string> = {
+  "photo-1524504388940-b1c1722653e1": "fitcheck-media-01.jpg",
+  "photo-1515886657613-9f3515b0c78f": "fitcheck-media-03.jpg",
+  "photo-1494790108377-be9c29b29330": "fitcheck-media-07.jpg",
+  "photo-1529139574466-a303027c1d8b": "fitcheck-media-08.jpg",
+  "photo-1531123897727-8f129e1688ce": "fitcheck-media-10.jpg",
+  "photo-1496747611176-843222e1e57c": "fitcheck-media-13.jpg",
+  "photo-1534528741775-53994a69daeb": "fitcheck-media-15.jpg",
+  "photo-1503342217505-b0a15ec3261c": "fitcheck-media-14.jpg",
+  "photo-1516762689617-e1cffcef479d": "fitcheck-media-02.jpg",
+  "photo-1485968579580-b6d095142e6e": "fitcheck-media-16.jpg",
+  "photo-1523398002811-999ca8dec234": "fitcheck-media-09.jpg",
+  "photo-1487412720507-e7ab37603c6f": "fitcheck-media-11.jpg",
+  "photo-1512436991641-6745cdb1723f": "fitcheck-media-12.jpg",
+  "photo-1542291026-7eec264c27ff": "fitcheck-media-06.jpg",
+  "photo-1506629905607-d9c297d1461d": "fitcheck-media-04.jpg",
+  "photo-1542060748-10c28b62716f": "fitcheck-media-05.jpg",
+  "photo-1543163521-1bf539c55dd2": "fitcheck-media-06.jpg",
+  "photo-1551488831-00ddcb6c6bd3": "fitcheck-media-14.jpg",
+};
+
+const image = (id: string, _width = 1200) => `/assets/media/${mediaMap[id] ?? "fitcheck-media-01.jpg"}`;
 
 const fashionServices: Service[] = [
   {

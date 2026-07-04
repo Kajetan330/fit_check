@@ -21,6 +21,10 @@
 - Supabase schema, RLS policies, storage buckets, and production setup docs are included.
 - Stripe checkout and webhook Vercel function scaffolding is included.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
+- Remote stock-photo dependencies were removed. The app now uses local generated original placeholder media in `public/assets/media/`.
+- Brand mark, wordmark, and icon assets were added in `public/brand/`.
+- Launch policy decisions were made: 18% standard take rate, 12% Founding/Pro rate, 70/30 affiliate split, 72-hour approval window, weekly Friday payouts, and a first-5-booking new creator hold.
+- Legal pages were converted into lawyer-ready drafts with a review packet. They are not lawyer-reviewed.
 
 ## What Was Incomplete Or Broken At Audit
 
@@ -94,6 +98,10 @@ npm run dev
 - Supabase migration with production tables, indexes, RLS policies, and storage buckets.
 - Stripe checkout and webhook serverless API scaffolding.
 - PWA service worker for production shell caching.
+- Local original media assets replacing external image URLs.
+- Brand assets and brand usage notes.
+- Platform policy decisions for take rate, refunds/revisions, affiliate split, and creator payouts.
+- Legal review packet for counsel.
 - Empty, error, loading, and gated-auth states.
 - PWA manifest metadata and static hosting rewrites.
 
@@ -106,6 +114,8 @@ npm run dev
 - Replace local demo persistence with Supabase reads/writes in the app state layer.
 - Connect booking creation to Stripe checkout and webhook-driven payment status updates.
 - Connect real upload/storage for closet and booking images.
+- Have qualified counsel review the legal packet before accepting real payments.
+- Replace generated placeholder people/customer media with creator-owned/licensed photos and signed releases before public launch.
 
 ### Priority 2
 

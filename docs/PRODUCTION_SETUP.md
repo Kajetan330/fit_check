@@ -69,7 +69,8 @@ Deploy to Vercel. The included `vercel.json` handles SPA routing.
 
 Before taking real bookings:
 
-- Replace demo imagery with licensed or creator-owned media.
+- External stock URLs have been removed. Before public launch, replace generated placeholder people/customer imagery with creator-owned or professionally licensed media and signed releases.
+- Use `docs/LEGAL_REVIEW_PACKET.md` with counsel before accepting real payments.
 - Finalize Terms, Privacy, Creator Terms, and Refund Policy with counsel.
 - Verify private upload bucket policies in Supabase.
 - Test Stripe checkout in test mode.

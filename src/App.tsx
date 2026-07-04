@@ -928,7 +928,7 @@ function ClosetPage() {
     event.preventDefault();
     if (!form.name.trim()) return;
     setUploadError("");
-    let imageUrl = "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=800&q=82";
+    let imageUrl = "/assets/media/fitcheck-media-14.jpg";
 
     if (itemFile) {
       try {
@@ -1669,10 +1669,10 @@ function LaunchReadinessPage() {
 
   const productChecks = [
     "Recruit 15-25 founding creators in one focused aesthetic vertical.",
-    "Write creator approval criteria and refund/revision policy.",
-    "Replace demo images with licensed creator/customer-owned media.",
+    "Review platform policies: 18% standard take rate, 12% Founding/Pro rate, 72-hour approval window.",
+    "Collect creator/customer media releases for every non-generated production photo.",
     "Run mobile QA on iOS Safari and Android Chrome.",
-    "Prepare Terms, Privacy, Creator Terms, and Refund Policy with counsel.",
+    "Send the legal review packet to counsel before taking real payments.",
   ];
 
   return (
@@ -1725,6 +1725,7 @@ function LaunchReadinessPage() {
           <Link to="/legal/privacy">Privacy</Link>
           <Link to="/legal/creator-terms">Creator Terms</Link>
           <Link to="/legal/refunds">Refunds</Link>
+          <Link to="/legal/platform-policies">Platform Policies</Link>
         </div>
       </section>
     </div>
@@ -1733,36 +1734,50 @@ function LaunchReadinessPage() {
 
 const legalContent: Record<string, { title: string; body: string[] }> = {
   terms: {
-    title: "Terms of Service Draft",
+    title: "Terms of Service Draft For Counsel",
     body: [
       "FitCheck connects customers with independent creators who provide asynchronous styling deliverables.",
       "Customers are responsible for providing accurate briefs, appropriate uploads, and timely revision requests.",
       "Creators are responsible for delivering the purchased scope by the stated turnaround and respecting customer privacy.",
-      "This draft is a product placeholder and should be reviewed by legal counsel before launch.",
+      "FitCheck charges a marketplace fee on completed services and may process payments through Stripe or another payment provider.",
+      "This page is prepared for lawyer review and must not be treated as legally approved until counsel signs off.",
     ],
   },
   privacy: {
-    title: "Privacy Policy Draft",
+    title: "Privacy Policy Draft For Counsel",
     body: [
       "FitCheck stores account information, creator profile content, booking briefs, closet items, uploads, and service history.",
       "Booking uploads may include body, face, wardrobe, and personal-space photographs and must be private by default.",
-      "Production launch requires a complete retention, deletion, analytics, and subprocessors policy.",
+      "Creators may use customer uploads only to complete the booked service. Public before-and-after posts require explicit customer permission.",
+      "Production launch requires a complete retention, deletion, analytics, subprocessors, and age/minor policy.",
     ],
   },
   "creator-terms": {
-    title: "Creator Terms Draft",
+    title: "Creator Terms Draft For Counsel",
     body: [
       "Creators must publish original or properly licensed content and may not disclose private customer uploads.",
       "Services follow platform templates so customers can understand scope, turnaround, revisions, and deliverables.",
       "Verification is a quality signal, not a guaranteed discovery boost.",
+      "Launch economics: 18% standard platform take rate, 12% Founding Creator / Pro take rate, payment processing fees passed through before payout.",
+      "Capsule Build affiliate revenue split: 70% creator and 30% FitCheck.",
     ],
   },
   refunds: {
-    title: "Refund And Revision Policy Draft",
+    title: "Refund And Revision Policy Draft For Counsel",
     body: [
-      "Every paid service should include one revision round unless otherwise stated.",
-      "Funds should be released after customer approval or an automatic release window after delivery.",
-      "Disputes should be reviewed using the booking brief, chat history, deliverable, and revision record.",
+      "Every paid service includes one revision round.",
+      "Customers have 72 hours after delivery to approve, request revision, or open a dispute. If no action is taken, the booking auto-approves.",
+      "Customers may cancel for a full refund before creator work starts or within 2 hours of booking, whichever comes first.",
+      "Disputes must be opened within 7 days of delivery and should be reviewed using the booking brief, chat history, deliverable, and revision record.",
+    ],
+  },
+  "platform-policies": {
+    title: "Platform Policies Draft For Counsel",
+    body: [
+      "Standard creator take rate: 18%. Founding Creator / Pro take rate: 12%. Capsule affiliate split: 70% creator and 30% FitCheck.",
+      "Funds become releasable after customer approval or 72-hour auto-approval. Disputed bookings remain held until resolved.",
+      "Creator payouts are batched weekly on Friday through Stripe Connect. New creators have a 7-day payout hold for their first 5 completed bookings.",
+      "Do not describe the system as formal legal escrow until counsel approves that language. Use payment held until delivery approval.",
     ],
   },
 };

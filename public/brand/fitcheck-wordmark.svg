@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 620 140" role="img" aria-labelledby="title">
+  <title>FitCheck wordmark</title>
+  <rect x="10" y="10" width="120" height="120" rx="24" fill="#151515"/>
+  <path d="M42 38h51v15H59v20h29v15H59v30H42V38Z" fill="#FBFBF8"/>
+  <path d="M77 88l10 10 21-27 11 9-31 37-22-21 11-8Z" fill="#D7FF4F"/>
+  <text x="154" y="92" fill="#151515" font-family="Inter, Arial, sans-serif" font-size="62" font-weight="850" letter-spacing="0">FitCheck</text>
+  <text x="158" y="119" fill="#686864" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700" letter-spacing="0">personal style, from the people you already follow</text>
+</svg>

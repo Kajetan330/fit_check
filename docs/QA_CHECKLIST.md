@@ -41,6 +41,12 @@ npm run check
 - Open `/launch`.
 - Open legal draft pages.
 
+## Brand And Media
+
+- Verify no external stock image URLs remain in source.
+- Verify `public/assets/media/` images render on Discover, profiles, posts, quiz, closet, and lookbook.
+- Verify `public/brand/fitcheck-mark.svg`, `fitcheck-wordmark.svg`, and `public/icon.svg` open correctly.
+
 ## Responsive Checks
 
 - iPhone SE width.
