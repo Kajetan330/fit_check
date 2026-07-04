@@ -1,0 +1,139 @@
+export type Role = "customer" | "creator";
+export type AppMode = "browse" | "studio";
+export type BookingStatus = "intake" | "in_progress" | "ready" | "completed";
+
+export interface User {
+  name: string;
+  role: Role;
+  mode: AppMode;
+}
+
+export interface Service {
+  id: string;
+  title: string;
+  shortTitle: string;
+  price: number;
+  priceLabel: string;
+  turnaround: string;
+  summary: string;
+  deliverables: string[];
+  intakePrompts: string[];
+  addOns: string[];
+}
+
+export interface Creator {
+  id: string;
+  handle: string;
+  displayName: string;
+  location: string;
+  avatar: string;
+  cover: string;
+  bio: string;
+  verticals: string[];
+  aesthetics: string[];
+  followers: string;
+  rating: number;
+  reviewCount: number;
+  avgTurnaround: string;
+  verified: boolean;
+  rising: boolean;
+  services: Service[];
+  socials: {
+    instagram: string;
+    tiktok?: string;
+  };
+}
+
+export interface TaggedItem {
+  name: string;
+  brand: string;
+  price?: string;
+  link?: string;
+}
+
+export interface Post {
+  id: string;
+  creatorHandle: string;
+  type: "outfit" | "transformation" | "moodboard" | "designer-drop" | "article";
+  title: string;
+  date: string;
+  image: string;
+  summary: string;
+  body: string;
+  tags: string[];
+  pinned?: boolean;
+  portfolio?: boolean;
+  taggedItems: TaggedItem[];
+}
+
+export interface DesignerPiece {
+  id: string;
+  creatorHandle: string;
+  title: string;
+  image: string;
+  price: string;
+  shopLabel: string;
+  description: string;
+}
+
+export interface Review {
+  id: string;
+  creatorHandle: string;
+  customerName: string;
+  rating: number;
+  serviceTitle: string;
+  text: string;
+}
+
+export interface ClosetItem {
+  id: string;
+  name: string;
+  category: string;
+  color: string;
+  image: string;
+  tags: string[];
+  lastWorn: string;
+}
+
+export interface LookbookOutfit {
+  id: string;
+  title: string;
+  image: string;
+  notes: string;
+  items: string[];
+}
+
+export interface Booking {
+  id: string;
+  creatorHandle: string;
+  serviceId: string;
+  serviceTitle: string;
+  customerName: string;
+  price: number;
+  status: BookingStatus;
+  createdAt: string;
+  dueDate: string;
+  brief: string;
+  budget: string;
+  closetItemIds: string[];
+  deliverable?: {
+    title: string;
+    voiceNoteLabel: string;
+    outfits: LookbookOutfit[];
+  };
+}
+
+export interface QuizLook {
+  id: string;
+  image: string;
+  title: string;
+  tags: string[];
+}
+
+export interface AppState {
+  user: User | null;
+  savedCreatorHandles: string[];
+  savedPostIds: string[];
+  closet: ClosetItem[];
+  bookings: Booking[];
+}

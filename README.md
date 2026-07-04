@@ -28,7 +28,7 @@ npm run preview
 
 ## MVP Scope
 
-The first working version focuses on:
+The working MVP includes:
 
 - Discovering creators through editorial cards, search, filters, Rising Stars, and a short style quiz.
 - Viewing a shareable creator profile with hero, pinned work, services, posts, portfolio, designer pieces, and reviews.
@@ -37,3 +37,21 @@ The first working version focuses on:
 - Giving creators a Studio surface for booking triage, profile/service management, lookbook assembly, and earnings snapshots.
 
 See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the audit, implementation plan, and remaining work.
+
+## Test
+
+```bash
+npm run build
+```
+
+The build runs TypeScript project checks and creates a production bundle in `dist/`.
+
+## Deploy
+
+The app is static and can be deployed to Vercel, Netlify, Cloudflare Pages, or any static host:
+
+```bash
+npm run build
+```
+
+Deploy the `dist/` directory. SPA rewrites are included for Vercel (`vercel.json`) and Netlify (`public/_redirects`).

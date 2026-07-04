@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title>FitCheck</title>
+  <rect width="96" height="96" rx="18" fill="#111111"/>
+  <path d="M24 24h48v12H38v13h28v12H38v23H24V24Z" fill="#F8F6EF"/>
+  <path d="M54 53h24v12H54V53Z" fill="#D7FF4F"/>
+</svg>
