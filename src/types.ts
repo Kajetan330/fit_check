@@ -1,9 +1,10 @@
-export type Role = "customer" | "creator";
+export type Role = "customer" | "creator" | "admin";
 export type AppMode = "browse" | "studio";
 export type BookingStatus = "intake" | "in_progress" | "ready" | "completed";
 
 export interface User {
   name: string;
+  email?: string;
   role: Role;
   mode: AppMode;
 }
@@ -111,6 +112,7 @@ export interface Booking {
   customerName: string;
   price: number;
   status: BookingStatus;
+  paymentStatus?: "demo" | "requires_payment" | "paid" | "released" | "refunded" | "failed";
   createdAt: string;
   dueDate: string;
   brief: string;
@@ -136,4 +138,23 @@ export interface AppState {
   savedPostIds: string[];
   closet: ClosetItem[];
   bookings: Booking[];
+  creatorApplications: CreatorApplication[];
+  creatorDrafts: Record<string, CreatorDraft>;
+  studioPosts: Post[];
+}
+
+export interface CreatorApplication {
+  id: string;
+  handle: string;
+  aesthetic: string;
+  links: string;
+  status: "submitted" | "reviewing" | "approved" | "rejected";
+  createdAt: string;
+}
+
+export interface CreatorDraft {
+  displayName: string;
+  bio: string;
+  location: string;
+  aesthetics: string;
 }

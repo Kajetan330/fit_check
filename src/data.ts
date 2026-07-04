@@ -340,6 +340,7 @@ export const bookingSeed: Booking[] = [
     customerName: "Maya R.",
     price: 95,
     status: "ready",
+    paymentStatus: "paid",
     createdAt: "2026-06-29",
     dueDate: "2026-07-04",
     brief: "Soft minimalist summer work wardrobe with fewer repeated panic outfits.",

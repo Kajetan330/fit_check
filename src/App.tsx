@@ -1,4 +1,5 @@
 import {
+  AlertTriangle,
   ArrowRight,
   BadgeCheck,
   Bookmark,
@@ -7,12 +8,19 @@ import {
   Check,
   ChevronRight,
   Clock3,
+  CreditCard,
+  Database,
+  FileText,
+  Gavel,
+  Globe2,
   Heart,
   LayoutDashboard,
   Loader2,
   LogOut,
+  LockKeyhole,
   Mic2,
   Search,
+  Settings,
   ShieldCheck,
   Shirt,
   Sparkles,
@@ -48,7 +56,10 @@ import {
   quizLooks,
 } from "./data";
 import { useAppState } from "./state";
-import type { Booking, ClosetItem, Creator, Post, Service } from "./types";
+import { createCheckoutSession } from "./lib/payments";
+import { supabase, supabaseStatus } from "./lib/supabase";
+import { uploadPrivateImage } from "./lib/uploads";
+import type { Booking, ClosetItem, Creator, CreatorDraft, Post, Service } from "./types";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
 
@@ -69,6 +80,31 @@ const statusLabel: Record<Booking["status"], string> = {
   completed: "Completed",
 };
 
+const paymentLabel: Record<NonNullable<Booking["paymentStatus"]>, string> = {
+  demo: "Demo payment",
+  requires_payment: "Payment pending",
+  paid: "Paid",
+  released: "Released",
+  refunded: "Refunded",
+  failed: "Payment failed",
+};
+
+const applyCreatorDraft = (creator: Creator, draft?: CreatorDraft): Creator => {
+  if (!draft) return creator;
+  return {
+    ...creator,
+    displayName: draft.displayName || creator.displayName,
+    bio: draft.bio || creator.bio,
+    location: draft.location || creator.location,
+    aesthetics: draft.aesthetics
+      ? draft.aesthetics
+          .split(",")
+          .map((tag) => tag.trim())
+          .filter(Boolean)
+      : creator.aesthetics,
+  };
+};
+
 export function App() {
   return (
     <Routes>
@@ -82,6 +118,9 @@ export function App() {
         <Route path="/bookings/:bookingId" element={<BookingDetailPage />} />
         <Route path="/closet" element={<ClosetPage />} />
         <Route path="/studio" element={<StudioPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="/launch" element={<LaunchReadinessPage />} />
+        <Route path="/legal/:slug" element={<LegalPage />} />
         <Route path="/signin" element={<SignInPage />} />
         <Route path="/apply" element={<CreatorApplyPage />} />
         <Route path="*" element={<NotFoundPage />} />
@@ -108,10 +147,11 @@ function AppShell() {
           <NavLink to="/closet">Closet</NavLink>
           <NavLink to="/bookings">Bookings</NavLink>
           <NavLink to="/studio">Studio</NavLink>
+          <NavLink to="/launch">Launch</NavLink>
         </nav>
 
         <div className="topbar-actions">
-          {user?.role === "creator" ? (
+          {user?.role === "creator" || user?.role === "admin" ? (
             <div className="mode-toggle" aria-label="Mode">
               <NavLink onClick={() => setMode("browse")} to="/">
                 Browse
@@ -123,7 +163,7 @@ function AppShell() {
           ) : null}
           {user ? (
             <>
-              <Link className="user-chip" to={user.role === "creator" ? "/studio" : "/bookings"}>
+              <Link className="user-chip" to={user.role === "admin" ? "/admin" : user.role === "creator" ? "/studio" : "/bookings"}>
                 <UserRound size={16} />
                 <span>{user.name}</span>
               </Link>
@@ -167,8 +207,10 @@ function AppShell() {
 }
 
 function DiscoverPage() {
+  const { state } = useAppState();
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState("all");
+  const recentPosts = [...state.studioPosts, ...posts].slice(0, 4);
 
   const filteredCreators = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -273,7 +315,7 @@ function DiscoverPage() {
       <section className="section-block">
         <SectionHeading eyebrow="Recent posts" title="Looks worth saving" action={<Link to="/bookings">Bookings</Link>} />
         <div className="post-grid">
-          {posts.slice(0, 4).map((post) => (
+          {recentPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
         </div>
@@ -394,16 +436,23 @@ function StyleQuizPage() {
 
 function CreatorProfilePage() {
   const { handle = "" } = useParams();
-  const creator = getCreator(handle);
   const { state, toggleCreator } = useAppState();
+  const baseCreator = getCreator(handle);
   const [activeTab, setActiveTab] = useState<"posts" | "portfolio" | "services">("posts");
 
-  if (!creator) {
+  if (!baseCreator) {
     return <NotFoundPanel title="Creator not found" text="This profile URL does not match an active FitCheck creator." />;
   }
 
-  const profilePosts = creatorPosts(creator.handle);
-  const portfolio = creatorPortfolio(creator.handle);
+  const creator = applyCreatorDraft(baseCreator, state.creatorDrafts[baseCreator.handle]);
+  const profilePosts = [
+    ...state.studioPosts.filter((post) => post.creatorHandle === creator.handle),
+    ...creatorPosts(creator.handle),
+  ];
+  const portfolio = [
+    ...state.studioPosts.filter((post) => post.creatorHandle === creator.handle && post.portfolio),
+    ...creatorPortfolio(creator.handle),
+  ];
   const reviews = creatorReviews(creator.handle);
   const pieces = creatorDesignerPieces(creator.handle);
   const isSaved = state.savedCreatorHandles.includes(creator.handle);
@@ -563,7 +612,8 @@ function CreatorProfilePage() {
 
 function PostPage() {
   const { postId = "" } = useParams();
-  const post = getPost(postId);
+  const { state } = useAppState();
+  const post = state.studioPosts.find((item) => item.id === postId) ?? getPost(postId);
 
   if (!post) {
     return <NotFoundPanel title="Post not found" text="This post may have been moved or removed." />;
@@ -637,6 +687,7 @@ function BookingPage() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const [uploadCount, setUploadCount] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
   const [selectedCloset, setSelectedCloset] = useState<string[]>(state.closet.slice(0, 3).map((item) => item.id));
   const [form, setForm] = useState({
     occasion: "",
@@ -665,13 +716,14 @@ function BookingPage() {
     );
   };
 
-  const submit = () => {
+  const submit = async () => {
     if (!form.occasion.trim()) {
       setError("Add the main occasion or style problem before confirming.");
       setStep(1);
       return;
     }
 
+    setSubmitting(true);
     const id = `booking-${Date.now()}`;
     const booking: Booking = {
       id,
@@ -681,6 +733,7 @@ function BookingPage() {
       customerName: state.user?.name ?? "Customer",
       price: service.price,
       status: "intake",
+      paymentStatus: "requires_payment",
       createdAt: new Date().toISOString().slice(0, 10),
       dueDate: dueDateFor(service),
       brief: [form.occasion, form.notes, form.constraints].filter(Boolean).join(" / "),
@@ -688,8 +741,15 @@ function BookingPage() {
       closetItemIds: selectedCloset,
     };
 
-    addBooking(booking);
-    navigate(`/bookings/${id}`);
+    const checkout = await createCheckoutSession({ booking, customerEmail: state.user?.email });
+    addBooking({ ...booking, paymentStatus: checkout.ok ? "requires_payment" : "demo" });
+
+    if (checkout.ok && checkout.checkoutUrl) {
+      window.location.href = checkout.checkoutUrl;
+      return;
+    }
+
+    navigate(`/bookings/${id}?payment=demo`);
   };
 
   return (
@@ -829,9 +889,9 @@ function BookingPage() {
               <button className="button light" onClick={() => setStep(2)}>
                 Back
               </button>
-              <button className="button dark" onClick={submit}>
-                <ShieldCheck size={18} />
-                Confirm booking
+              <button className="button dark" onClick={submit} disabled={submitting}>
+                {submitting ? <Loader2 className="spin" size={18} /> : <ShieldCheck size={18} />}
+                {submitting ? "Preparing checkout" : "Confirm booking"}
               </button>
             </div>
           </div>
@@ -847,6 +907,8 @@ function ClosetPage() {
   const [query, setQuery] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", category: "Top", color: "" });
+  const [itemFile, setItemFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState("");
 
   if (!state.user) {
     return (
@@ -862,20 +924,34 @@ function ClosetPage() {
     [item.name, item.category, item.color, ...item.tags].join(" ").toLowerCase().includes(query.toLowerCase()),
   );
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!form.name.trim()) return;
+    setUploadError("");
+    let imageUrl = "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=800&q=82";
+
+    if (itemFile) {
+      try {
+        const upload = await uploadPrivateImage(itemFile, state.user?.email ?? state.user?.name ?? "demo-user");
+        imageUrl = upload.url || imageUrl;
+      } catch (error) {
+        setUploadError(error instanceof Error ? error.message : "Upload failed.");
+        return;
+      }
+    }
+
     const newItem: ClosetItem = {
       id: `closet-${Date.now()}`,
       name: form.name,
       category: form.category,
       color: form.color || "Unspecified",
-      image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?auto=format&fit=crop&w=800&q=82",
+      image: imageUrl,
       tags: [form.category.toLowerCase(), form.color.toLowerCase()].filter(Boolean),
       lastWorn: new Date().toISOString().slice(0, 10),
     };
     addClosetItem(newItem);
     setForm({ name: "", category: "Top", color: "" });
+    setItemFile(null);
     setShowForm(false);
   };
 
@@ -913,10 +989,15 @@ function ClosetPage() {
             Color
             <input value={form.color} onChange={(event) => setForm({ ...form, color: event.target.value })} />
           </label>
+          <label>
+            Photo
+            <input type="file" accept="image/*" onChange={(event) => setItemFile(event.currentTarget.files?.[0] ?? null)} />
+          </label>
           <button className="button dark" type="submit">
             <Check size={18} />
             Save
           </button>
+          {uploadError ? <p className="form-error">{uploadError}</p> : null}
         </form>
       ) : null}
 
@@ -995,6 +1076,7 @@ function BookingsPage() {
 function BookingDetailPage() {
   const { bookingId = "" } = useParams();
   const { state } = useAppState();
+  const [params] = useSearchParams();
   const booking = state.bookings.find((item) => item.id === bookingId);
 
   if (!booking) {
@@ -1021,10 +1103,23 @@ function BookingDetailPage() {
           <ConfirmRow label="Customer" value={booking.customerName} />
           <ConfirmRow label="Budget" value={booking.budget} />
           <ConfirmRow label="Price" value={money.format(booking.price)} />
+          <ConfirmRow label="Payment" value={paymentLabel[booking.paymentStatus ?? "demo"]} />
           <ConfirmRow label="Due date" value={formatDate(booking.dueDate)} />
         </div>
         <div className="detail-panel">
           <h2>Progress</h2>
+          {params.get("payment") === "demo" ? (
+            <div className="setup-note compact">
+              <CreditCard size={18} />
+              Stripe is not configured locally, so this booking was saved without charging.
+            </div>
+          ) : null}
+          {params.get("checkout") === "success" ? (
+            <div className="setup-note compact success">
+              <ShieldCheck size={18} />
+              Stripe checkout returned successfully.
+            </div>
+          ) : null}
           <Timeline status={booking.status} />
         </div>
       </section>
@@ -1066,8 +1161,21 @@ function BookingDetailPage() {
 }
 
 function StudioPage() {
-  const { state, signIn, setMode, updateBookingStatus } = useAppState();
-  const creator = creators[0];
+  const { state, signIn, setMode, updateBookingStatus, saveCreatorDraft, addStudioPost } = useAppState();
+  const baseCreator = creators[0];
+  const creator = applyCreatorDraft(baseCreator, state.creatorDrafts[baseCreator.handle]);
+  const [profileDraft, setProfileDraft] = useState({
+    displayName: creator.displayName,
+    bio: creator.bio,
+    location: creator.location,
+    aesthetics: creator.aesthetics.join(", "),
+  });
+  const [postDraft, setPostDraft] = useState({
+    title: "",
+    summary: "",
+    body: "",
+    tags: "",
+  });
 
   if (!state.user || state.user.role !== "creator") {
     return (
@@ -1096,6 +1204,28 @@ function StudioPage() {
 
   const activeBookings = state.bookings.filter((booking) => booking.status !== "completed");
   const monthlyRevenue = state.bookings.reduce((total, booking) => total + booking.price, 0);
+  const publishPost = (event: FormEvent) => {
+    event.preventDefault();
+    if (!postDraft.title.trim()) return;
+    addStudioPost({
+      id: `studio-post-${Date.now()}`,
+      creatorHandle: creator.handle,
+      type: "outfit",
+      title: postDraft.title,
+      date: new Date().toISOString().slice(0, 10),
+      image: creator.cover,
+      summary: postDraft.summary || "New creator post drafted in Studio.",
+      body: postDraft.body || postDraft.summary || "Studio draft.",
+      tags: postDraft.tags
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter(Boolean),
+      pinned: false,
+      portfolio: true,
+      taggedItems: [],
+    });
+    setPostDraft({ title: "", summary: "", body: "", tags: "" });
+  };
 
   return (
     <div className="page-stack">
@@ -1182,6 +1312,92 @@ function StudioPage() {
         </div>
       </section>
 
+      <section className="studio-grid">
+        <form
+          className="form-panel"
+          onSubmit={(event) => {
+            event.preventDefault();
+            saveCreatorDraft(creator.handle, profileDraft);
+          }}
+        >
+          <p className="eyebrow">Profile editor</p>
+          <h2>Public profile draft</h2>
+          <label>
+            Display name
+            <input
+              value={profileDraft.displayName}
+              onChange={(event) => setProfileDraft({ ...profileDraft, displayName: event.target.value })}
+            />
+          </label>
+          <label>
+            Bio
+            <textarea
+              value={profileDraft.bio}
+              onChange={(event) => setProfileDraft({ ...profileDraft, bio: event.target.value })}
+            />
+          </label>
+          <label>
+            Location
+            <input
+              value={profileDraft.location}
+              onChange={(event) => setProfileDraft({ ...profileDraft, location: event.target.value })}
+            />
+          </label>
+          <label>
+            Aesthetics
+            <input
+              value={profileDraft.aesthetics}
+              onChange={(event) => setProfileDraft({ ...profileDraft, aesthetics: event.target.value })}
+            />
+          </label>
+          <button className="button dark" type="submit">
+            <Settings size={18} />
+            Save profile draft
+          </button>
+        </form>
+
+        <form className="form-panel" onSubmit={publishPost}>
+          <p className="eyebrow">Post composer</p>
+          <h2>Publish a portfolio piece</h2>
+          <label>
+            Title
+            <input
+              value={postDraft.title}
+              onChange={(event) => setPostDraft({ ...postDraft, title: event.target.value })}
+              placeholder="Client capsule before and after"
+            />
+          </label>
+          <label>
+            Summary
+            <input
+              value={postDraft.summary}
+              onChange={(event) => setPostDraft({ ...postDraft, summary: event.target.value })}
+              placeholder="One-line public hook"
+            />
+          </label>
+          <label>
+            Body
+            <textarea
+              value={postDraft.body}
+              onChange={(event) => setPostDraft({ ...postDraft, body: event.target.value })}
+              placeholder="Tell the styling story"
+            />
+          </label>
+          <label>
+            Tags
+            <input
+              value={postDraft.tags}
+              onChange={(event) => setPostDraft({ ...postDraft, tags: event.target.value })}
+              placeholder="capsule, workwear, transformation"
+            />
+          </label>
+          <button className="button dark" type="submit">
+            <FileText size={18} />
+            Publish locally
+          </button>
+        </form>
+      </section>
+
       <section className="section-block">
         <SectionHeading eyebrow="Services" title="Live catalogue" />
         <div className="service-grid">
@@ -1200,11 +1416,29 @@ function SignInPage() {
   const [params] = useSearchParams();
   const redirect = params.get("redirect") || "/";
   const [name, setName] = useState("Maya");
-  const [role, setRole] = useState<"customer" | "creator">("customer");
+  const [email, setEmail] = useState("maya@example.com");
+  const [role, setRole] = useState<"customer" | "creator" | "admin">("customer");
+  const [notice, setNotice] = useState("");
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
-    signIn(name, role);
+    if (supabase && email.includes("@")) {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}${redirect}`,
+        },
+      });
+
+      if (error) {
+        setNotice(error.message);
+        return;
+      } else {
+        setNotice("Magic link sent. Demo mode also continues locally so you can keep testing.");
+      }
+    }
+
+    signIn(name, role, email);
     navigate(redirect);
   };
 
@@ -1213,10 +1447,21 @@ function SignInPage() {
       <UserRound size={34} />
       <h1>Welcome to FitCheck</h1>
       <p>Use a demo account to save creators, build a closet, book services, and open Studio.</p>
+      <div className={`setup-note compact ${supabaseStatus === "connected" ? "success" : ""}`}>
+        <Database size={18} />
+        {supabaseStatus === "connected"
+          ? "Supabase is configured. Magic-link auth is enabled."
+          : "Demo auth is active until Supabase environment variables are added."}
+      </div>
+      {notice ? <p className="form-error">{notice}</p> : null}
       <form className="signin-form" onSubmit={submit}>
         <label>
           Name
           <input value={name} onChange={(event) => setName(event.target.value)} />
+        </label>
+        <label>
+          Email
+          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
         </label>
         <div className="role-choice" aria-label="Account type">
           <button type="button" className={role === "customer" ? "active" : ""} onClick={() => setRole("customer")}>
@@ -1224,6 +1469,9 @@ function SignInPage() {
           </button>
           <button type="button" className={role === "creator" ? "active" : ""} onClick={() => setRole("creator")}>
             Creator
+          </button>
+          <button type="button" className={role === "admin" ? "active" : ""} onClick={() => setRole("admin")}>
+            Admin
           </button>
         </div>
         <button className="button dark full" type="submit">
@@ -1236,7 +1484,13 @@ function SignInPage() {
 }
 
 function CreatorApplyPage() {
+  const { addCreatorApplication } = useAppState();
   const [submitted, setSubmitted] = useState(false);
+  const [form, setForm] = useState({
+    handle: "",
+    aesthetic: "",
+    links: "",
+  });
 
   if (submitted) {
     return (
@@ -1260,19 +1514,39 @@ function CreatorApplyPage() {
       </section>
       <form className="form-panel" onSubmit={(event) => {
         event.preventDefault();
+        addCreatorApplication({
+          id: `application-${Date.now()}`,
+          handle: form.handle || "new-creator",
+          aesthetic: form.aesthetic || "fashion styling",
+          links: form.links || "No links added",
+          status: "submitted",
+          createdAt: new Date().toISOString().slice(0, 10),
+        });
         setSubmitted(true);
       }}>
         <label>
           Creator handle
-          <input placeholder="@yourstyle" />
+          <input
+            placeholder="@yourstyle"
+            value={form.handle}
+            onChange={(event) => setForm({ ...form, handle: event.target.value })}
+          />
         </label>
         <label>
           Primary aesthetic
-          <input placeholder="modest occasionwear, city capsule, dark academia" />
+          <input
+            placeholder="modest occasionwear, city capsule, dark academia"
+            value={form.aesthetic}
+            onChange={(event) => setForm({ ...form, aesthetic: event.target.value })}
+          />
         </label>
         <label>
           Links to work
-          <textarea placeholder="Instagram, TikTok, portfolio, or a short note about your styling work" />
+          <textarea
+            placeholder="Instagram, TikTok, portfolio, or a short note about your styling work"
+            value={form.links}
+            onChange={(event) => setForm({ ...form, links: event.target.value })}
+          />
         </label>
         <button className="button dark" type="submit">
           Submit application
@@ -1280,6 +1554,235 @@ function CreatorApplyPage() {
         </button>
       </form>
     </div>
+  );
+}
+
+function AdminPage() {
+  const { state, signIn, updateCreatorApplicationStatus, updateBookingStatus } = useAppState();
+
+  if (state.user?.role !== "admin") {
+    return (
+      <CenteredPanel>
+        <LockKeyhole size={34} />
+        <h1>Admin console</h1>
+        <p>Creator vetting, disputes, and moderation are admin-only in production. Use demo admin mode locally.</p>
+        <button className="button dark" onClick={() => signIn("FitCheck Admin", "admin", "admin@fitcheck.local")}>
+          <ShieldCheck size={18} />
+          Continue as admin
+        </button>
+      </CenteredPanel>
+    );
+  }
+
+  const openBookings = state.bookings.filter((booking) => booking.status !== "completed");
+
+  return (
+    <div className="page-stack">
+      <section className="workspace-header">
+        <div>
+          <p className="eyebrow">Admin</p>
+          <h1>Operations console</h1>
+          <p className="lead">The minimum queues needed before real creators, customer uploads, and paid bookings go live.</p>
+        </div>
+        <Link className="button light" to="/launch">
+          <Globe2 size={18} />
+          Launch checklist
+        </Link>
+      </section>
+
+      <section className="metric-grid">
+        <Metric icon={<UserRound size={19} />} label="Applications" value={String(state.creatorApplications.length)} />
+        <Metric icon={<CalendarDays size={19} />} label="Open bookings" value={String(openBookings.length)} />
+        <Metric icon={<AlertTriangle size={19} />} label="Moderation flags" value="2" />
+        <Metric icon={<Gavel size={19} />} label="Disputes" value="1" />
+      </section>
+
+      <section className="admin-grid">
+        <div className="studio-column">
+          <SectionHeading eyebrow="Vetting" title="Creator applications" />
+          {state.creatorApplications.map((application) => (
+            <article className="studio-booking" key={application.id}>
+              <div>
+                <span className={`status-pill ${application.status === "approved" ? "ready" : "intake"}`}>
+                  {application.status}
+                </span>
+                <h3>@{application.handle.replace(/^@/, "")}</h3>
+                <p>{application.aesthetic}</p>
+                <small>{application.links}</small>
+              </div>
+              <div className="studio-booking-actions">
+                <button
+                  className="button small light"
+                  onClick={() => updateCreatorApplicationStatus(application.id, "approved")}
+                >
+                  Approve
+                </button>
+                <button
+                  className="button small light"
+                  onClick={() => updateCreatorApplicationStatus(application.id, "rejected")}
+                >
+                  Reject
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="studio-column">
+          <SectionHeading eyebrow="Quality" title="Bookings and disputes" />
+          {openBookings.map((booking) => (
+            <article className="studio-booking" key={booking.id}>
+              <div>
+                <span className={`status-pill ${booking.status}`}>{statusLabel[booking.status]}</span>
+                <h3>{booking.serviceTitle}</h3>
+                <p>{booking.brief}</p>
+              </div>
+              <div className="studio-booking-actions">
+                <Link className="text-button" to={`/bookings/${booking.id}`}>
+                  Review
+                  <ArrowRight size={16} />
+                </Link>
+                <button className="button small light" onClick={() => updateBookingStatus(booking.id, "completed")}>
+                  Resolve
+                </button>
+              </div>
+            </article>
+          ))}
+          <div className="setup-note">
+            <AlertTriangle size={18} />
+            Moderation/dispute rows are represented in the Supabase schema. Full queues need backend-connected data.
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function LaunchReadinessPage() {
+  const productionChecks = [
+    ["Supabase project", supabaseStatus === "connected", "Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY."],
+    ["Database schema", false, "Run supabase/migrations/0001_initial_schema.sql."],
+    ["Stripe checkout", false, "Add STRIPE_SECRET_KEY and configure webhook endpoint."],
+    ["Storage buckets", false, "Created by migration; verify public/private policies in Supabase."],
+    ["Domain and email", false, "Set production domain, auth redirect URLs, and transactional email provider."],
+  ] as const;
+
+  const productChecks = [
+    "Recruit 15-25 founding creators in one focused aesthetic vertical.",
+    "Write creator approval criteria and refund/revision policy.",
+    "Replace demo images with licensed creator/customer-owned media.",
+    "Run mobile QA on iOS Safari and Android Chrome.",
+    "Prepare Terms, Privacy, Creator Terms, and Refund Policy with counsel.",
+  ];
+
+  return (
+    <div className="page-stack">
+      <section className="workspace-header">
+        <div>
+          <p className="eyebrow">Launch</p>
+          <h1>Readiness checklist</h1>
+          <p className="lead">Everything that has to be true before FitCheck can accept real users and payments.</p>
+        </div>
+        <Link className="button dark" to="/admin">
+          <ShieldCheck size={18} />
+          Admin console
+        </Link>
+      </section>
+
+      <section className="readiness-grid">
+        <div className="detail-panel">
+          <h2>Technical readiness</h2>
+          {productionChecks.map(([label, done, note]) => (
+            <div className="check-row" key={label}>
+              <span className={done ? "done" : ""}>{done ? <Check size={16} /> : <Clock3 size={16} />}</span>
+              <div>
+                <strong>{label}</strong>
+                <p>{note}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="detail-panel">
+          <h2>Product readiness</h2>
+          {productChecks.map((item) => (
+            <div className="check-row" key={item}>
+              <span>
+                <Clock3 size={16} />
+              </span>
+              <div>
+                <strong>{item}</strong>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionHeading eyebrow="Policies" title="Draft policy pages" />
+        <div className="policy-link-grid">
+          <Link to="/legal/terms">Terms</Link>
+          <Link to="/legal/privacy">Privacy</Link>
+          <Link to="/legal/creator-terms">Creator Terms</Link>
+          <Link to="/legal/refunds">Refunds</Link>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+const legalContent: Record<string, { title: string; body: string[] }> = {
+  terms: {
+    title: "Terms of Service Draft",
+    body: [
+      "FitCheck connects customers with independent creators who provide asynchronous styling deliverables.",
+      "Customers are responsible for providing accurate briefs, appropriate uploads, and timely revision requests.",
+      "Creators are responsible for delivering the purchased scope by the stated turnaround and respecting customer privacy.",
+      "This draft is a product placeholder and should be reviewed by legal counsel before launch.",
+    ],
+  },
+  privacy: {
+    title: "Privacy Policy Draft",
+    body: [
+      "FitCheck stores account information, creator profile content, booking briefs, closet items, uploads, and service history.",
+      "Booking uploads may include body, face, wardrobe, and personal-space photographs and must be private by default.",
+      "Production launch requires a complete retention, deletion, analytics, and subprocessors policy.",
+    ],
+  },
+  "creator-terms": {
+    title: "Creator Terms Draft",
+    body: [
+      "Creators must publish original or properly licensed content and may not disclose private customer uploads.",
+      "Services follow platform templates so customers can understand scope, turnaround, revisions, and deliverables.",
+      "Verification is a quality signal, not a guaranteed discovery boost.",
+    ],
+  },
+  refunds: {
+    title: "Refund And Revision Policy Draft",
+    body: [
+      "Every paid service should include one revision round unless otherwise stated.",
+      "Funds should be released after customer approval or an automatic release window after delivery.",
+      "Disputes should be reviewed using the booking brief, chat history, deliverable, and revision record.",
+    ],
+  },
+};
+
+function LegalPage() {
+  const { slug = "terms" } = useParams();
+  const content = legalContent[slug] ?? legalContent.terms;
+
+  return (
+    <article className="legal-page">
+      <p className="eyebrow">Legal draft</p>
+      <h1>{content.title}</h1>
+      {content.body.map((paragraph) => (
+        <p key={paragraph}>{paragraph}</p>
+      ))}
+      <div className="setup-note">
+        <Gavel size={18} />
+        This is launch planning copy, not legal advice. Final terms should be prepared or reviewed by a lawyer.
+      </div>
+    </article>
   );
 }
 

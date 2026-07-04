@@ -18,12 +18,16 @@
 - Mobile-ready navigation, PWA manifest metadata, and static deployment rewrites are included.
 - Creator Studio demo works with booking queue, status updates, earnings metrics, service catalogue, and lookbook assembly surface.
 - Closet, saved creators/posts, and bookings persist in `localStorage`.
+- Supabase schema, RLS policies, storage buckets, and production setup docs are included.
+- Stripe checkout and webhook Vercel function scaffolding is included.
+- Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
 
 ## What Was Incomplete Or Broken At Audit
 
 - There was no application implementation.
 - There was no package setup, run instructions, routing, UI, data model, or deployment path.
 - There was no backend, authentication provider, payment provider, image upload service, or moderation pipeline.
+- Real Supabase/Stripe services are not connected yet because account credentials are required.
 
 ## Implemented MVP
 
@@ -45,6 +49,8 @@ Launch focus is fashion only. Beauty, hair, skincare, paid subscriptions, real A
 - React Router
 - Lucide React icons
 - Static seeded data plus `localStorage` persistence
+- Optional Supabase client when environment variables are present
+- Stripe serverless checkout/webhook functions
 - CSS-only responsive layout
 
 ## Local Development
@@ -56,7 +62,7 @@ npm run dev
 
 ## Verification
 
-- `npm run build` passes.
+- `npm run check` passes.
 - Dev server route smoke checks returned HTTP 200 for:
   - `/`
   - `/quiz`
@@ -66,6 +72,9 @@ npm run dev
   - `/closet`
   - `/bookings`
   - `/studio`
+  - `/admin`
+  - `/launch`
+  - `/legal/privacy`
   - `/signin`
 
 ## Completed Features
@@ -79,6 +88,12 @@ npm run dev
 - Customer closet with filtering and add-item flow.
 - Bookings list and booking detail with timeline and delivered lookbook state.
 - Creator Studio with active queue, booking status actions, metrics, services, and atelier-style workbench.
+- Creator profile draft editor and local post composer.
+- Admin console for creator applications, open bookings, moderation/dispute placeholders.
+- Launch readiness checklist and legal draft pages.
+- Supabase migration with production tables, indexes, RLS policies, and storage buckets.
+- Stripe checkout and webhook serverless API scaffolding.
+- PWA service worker for production shell caching.
 - Empty, error, loading, and gated-auth states.
 - PWA manifest metadata and static hosting rewrites.
 
@@ -86,21 +101,22 @@ npm run dev
 
 ### Priority 1
 
-- Add real authentication and account persistence.
-- Add backend database models for creators, posts, services, bookings, closet items, and reviews.
-- Add real upload/storage for closet and booking images.
-- Add payment and escrow integration.
+- Create Supabase and Stripe projects and add live credentials.
+- Run the Supabase migration and verify RLS/storage policies.
+- Replace local demo persistence with Supabase reads/writes in the app state layer.
+- Connect booking creation to Stripe checkout and webhook-driven payment status updates.
+- Connect real upload/storage for closet and booking images.
 
 ### Priority 2
 
 - Replace mock AI tagging/lookbook suggestions with a real processing pipeline.
-- Add creator onboarding review/admin tools.
+- Connect creator onboarding review/admin tools to Supabase rows.
 - Add booking-scoped messaging and revision workflow.
 - Add content moderation for customer uploads.
 
 ### Priority 3
 
-- Add richer portfolio editing and post composer tools.
+- Add richer portfolio editing and post composer tools with image uploads.
 - Add real affiliate link handling for Capsule Build.
 - Add email/push notifications.
 - Add native iOS/Android apps after the web product proves demand.

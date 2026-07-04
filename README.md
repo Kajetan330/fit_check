@@ -41,10 +41,10 @@ See [PROJECT_STATUS.md](PROJECT_STATUS.md) for the audit, implementation plan, a
 ## Test
 
 ```bash
-npm run build
+npm run check
 ```
 
-The build runs TypeScript project checks and creates a production bundle in `dist/`.
+The check script runs the browser production build and type-checks the serverless Stripe API files.
 
 ## Deploy
 
@@ -55,3 +55,14 @@ npm run build
 ```
 
 Deploy the `dist/` directory. SPA rewrites are included for Vercel (`vercel.json`) and Netlify (`public/_redirects`).
+
+## Production Integrations
+
+The app runs without credentials in demo mode. Production-ready scaffolding is included for:
+
+- Supabase auth, database, storage, RLS policies, moderation, disputes, reviews, and bookings.
+- Stripe checkout and webhook serverless functions.
+- PWA service worker shell caching.
+- Admin, launch readiness, and legal draft routes.
+
+See [Production Setup](docs/PRODUCTION_SETUP.md) and [QA Checklist](docs/QA_CHECKLIST.md).

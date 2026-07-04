@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import type { AppState, Booking, ClosetItem, Role, User } from "./types";
+import type { AppState, Booking, ClosetItem, CreatorApplication, CreatorDraft, Post, Role, User } from "./types";
 import { bookingSeed, closetSeed } from "./data";
 
 const STORAGE_KEY = "fitcheck-state-v1";
@@ -10,11 +10,23 @@ const defaultState: AppState = {
   savedPostIds: ["post-amara-01"],
   closet: closetSeed,
   bookings: bookingSeed,
+  creatorApplications: [
+    {
+      id: "application-demo-01",
+      handle: "city-archive",
+      aesthetic: "plus-size city capsule",
+      links: "instagram.com/cityarchive",
+      status: "reviewing",
+      createdAt: "2026-07-01",
+    },
+  ],
+  creatorDrafts: {},
+  studioPosts: [],
 };
 
 interface AppStateContextValue {
   state: AppState;
-  signIn: (name: string, role: Role) => void;
+  signIn: (name: string, role: Role, email?: string) => void;
   signOut: () => void;
   setMode: (mode: User["mode"]) => void;
   toggleCreator: (handle: string) => void;
@@ -22,6 +34,11 @@ interface AppStateContextValue {
   addClosetItem: (item: ClosetItem) => void;
   addBooking: (booking: Booking) => void;
   updateBookingStatus: (bookingId: string, status: Booking["status"]) => void;
+  updateBookingPaymentStatus: (bookingId: string, paymentStatus: NonNullable<Booking["paymentStatus"]>) => void;
+  addCreatorApplication: (application: CreatorApplication) => void;
+  updateCreatorApplicationStatus: (applicationId: string, status: CreatorApplication["status"]) => void;
+  saveCreatorDraft: (handle: string, draft: CreatorDraft) => void;
+  addStudioPost: (post: Post) => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
@@ -36,6 +53,11 @@ const loadState = (): AppState => {
       ...parsed,
       closet: parsed.closet?.length ? parsed.closet : defaultState.closet,
       bookings: parsed.bookings?.length ? parsed.bookings : defaultState.bookings,
+      creatorApplications: parsed.creatorApplications?.length
+        ? parsed.creatorApplications
+        : defaultState.creatorApplications,
+      creatorDrafts: parsed.creatorDrafts ?? defaultState.creatorDrafts,
+      studioPosts: parsed.studioPosts ?? defaultState.studioPosts,
     };
   } catch {
     return defaultState;
@@ -52,10 +74,15 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AppStateContextValue>(
     () => ({
       state,
-      signIn: (name, role) => {
+      signIn: (name, role, email) => {
         setState((current) => ({
           ...current,
-          user: { name: name.trim() || "Maya", role, mode: role === "creator" ? "studio" : "browse" },
+          user: {
+            name: name.trim() || "Maya",
+            email: email?.trim() || undefined,
+            role,
+            mode: role === "creator" || role === "admin" ? "studio" : "browse",
+          },
         }));
       },
       signOut: () => setState((current) => ({ ...current, user: null })),
@@ -98,6 +125,36 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           ),
         }));
       },
+      updateBookingPaymentStatus: (bookingId, paymentStatus) => {
+        setState((current) => ({
+          ...current,
+          bookings: current.bookings.map((booking) =>
+            booking.id === bookingId ? { ...booking, paymentStatus } : booking,
+          ),
+        }));
+      },
+      addCreatorApplication: (application) =>
+        setState((current) => ({
+          ...current,
+          creatorApplications: [application, ...current.creatorApplications],
+        })),
+      updateCreatorApplicationStatus: (applicationId, status) =>
+        setState((current) => ({
+          ...current,
+          creatorApplications: current.creatorApplications.map((application) =>
+            application.id === applicationId ? { ...application, status } : application,
+          ),
+        })),
+      saveCreatorDraft: (handle, draft) =>
+        setState((current) => ({
+          ...current,
+          creatorDrafts: { ...current.creatorDrafts, [handle]: draft },
+        })),
+      addStudioPost: (post) =>
+        setState((current) => ({
+          ...current,
+          studioPosts: [post, ...current.studioPosts],
+        })),
     }),
     [state],
   );
