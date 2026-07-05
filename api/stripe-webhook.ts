@@ -1,4 +1,5 @@
 import Stripe from "stripe";
+import { getSupabaseAdmin } from "./_supabaseAdmin";
 
 export const config = {
   api: {
@@ -35,11 +36,67 @@ export default async function handler(req: any, res: any) {
     const rawBody = await readRawBody(req);
     const event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret);
 
+    const supabase = getSupabaseAdmin();
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
-      // Production hook: mark booking payment_status as paid and create a payout ledger row.
-      // Requires SUPABASE_SERVICE_ROLE_KEY and the schema in supabase/migrations.
+      const bookingReference = session.metadata?.bookingId;
+
+      if (supabase && bookingReference) {
+        const { error } = await supabase
+          .from("checkout_sessions")
+          .update({
+            payment_status: "paid",
+            stripe_payment_intent_id:
+              typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
+            raw_event: event as unknown as Record<string, unknown>,
+          })
+          .eq("booking_reference", bookingReference);
+
+        if (error) {
+          console.error("FitCheck checkout session update failed", error.message);
+        }
+      }
+
       console.info("FitCheck checkout completed", session.metadata);
+    }
+
+    if (event.type === "payment_intent.payment_failed") {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent;
+
+      if (supabase) {
+        const { error } = await supabase
+          .from("checkout_sessions")
+          .update({
+            payment_status: "failed",
+            raw_event: event as unknown as Record<string, unknown>,
+          })
+          .eq("stripe_payment_intent_id", paymentIntent.id);
+
+        if (error) {
+          console.error("FitCheck payment failure update failed", error.message);
+        }
+      }
+    }
+
+    if (event.type === "charge.refunded") {
+      const charge = event.data.object as Stripe.Charge;
+      const paymentIntentId =
+        typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
+
+      if (supabase && paymentIntentId) {
+        const { error } = await supabase
+          .from("checkout_sessions")
+          .update({
+            payment_status: "refunded",
+            raw_event: event as unknown as Record<string, unknown>,
+          })
+          .eq("stripe_payment_intent_id", paymentIntentId);
+
+        if (error) {
+          console.error("FitCheck refund update failed", error.message);
+        }
+      }
     }
 
     res.status(200).json({ received: true });

@@ -62,6 +62,7 @@ The app runs without credentials in demo mode. Production-ready scaffolding is i
 
 - Supabase auth, database, storage, RLS policies, moderation, disputes, reviews, and bookings.
 - Stripe checkout and webhook serverless functions.
+- Checkout status persistence through Supabase migration `0002_checkout_sessions.sql`.
 - PWA service worker shell caching.
 - Admin, launch readiness, and legal draft routes.
 - Original local placeholder media replacing remote stock URLs.

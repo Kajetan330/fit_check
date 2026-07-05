@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc -b && vite build",
-    "check:api": "tsc --noEmit --skipLibCheck --moduleResolution Node --module ESNext --target ES2020 --esModuleInterop --types node api/create-checkout-session.ts api/stripe-webhook.ts",
+    "check:api": "tsc --noEmit --skipLibCheck --moduleResolution Node --module ESNext --target ES2020 --esModuleInterop --types node api/_supabaseAdmin.ts api/create-checkout-session.ts api/stripe-webhook.ts api/checkout-status.ts",
     "check": "npm run build && npm run check:api",
     "preview": "vite preview --host 127.0.0.1"
   },

@@ -30,7 +30,7 @@ import {
   WalletCards,
   X,
 } from "lucide-react";
-import { type FormEvent, useMemo, useState, type ReactNode } from "react";
+import { type FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Link,
   NavLink,
@@ -56,7 +56,7 @@ import {
   quizLooks,
 } from "./data";
 import { useAppState } from "./state";
-import { createCheckoutSession } from "./lib/payments";
+import { createCheckoutSession, getCheckoutStatus } from "./lib/payments";
 import { supabase, supabaseStatus } from "./lib/supabase";
 import { uploadPrivateImage } from "./lib/uploads";
 import type { Booking, ClosetItem, Creator, CreatorDraft, Post, Service } from "./types";
@@ -88,6 +88,9 @@ const paymentLabel: Record<NonNullable<Booking["paymentStatus"]>, string> = {
   refunded: "Refunded",
   failed: "Payment failed",
 };
+
+const newBookingReference = () =>
+  `booking-${typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : Date.now()}`;
 
 const applyCreatorDraft = (creator: Creator, draft?: CreatorDraft): Creator => {
   if (!draft) return creator;
@@ -724,7 +727,7 @@ function BookingPage() {
     }
 
     setSubmitting(true);
-    const id = `booking-${Date.now()}`;
+    const id = newBookingReference();
     const booking: Booking = {
       id,
       creatorHandle: creator.handle,
@@ -1075,9 +1078,35 @@ function BookingsPage() {
 
 function BookingDetailPage() {
   const { bookingId = "" } = useParams();
-  const { state } = useAppState();
+  const { state, updateBookingPaymentStatus } = useAppState();
   const [params] = useSearchParams();
   const booking = state.bookings.find((item) => item.id === bookingId);
+
+  useEffect(() => {
+    if (!booking || params.get("checkout") !== "success") return;
+
+    let active = true;
+
+    getCheckoutStatus(booking.id).then((result) => {
+      if (!active) return;
+
+      if (result.paymentStatus === "paid" && booking.paymentStatus !== "paid") {
+        updateBookingPaymentStatus(booking.id, "paid");
+      }
+
+      if (result.paymentStatus === "failed" && booking.paymentStatus !== "failed") {
+        updateBookingPaymentStatus(booking.id, "failed");
+      }
+
+      if (result.paymentStatus === "refunded" && booking.paymentStatus !== "refunded") {
+        updateBookingPaymentStatus(booking.id, "refunded");
+      }
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [booking, params, updateBookingPaymentStatus]);
 
   if (!booking) {
     return <NotFoundPanel title="Booking not found" text="This booking is not in your local FitCheck workspace." />;

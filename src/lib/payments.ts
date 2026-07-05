@@ -11,6 +11,11 @@ export interface CheckoutResult {
   message: string;
 }
 
+export interface CheckoutStatusResult {
+  paymentStatus: "unknown" | "requires_payment" | "paid" | "failed" | "refunded" | "cancelled";
+  message?: string;
+}
+
 export async function createCheckoutSession({ booking, customerEmail }: CheckoutRequest): Promise<CheckoutResult> {
   try {
     const response = await fetch("/api/create-checkout-session", {
@@ -43,6 +48,27 @@ export async function createCheckoutSession({ booking, customerEmail }: Checkout
     return {
       ok: false,
       message: "Payments are unavailable in local demo mode. Booking was saved without charging.",
+    };
+  }
+}
+
+export async function getCheckoutStatus(bookingId: string): Promise<CheckoutStatusResult> {
+  try {
+    const response = await fetch(`/api/checkout-status?bookingId=${encodeURIComponent(bookingId)}`);
+    const payload = (await response.json()) as CheckoutStatusResult;
+
+    if (!response.ok) {
+      return {
+        paymentStatus: payload.paymentStatus ?? "unknown",
+        message: payload.message || "Checkout status is not available yet.",
+      };
+    }
+
+    return payload;
+  } catch {
+    return {
+      paymentStatus: "unknown",
+      message: "Checkout status could not be reached.",
     };
   }
 }

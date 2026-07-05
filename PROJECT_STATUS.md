@@ -20,6 +20,7 @@
 - Closet, saved creators/posts, and bookings persist in `localStorage`.
 - Supabase schema, RLS policies, storage buckets, and production setup docs are included.
 - Stripe checkout and webhook Vercel function scaffolding is included.
+- Stripe checkout session status persistence is scaffolded through `checkout_sessions` and `/api/checkout-status`.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
 - Remote stock-photo dependencies were removed. The app now uses local generated original placeholder media in `public/assets/media/`.
 - Brand mark, wordmark, and icon assets were added in `public/brand/`.
@@ -55,6 +56,7 @@ Launch focus is fashion only. Beauty, hair, skincare, paid subscriptions, real A
 - Static seeded data plus `localStorage` persistence
 - Optional Supabase client when environment variables are present
 - Stripe serverless checkout/webhook functions
+- Checkout session persistence through Supabase
 - CSS-only responsive layout
 
 ## Local Development
@@ -96,6 +98,7 @@ npm run dev
 - Admin console for creator applications, open bookings, moderation/dispute placeholders.
 - Launch readiness checklist and legal draft pages.
 - Supabase migration with production tables, indexes, RLS policies, and storage buckets.
+- Supabase migration for Stripe checkout session persistence.
 - Stripe checkout and webhook serverless API scaffolding.
 - PWA service worker for production shell caching.
 - Local original media assets replacing external image URLs.
@@ -110,9 +113,9 @@ npm run dev
 ### Priority 1
 
 - Create Supabase and Stripe projects and add live credentials.
-- Run the Supabase migration and verify RLS/storage policies.
+- Run Supabase migrations `0001_initial_schema.sql` and `0002_checkout_sessions.sql`, then verify RLS/storage policies.
 - Replace local demo persistence with Supabase reads/writes in the app state layer.
-- Connect booking creation to Stripe checkout and webhook-driven payment status updates.
+- Connect full booking records to Supabase once creator/service IDs are live in the database.
 - Connect real upload/storage for closet and booking images.
 - Have qualified counsel review the legal packet before accepting real payments.
 - Replace generated placeholder people/customer media with creator-owned/licensed photos and signed releases before public launch.
