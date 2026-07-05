@@ -1,5 +1,3 @@
-import { getSupabaseAdmin } from "./_supabaseAdmin";
-
 export default async function handler(req: any, res: any) {
   if (req.method !== "GET") {
     res.status(405).json({ message: "Method not allowed" });
@@ -11,6 +9,7 @@ export default async function handler(req: any, res: any) {
   let checkoutSessionsMessage = "Supabase admin client is not configured.";
 
   try {
+    const { getSupabaseAdmin } = await import("./_supabaseAdmin");
     const supabase = getSupabaseAdmin();
     supabaseAdminConfigured = Boolean(supabase);
 
