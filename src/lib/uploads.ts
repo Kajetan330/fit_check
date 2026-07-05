@@ -7,6 +7,13 @@ export interface UploadResult {
 }
 
 const safeFileName = (file: File) => file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
+const safePathSegment = (value: string) => value.toLowerCase().replace(/[^a-z0-9-]+/g, "-") || "demo-user";
+
+async function getOwnerPathSegment(fallback: string) {
+  if (!supabase) return safePathSegment(fallback);
+  const { data } = await supabase.auth.getUser();
+  return data.user?.id ?? safePathSegment(fallback);
+}
 
 export async function uploadPrivateImage(file: File, ownerKey: string): Promise<UploadResult> {
   if (!supabase) {
@@ -16,7 +23,8 @@ export async function uploadPrivateImage(file: File, ownerKey: string): Promise<
     };
   }
 
-  const path = `${ownerKey}/${Date.now()}-${safeFileName(file)}`;
+  const ownerPath = await getOwnerPathSegment(ownerKey);
+  const path = `${ownerPath}/${Date.now()}-${safeFileName(file)}`;
   const { error } = await supabase.storage.from("private-booking-uploads").upload(path, file, {
     cacheControl: "3600",
     upsert: false,
@@ -43,7 +51,8 @@ export async function uploadPublicImage(file: File, ownerKey: string): Promise<U
     };
   }
 
-  const path = `${ownerKey}/${Date.now()}-${safeFileName(file)}`;
+  const ownerPath = await getOwnerPathSegment(ownerKey);
+  const path = `${ownerPath}/${Date.now()}-${safeFileName(file)}`;
   const { error } = await supabase.storage.from("public-media").upload(path, file, {
     cacheControl: "3600",
     upsert: false,
