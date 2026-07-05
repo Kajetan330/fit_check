@@ -1,5 +1,5 @@
 import Stripe from "stripe";
-import { getSupabaseAdmin, toCents } from "./_supabaseAdmin";
+import { getSupabaseAdmin, toCents } from "./_supabaseAdmin.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": process.env.VITE_APP_URL || "*",

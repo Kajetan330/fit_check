@@ -9,7 +9,7 @@ export default async function handler(req: any, res: any) {
   let checkoutSessionsMessage = "Supabase admin client is not configured.";
 
   try {
-    const { getSupabaseAdmin } = await import("./_supabaseAdmin");
+    const { getSupabaseAdmin } = await import("./_supabaseAdmin.js");
     const supabase = getSupabaseAdmin();
     supabaseAdminConfigured = Boolean(supabase);
 

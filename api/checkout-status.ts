@@ -1,4 +1,4 @@
-import { getSupabaseAdmin } from "./_supabaseAdmin";
+import { getSupabaseAdmin } from "./_supabaseAdmin.js";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": process.env.VITE_APP_URL || "*",
