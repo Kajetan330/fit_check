@@ -1,6 +1,6 @@
 # FitCheck Final Finish Plan
 
-Last updated: July 5, 2026
+Last updated: July 6, 2026
 
 ## Current State
 
@@ -31,15 +31,17 @@ The app has:
 - Stripe test webhook created.
 - Stripe test checkout confirmed.
 - Stripe webhook delivery confirmed with `200 OK`.
-- Repo updated through commit `54bc051`.
+- Production health endpoint added for checking Stripe/Supabase wiring without exposing secret values.
+- Repo updated through the current `main` branch.
 
 ## Do Now
 
 1. Run Supabase migration `0002_checkout_sessions.sql`.
 2. Wait for Vercel to redeploy from the latest `main` commit.
-3. Run another test booking and Stripe test checkout.
-4. Confirm the booking page changes payment from pending to paid after webhook sync.
-5. Rotate any credentials that were exposed in screenshots or chat.
+3. Visit `/launch` or `/api/health` on production and confirm the health checks pass.
+4. Run another test booking and Stripe test checkout.
+5. Confirm the booking page changes payment from pending to paid after webhook sync.
+6. Rotate any credentials that were exposed in screenshots or chat.
 
 ## Engineering Work Remaining
 

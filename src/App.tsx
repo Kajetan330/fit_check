@@ -56,6 +56,7 @@ import {
   quizLooks,
 } from "./data";
 import { useAppState } from "./state";
+import { getProductionHealth, type ProductionHealth } from "./lib/health";
 import { createCheckoutSession, getCheckoutStatus } from "./lib/payments";
 import { supabase, supabaseStatus } from "./lib/supabase";
 import { uploadPrivateImage } from "./lib/uploads";
@@ -1718,6 +1719,23 @@ function AdminPage() {
 }
 
 function LaunchReadinessPage() {
+  const [health, setHealth] = useState<ProductionHealth | null>(null);
+  const [healthChecked, setHealthChecked] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+
+    getProductionHealth().then((result) => {
+      if (!active) return;
+      setHealth(result);
+      setHealthChecked(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const productionChecks = [
     ["Supabase project", supabaseStatus === "connected", "Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY."],
     ["Database schema", false, "Run supabase/migrations/0001_initial_schema.sql."],
@@ -1763,7 +1781,33 @@ function LaunchReadinessPage() {
         </div>
 
         <div className="detail-panel">
-          <h2>Product readiness</h2>
+          <h2>Live production health</h2>
+          <HealthRow label="App URL" done={Boolean(health?.appUrlConfigured)} checked={healthChecked} />
+          <HealthRow label="Stripe secret" done={Boolean(health?.stripeSecretConfigured)} checked={healthChecked} />
+          <HealthRow
+            label="Stripe webhook secret"
+            done={Boolean(health?.stripeWebhookSecretConfigured)}
+            checked={healthChecked}
+          />
+          <HealthRow label="Supabase admin" done={Boolean(health?.supabaseAdminConfigured)} checked={healthChecked} />
+          <HealthRow
+            label="Checkout table"
+            done={Boolean(health?.checkoutSessionsReachable)}
+            checked={healthChecked}
+            note={health?.checkoutSessionsMessage ?? "Checking production health..."}
+          />
+          {healthChecked && !health ? (
+            <div className="setup-note">
+              <AlertTriangle size={18} />
+              The health endpoint did not respond. Check the latest Vercel deployment and function logs.
+            </div>
+          ) : null}
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionHeading eyebrow="Product readiness" title="Manual launch work" />
+        <div className="detail-panel">
           {productChecks.map((item) => (
             <div className="check-row" key={item}>
               <span>
@@ -1787,6 +1831,18 @@ function LaunchReadinessPage() {
           <Link to="/legal/platform-policies">Platform Policies</Link>
         </div>
       </section>
+    </div>
+  );
+}
+
+function HealthRow({ label, done, checked, note }: { label: string; done: boolean; checked: boolean; note?: string }) {
+  return (
+    <div className="check-row">
+      <span className={done ? "done" : ""}>{done ? <Check size={16} /> : <Clock3 size={16} />}</span>
+      <div>
+        <strong>{label}</strong>
+        <p>{note ?? (checked ? (done ? "Configured" : "Not confirmed") : "Checking production health...")}</p>
+      </div>
     </div>
   );
 }

@@ -21,6 +21,7 @@
 - Supabase schema, RLS policies, storage buckets, and production setup docs are included.
 - Stripe checkout and webhook Vercel function scaffolding is included.
 - Stripe checkout session status persistence is scaffolded through `checkout_sessions` and `/api/checkout-status`.
+- Production health checks are exposed through `/api/health` and shown on `/launch` without displaying secret values.
 - The final finish plan is tracked in `docs/FINAL_FINISH_PLAN.md`.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
 - Remote stock-photo dependencies were removed. The app now uses local generated original placeholder media in `public/assets/media/`.
@@ -101,6 +102,7 @@ npm run dev
 - Supabase migration with production tables, indexes, RLS policies, and storage buckets.
 - Supabase migration for Stripe checkout session persistence.
 - Stripe checkout and webhook serverless API scaffolding.
+- Production health endpoint for checking Stripe/Supabase deployment wiring.
 - PWA service worker for production shell caching.
 - Local original media assets replacing external image URLs.
 - Brand assets and brand usage notes.
