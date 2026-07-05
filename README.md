@@ -69,4 +69,4 @@ The app runs without credentials in demo mode. Production-ready scaffolding is i
 - Brand mark, wordmark, and PWA icon assets.
 - Launch policy decisions for take rate, refunds, revisions, and creator payouts.
 
-See [Production Setup](docs/PRODUCTION_SETUP.md), [QA Checklist](docs/QA_CHECKLIST.md), [Brand Assets](docs/BRAND_ASSETS.md), [Media Provenance](docs/MEDIA_PROVENANCE.md), [Platform Policies](docs/PLATFORM_POLICIES.md), and [Legal Review Packet](docs/LEGAL_REVIEW_PACKET.md).
+See [Production Setup](docs/PRODUCTION_SETUP.md), [Final Finish Plan](docs/FINAL_FINISH_PLAN.md), [QA Checklist](docs/QA_CHECKLIST.md), [Brand Assets](docs/BRAND_ASSETS.md), [Media Provenance](docs/MEDIA_PROVENANCE.md), [Platform Policies](docs/PLATFORM_POLICIES.md), and [Legal Review Packet](docs/LEGAL_REVIEW_PACKET.md).

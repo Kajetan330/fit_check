@@ -1080,33 +1080,57 @@ function BookingDetailPage() {
   const { bookingId = "" } = useParams();
   const { state, updateBookingPaymentStatus } = useAppState();
   const [params] = useSearchParams();
+  const [checkoutSync, setCheckoutSync] = useState<"idle" | "checking" | "synced" | "pending">("idle");
   const booking = state.bookings.find((item) => item.id === bookingId);
+  const checkoutResult = params.get("checkout");
 
   useEffect(() => {
-    if (!booking || params.get("checkout") !== "success") return;
+    if (!booking || checkoutResult !== "success" || booking.paymentStatus === "paid") return;
 
     let active = true;
+    let attempts = 0;
+    let timeoutId: number | undefined;
 
-    getCheckoutStatus(booking.id).then((result) => {
+    const syncStatus = async () => {
+      if (!active) return;
+      attempts += 1;
+      setCheckoutSync("checking");
+
+      const result = await getCheckoutStatus(booking.id);
       if (!active) return;
 
       if (result.paymentStatus === "paid" && booking.paymentStatus !== "paid") {
         updateBookingPaymentStatus(booking.id, "paid");
+        setCheckoutSync("synced");
+        return;
       }
 
       if (result.paymentStatus === "failed" && booking.paymentStatus !== "failed") {
         updateBookingPaymentStatus(booking.id, "failed");
+        setCheckoutSync("synced");
+        return;
       }
 
       if (result.paymentStatus === "refunded" && booking.paymentStatus !== "refunded") {
         updateBookingPaymentStatus(booking.id, "refunded");
+        setCheckoutSync("synced");
+        return;
       }
-    });
+
+      if (attempts < 8) {
+        timeoutId = window.setTimeout(syncStatus, 2500);
+      } else {
+        setCheckoutSync("pending");
+      }
+    };
+
+    syncStatus();
 
     return () => {
       active = false;
+      if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [booking, params, updateBookingPaymentStatus]);
+  }, [booking, checkoutResult, updateBookingPaymentStatus]);
 
   if (!booking) {
     return <NotFoundPanel title="Booking not found" text="This booking is not in your local FitCheck workspace." />;
@@ -1143,10 +1167,16 @@ function BookingDetailPage() {
               Stripe is not configured locally, so this booking was saved without charging.
             </div>
           ) : null}
-          {params.get("checkout") === "success" ? (
+          {checkoutResult === "success" ? (
             <div className="setup-note compact success">
               <ShieldCheck size={18} />
-              Stripe checkout returned successfully.
+              {checkoutSync === "checking"
+                ? "Stripe checkout returned. Syncing payment status..."
+                : checkoutSync === "synced" || booking.paymentStatus === "paid"
+                  ? "Stripe payment status synced."
+                  : checkoutSync === "pending"
+                    ? "Stripe checkout returned. Webhook status is still pending."
+                    : "Stripe checkout returned successfully."}
             </div>
           ) : null}
           <Timeline status={booking.status} />

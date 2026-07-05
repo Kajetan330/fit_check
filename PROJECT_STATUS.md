@@ -21,6 +21,7 @@
 - Supabase schema, RLS policies, storage buckets, and production setup docs are included.
 - Stripe checkout and webhook Vercel function scaffolding is included.
 - Stripe checkout session status persistence is scaffolded through `checkout_sessions` and `/api/checkout-status`.
+- The final finish plan is tracked in `docs/FINAL_FINISH_PLAN.md`.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
 - Remote stock-photo dependencies were removed. The app now uses local generated original placeholder media in `public/assets/media/`.
 - Brand mark, wordmark, and icon assets were added in `public/brand/`.
