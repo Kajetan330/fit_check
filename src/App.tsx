@@ -33,6 +33,7 @@ import {
 import { type FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Link,
+  Navigate,
   NavLink,
   Outlet,
   Route,
@@ -48,21 +49,36 @@ import {
   creatorPortfolio,
   creatorPosts,
   creatorReviews,
+  creatorTasteProducts,
   creators,
   getCreator,
   getPost,
   getService,
+  getTasteProduct,
+  getTasteProductById,
   posts,
   quizLooks,
+  tasteProductFullItems,
+  tasteProductFullOutfits,
+  tasteProductPreviewItems,
+  tasteProductPreviewOutfits,
 } from "./data";
 import { useAppState } from "./state";
+import { ShareButton } from "./features/sharing/ShareButton";
+import { createCommerceCheckout } from "./lib/commerce";
 import { getProductionHealth, type ProductionHealth } from "./lib/health";
 import { createCheckoutSession, getCheckoutStatus } from "./lib/payments";
+import { captureReferral, creatorSharePath, editSharePath, safeRedirectPath, serviceSharePath, sharePageUrl } from "./lib/sharing";
 import { supabase, supabaseStatus } from "./lib/supabase";
 import { uploadPrivateImage } from "./lib/uploads";
 import type { Booking, ClosetItem, Creator, CreatorDraft, Post, Service } from "./types";
+import type { TasteProduct, TasteProductItem, TasteProductOutfit } from "./types/commerce";
 
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+const compactNumber = new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 });
+const productMoney = (cents: number, currency: string) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase(), maximumFractionDigits: 0 }).format(cents / 100);
+const formatFollowerCount = (value: number) => compactNumber.format(value);
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
@@ -115,17 +131,28 @@ export function App() {
       <Route element={<AppShell />}>
         <Route path="/" element={<DiscoverPage />} />
         <Route path="/quiz" element={<StyleQuizPage />} />
+        <Route path="/c/:handle" element={<CreatorRedirectPage />} />
         <Route path="/creator/:handle" element={<CreatorProfilePage />} />
+        <Route path="/creator/:handle/edit/:slug" element={<EditLandingPage />} />
+        <Route path="/creator/:handle/service/:serviceSlug" element={<ServiceDetailPage />} />
         <Route path="/post/:postId" element={<PostPage />} />
         <Route path="/book/:handle/:serviceId" element={<BookingPage />} />
+        <Route path="/library" element={<CustomerLibraryPage />} />
+        <Route path="/library/edits/:purchaseId" element={<PaidEditReaderPage />} />
+        <Route path="/share/:token" element={<ControlledSharePage />} />
         <Route path="/bookings" element={<BookingsPage />} />
         <Route path="/bookings/:bookingId" element={<BookingDetailPage />} />
         <Route path="/closet" element={<ClosetPage />} />
         <Route path="/studio" element={<StudioPage />} />
+        <Route path="/studio/storefront" element={<StorefrontStudioPage />} />
+        <Route path="/studio/edits" element={<StudioEditsPage />} />
+        <Route path="/studio/edits/new" element={<EditEditorPage />} />
+        <Route path="/studio/analytics" element={<StudioAnalyticsPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="/launch" element={<LaunchReadinessPage />} />
         <Route path="/legal/:slug" element={<LegalPage />} />
         <Route path="/signin" element={<SignInPage />} />
+        <Route path="/creator/signin" element={<CreatorSignInPage />} />
         <Route path="/apply" element={<CreatorApplyPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
@@ -136,6 +163,40 @@ export function App() {
 function AppShell() {
   const { state, setMode, signOut } = useAppState();
   const user = state.user;
+  const location = useLocation();
+
+  useEffect(() => {
+    captureReferral(location.search);
+  }, [location.search]);
+
+  const navItems =
+    user?.role === "admin"
+      ? [
+          ["/", "Discover"],
+          ["/admin", "Admin"],
+          ["/launch", "Launch"],
+          ["/studio", "Studio"],
+        ]
+      : user?.role === "creator"
+        ? [
+            ["/studio/storefront", "Storefront"],
+            ["/studio", "Orders"],
+            ["/studio/edits", "Edits"],
+            ["/studio/analytics", "Earnings"],
+          ]
+        : user?.role === "customer"
+          ? [
+              ["/", "Discover"],
+              ["/library", "Library"],
+              ["/closet", "Closet"],
+              ["/bookings", "Bookings"],
+            ]
+          : [
+              ["/", "Discover"],
+              [`/creator/${creators[0].handle}/edit/${creatorTasteProducts(creators[0].handle)[0]?.slug ?? ""}`, "Edits"],
+              ["/quiz", "How it works"],
+              ["/apply", "Become a creator"],
+            ];
 
   return (
     <div className="app-shell">
@@ -146,12 +207,11 @@ function AppShell() {
         </Link>
 
         <nav className="desktop-nav" aria-label="Primary navigation">
-          <NavLink to="/">Discover</NavLink>
-          <NavLink to="/quiz">Style quiz</NavLink>
-          <NavLink to="/closet">Closet</NavLink>
-          <NavLink to="/bookings">Bookings</NavLink>
-          <NavLink to="/studio">Studio</NavLink>
-          <NavLink to="/launch">Launch</NavLink>
+          {navItems.map(([to, label]) => (
+            <NavLink key={to} to={to}>
+              {label}
+            </NavLink>
+          ))}
         </nav>
 
         <div className="topbar-actions">
@@ -189,10 +249,35 @@ function AppShell() {
       </main>
 
       <nav className="bottom-nav" aria-label="Mobile navigation">
-        <NavLink to="/">
+        {user?.role === "creator" ? (
+          <>
+            <NavLink to="/studio/storefront">
+              <UserRound size={19} />
+              <span>Storefront</span>
+            </NavLink>
+            <NavLink to="/studio">
+              <CalendarDays size={19} />
+              <span>Orders</span>
+            </NavLink>
+            <NavLink to="/studio/edits">
+              <FileText size={19} />
+              <span>Edits</span>
+            </NavLink>
+            <NavLink to="/studio/analytics">
+              <WalletCards size={19} />
+              <span>Earnings</span>
+            </NavLink>
+          </>
+        ) : (
+          <>
+            <NavLink to="/">
           <Search size={19} />
           <span>Discover</span>
         </NavLink>
+            <NavLink to="/library">
+              <Bookmark size={19} />
+              <span>Library</span>
+            </NavLink>
         <NavLink to="/closet">
           <Shirt size={19} />
           <span>Closet</span>
@@ -201,10 +286,8 @@ function AppShell() {
           <CalendarDays size={19} />
           <span>Bookings</span>
         </NavLink>
-        <NavLink to="/studio">
-          <LayoutDashboard size={19} />
-          <span>Studio</span>
-        </NavLink>
+          </>
+        )}
       </nav>
     </div>
   );
@@ -438,6 +521,11 @@ function StyleQuizPage() {
   );
 }
 
+function CreatorRedirectPage() {
+  const { handle = "" } = useParams();
+  return <Navigate to={`/creator/${handle}`} replace />;
+}
+
 function CreatorProfilePage() {
   const { handle = "" } = useParams();
   const { state, toggleCreator } = useAppState();
@@ -459,6 +547,10 @@ function CreatorProfilePage() {
   ];
   const reviews = creatorReviews(creator.handle);
   const pieces = creatorDesignerPieces(creator.handle);
+  const products = creatorTasteProducts(creator.handle);
+  const featuredProduct = products.find((product) => product.id === creator.featuredProductId) ?? products[0];
+  const featuredService =
+    creator.services.find((service) => service.id === creator.featuredServiceId) ?? creator.services[0];
   const isSaved = state.savedCreatorHandles.includes(creator.handle);
 
   return (
@@ -477,7 +569,7 @@ function CreatorProfilePage() {
                 </span>
               ) : null}
             </div>
-            <p>{creator.bio}</p>
+            <p>{creator.storefrontHeadline || creator.bio}</p>
             <div className="tag-row">
               {creator.aesthetics.slice(0, 4).map((tag) => (
                 <span key={tag}>{tag}</span>
@@ -486,22 +578,84 @@ function CreatorProfilePage() {
           </div>
         </div>
         <div className="profile-stats">
-          <Stat label="Followers" value={creator.followers} />
+          <Stat label="Audience" value={formatFollowerCount(creator.followerCount)} />
           <Stat label="Rating" value={creator.rating.toFixed(2)} />
           <Stat label="Reviews" value={String(creator.reviewCount)} />
           <Stat label="Avg turn" value={creator.avgTurnaround} />
         </div>
         <div className="profile-actions">
-          <Link className="button dark" to={`/book/${creator.handle}/${creator.services[0].id}`}>
+          {featuredProduct ? (
+            <Link className="button dark" to={`/creator/${creator.handle}/edit/${featuredProduct.slug}`}>
+              <FileText size={18} />
+              Shop my edits
+            </Link>
+          ) : null}
+          <Link className="button light" to={`/creator/${creator.handle}/service/${featuredService.id}`}>
             <CalendarDays size={18} />
-            Book a service
+            Book my taste
           </Link>
           <button className="button light" onClick={() => toggleCreator(creator.handle)}>
             <Heart size={18} fill={isSaved ? "currentColor" : "none"} />
             {isSaved ? "Following" : "Follow"}
           </button>
+          <ShareButton
+            title={`${creator.displayName} on FitCheck`}
+            text={creator.tasteSignature}
+            url={sharePageUrl(creatorSharePath(creator.handle))}
+          />
         </div>
       </section>
+
+      <section className="storefront-offer-grid">
+        <article className="detail-panel taste-panel">
+          <p className="eyebrow">Taste signature</p>
+          <h2>{creator.tasteSignature}</h2>
+          <p>{creator.storefrontDescription}</p>
+          <div className="principle-list">
+            {creator.tastePrinciples.map((principle) => (
+              <span key={principle}>{principle}</span>
+            ))}
+          </div>
+          <div className="creator-meta">
+            {creator.socialVerifiedAt ? (
+              <span>
+                <BadgeCheck size={15} />
+                Social verified
+              </span>
+            ) : null}
+            <span>{creator.availability}</span>
+          </div>
+        </article>
+        {featuredProduct ? (
+          <TasteProductCard product={featuredProduct} variant="featured" />
+        ) : null}
+        {featuredService ? (
+          <article className="detail-panel featured-offer">
+            <p className="eyebrow">Book my taste</p>
+            <h2>{featuredService.title}</h2>
+            <p>{featuredService.summary}</p>
+            <div className="summary-row">
+              <span>{featuredService.priceLabel}</span>
+              <span>{featuredService.turnaround}</span>
+            </div>
+            <Link className="button dark full" to={`/creator/${creator.handle}/service/${featuredService.id}`}>
+              Open service
+              <ArrowRight size={18} />
+            </Link>
+          </article>
+        ) : null}
+      </section>
+
+      {products.length ? (
+        <section className="section-block">
+          <SectionHeading eyebrow="Shop my edits" title="Paid taste products" />
+          <div className="product-grid">
+            {products.map((product) => (
+              <TasteProductCard key={product.id} product={product} />
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section className="section-block">
         <SectionHeading eyebrow="Pinned" title="First impression" />
@@ -611,6 +765,374 @@ function CreatorProfilePage() {
         )}
       </section>
     </div>
+  );
+}
+
+function EditLandingPage() {
+  const { handle = "", slug = "" } = useParams();
+  const { state } = useAppState();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const creator = getCreator(handle);
+  const product = getTasteProduct(handle, slug);
+  const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [startingCheckout, setStartingCheckout] = useState(false);
+
+  if (!creator || !product) {
+    return <NotFoundPanel title="Edit not found" text="This paid edit is not published on FitCheck." />;
+  }
+
+  const previewItems = tasteProductPreviewItems(product.id);
+  const previewOutfits = tasteProductPreviewOutfits(product.id);
+  const hasLocalEntitlement = state.entitlements.some(
+    (entitlement) => entitlement.productId === product.id && !entitlement.revokedAt,
+  );
+
+  const startCheckout = async () => {
+    if (!state.user) {
+      navigate(`/signin?redirect=${encodeURIComponent(location.pathname)}`);
+      return;
+    }
+
+    setStartingCheckout(true);
+    setCheckoutMessage("");
+    const result = await createCommerceCheckout({ checkoutType: "taste_product", referenceId: product.id });
+    setStartingCheckout(false);
+
+    if (result.ok && result.checkoutUrl) {
+      window.location.href = result.checkoutUrl;
+      return;
+    }
+
+    setCheckoutMessage(result.message);
+  };
+
+  return (
+    <div className="page-stack">
+      <section className="edit-hero">
+        <img src={product.coverImageUrl} alt={product.title} />
+        <div>
+          <CreatorMini creator={creator} />
+          <p className="eyebrow">Paid edit</p>
+          <h1>{product.title}</h1>
+          <p className="lead">{product.subtitle}</p>
+          <p>{product.description}</p>
+          <div className="tag-row">
+            <span>{product.theme}</span>
+            <span>{product.totalItemCount} products</span>
+            <span>{product.outfitCount} outfits</span>
+            <span>Updated {formatDate(product.updatedAt)}</span>
+          </div>
+          <div className="quick-actions">
+            <button className="button dark" onClick={startCheckout} disabled={startingCheckout}>
+              {startingCheckout ? <Loader2 className="spin" size={18} /> : <CreditCard size={18} />}
+              {hasLocalEntitlement ? "Buy another copy" : `Buy ${productMoney(product.priceCents, product.currency)}`}
+            </button>
+            {hasLocalEntitlement ? (
+              <Link className="button light" to="/library/edits/purchase-demo-amara-copenhagen">
+                Open owned demo
+              </Link>
+            ) : null}
+            <ShareButton
+              title={product.title}
+              text={product.previewText}
+              url={sharePageUrl(editSharePath(creator.handle, product.slug))}
+            />
+          </div>
+          {checkoutMessage ? <p className="form-error">{checkoutMessage}</p> : null}
+          <div className="setup-note">
+            <LockKeyhole size={18} />
+            Preview rows are public. Full rows are designed to load only after a Supabase entitlement exists.
+          </div>
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionHeading eyebrow="Who this is for" title="Creator-led buying context" />
+        <div className="detail-grid">
+          <article className="detail-panel">
+            <h2>{product.previewText}</h2>
+            <p>{product.affiliateDisclosure}</p>
+          </article>
+          <article className="detail-panel">
+            <h2>Best fit</h2>
+            <div className="principle-list">
+              {product.whoIsItFor.map((item) => (
+                <span key={item}>{item}</span>
+              ))}
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionHeading eyebrow="Preview products" title="A few public picks" />
+        <div className="product-item-grid">
+          {previewItems.map((item) => (
+            <ProductItemCard key={item.id} item={item} />
+          ))}
+          <LockedPreviewCard count={Math.max(product.totalItemCount - previewItems.length, 0)} />
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionHeading eyebrow="Preview outfit" title="How the edit thinks" />
+        <div className="lookbook-grid">
+          {previewOutfits.map((outfit) => (
+            <OutfitCard key={outfit.id} outfit={outfit} />
+          ))}
+        </div>
+      </section>
+
+      <section className="section-block">
+        <SectionHeading eyebrow="Related service" title="Want this taste applied to you?" />
+        <div className="service-grid">
+          {creator.services.slice(0, 2).map((service) => (
+            <ServiceCard key={service.id} creator={creator} service={service} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ServiceDetailPage() {
+  const { handle = "", serviceSlug = "" } = useParams();
+  const creator = getCreator(handle);
+  const service = getService(handle, serviceSlug);
+
+  if (!creator || !service) {
+    return <NotFoundPanel title="Service not found" text="This service is not active on FitCheck." />;
+  }
+
+  return (
+    <div className="booking-page">
+      <aside className="booking-summary">
+        <CreatorMini creator={creator} />
+        <ShareButton
+          title={`${service.title} by ${creator.displayName}`}
+          text={service.summary}
+          url={sharePageUrl(serviceSharePath(creator.handle, service.id))}
+        />
+      </aside>
+      <section className="form-panel service-detail-panel">
+        <p className="eyebrow">Book my taste</p>
+        <h1>{service.title}</h1>
+        <p className="lead">{service.summary}</p>
+        <div className="summary-row">
+          <span>{service.priceLabel}</span>
+          <span>{service.turnaround}</span>
+        </div>
+        <div className="service-deliverables">
+          {service.deliverables.map((deliverable) => (
+            <span key={deliverable}>
+              <Check size={16} />
+              {deliverable}
+            </span>
+          ))}
+        </div>
+        <div className="detail-panel">
+          <h2>Intake prompts</h2>
+          <div className="principle-list">
+            {service.intakePrompts.map((prompt) => (
+              <span key={prompt}>{prompt}</span>
+            ))}
+          </div>
+        </div>
+        <Link className="button dark" to={`/book/${creator.handle}/${service.id}`}>
+          Start booking
+          <ArrowRight size={18} />
+        </Link>
+      </section>
+    </div>
+  );
+}
+
+function CustomerLibraryPage() {
+  const { state } = useAppState();
+  const location = useLocation();
+
+  if (!state.user) {
+    return (
+      <AuthGate
+        title="Sign in to open your library"
+        text="Purchased edits and delivered styling work stay attached to your account."
+        redirect={location.pathname}
+      />
+    );
+  }
+
+  const purchasedProducts = state.purchases
+    .map((purchase) => ({ purchase, product: getTasteProductById(purchase.productId) }))
+    .filter((item): item is { purchase: (typeof state.purchases)[number]; product: TasteProduct } => Boolean(item.product));
+
+  return (
+    <div className="page-stack">
+      <section className="workspace-header">
+        <div>
+          <p className="eyebrow">Library</p>
+          <h1>Your paid edits and lookbooks</h1>
+          <p className="lead">A customer-owned surface for purchases and delivered one-to-one services.</p>
+        </div>
+        <Link className="button light" to="/">
+          Find more creators
+        </Link>
+      </section>
+
+      <section className="section-block">
+        <SectionHeading eyebrow="Paid edits" title="Purchased taste products" />
+        {purchasedProducts.length ? (
+          <div className="product-grid">
+            {purchasedProducts.map(({ purchase, product }) => (
+              <Link className="product-card" key={purchase.id} to={`/library/edits/${purchase.id}`}>
+                <img src={product.coverImageUrl} alt={product.title} />
+                <div>
+                  <span>{paymentLabel[purchase.paymentStatus === "requires_payment" ? "requires_payment" : purchase.paymentStatus]}</span>
+                  <h3>{product.title}</h3>
+                  <p>{product.subtitle}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon={<FileText size={26} />} title="No paid edits yet" text="Buy a creator edit to unlock it here." />
+        )}
+      </section>
+
+      <section className="section-block">
+        <SectionHeading eyebrow="Services" title="Delivered styling" />
+        {state.bookings.length ? (
+          <div className="booking-list">
+            {state.bookings.map((booking) => (
+              <BookingCard key={booking.id} booking={booking} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState icon={<CalendarDays size={26} />} title="No services yet" text="Book a creator to start." />
+        )}
+      </section>
+    </div>
+  );
+}
+
+function PaidEditReaderPage() {
+  const { purchaseId = "" } = useParams();
+  const { state } = useAppState();
+  const location = useLocation();
+
+  if (!state.user) {
+    return (
+      <AuthGate
+        title="Sign in to read this edit"
+        text="Paid edits require an account and an active entitlement."
+        redirect={location.pathname}
+      />
+    );
+  }
+
+  const purchase = state.purchases.find((item) => item.id === purchaseId);
+  if (!purchase) {
+    return <NotFoundPanel title="Purchase not found" text="This paid edit is not in your local library." />;
+  }
+
+  const product = getTasteProductById(purchase.productId);
+  if (!product) {
+    return <NotFoundPanel title="Product unavailable" text="This paid edit is no longer available." />;
+  }
+
+  const entitlement = state.entitlements.find(
+    (item) => item.productId === product.id && item.sourcePurchaseId === purchase.id && !item.revokedAt,
+  );
+
+  if (purchase.paymentStatus === "requires_payment") {
+    return <AccessStatePanel title="Payment pending" text="Finish checkout before the full edit opens." />;
+  }
+
+  if (purchase.paymentStatus === "refunded" || !entitlement) {
+    return <AccessStatePanel title="Access revoked" text="This purchase no longer has an active entitlement." />;
+  }
+
+  const items = tasteProductFullItems(product.id);
+  const outfits = tasteProductFullOutfits(product.id);
+
+  return (
+    <div className="page-stack">
+      <section className="workspace-header">
+        <div>
+          <p className="eyebrow">Paid edit reader</p>
+          <h1>{product.title}</h1>
+          <p className="lead">{product.subtitle}</p>
+        </div>
+        <span className="verified-badge">
+          <LockKeyhole size={16} />
+          Entitled
+        </span>
+      </section>
+      <div className="setup-note">
+        <Database size={18} />
+        This reader uses a local demo entitlement. Production access is enforced by `/api/paid-edit-access`.
+      </div>
+      <section className="section-block">
+        <SectionHeading eyebrow="All products" title={`${items.length} creator-vetted picks`} />
+        <div className="product-item-grid">
+          {items.map((item) => (
+            <ProductItemCard key={item.id} item={item} unlocked />
+          ))}
+        </div>
+      </section>
+      <section className="section-block">
+        <SectionHeading eyebrow="Outfits" title="Creator formulas" />
+        <div className="lookbook-grid">
+          {outfits.map((outfit) => (
+            <OutfitCard key={outfit.id} outfit={outfit} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function ControlledSharePage() {
+  const { token = "" } = useParams();
+  const [state, setState] = useState<"loading" | "demo" | "invalid">("loading");
+
+  useEffect(() => {
+    if (token === "demo") {
+      setState("demo");
+      return;
+    }
+
+    setState("invalid");
+  }, [token]);
+
+  if (state === "loading") {
+    return (
+      <CenteredPanel>
+        <Loader2 className="spin" size={34} />
+        <h1>Checking share link</h1>
+        <p>Controlled links are validated by a trusted endpoint before private content is shown.</p>
+      </CenteredPanel>
+    );
+  }
+
+  if (state === "invalid") {
+    return <AccessStatePanel title="Share link unavailable" text="This link is expired, revoked, or not recognised." />;
+  }
+
+  const product = getTasteProductById("11111111-1111-4111-8111-111111111111")!;
+  return (
+    <article className="legal-page">
+      <p className="eyebrow">Controlled preview</p>
+      <h1>{product.title}</h1>
+      <p>{product.previewText}</p>
+      <div className="setup-note">
+        <ShieldCheck size={18} />
+        Private shopping lists, customer fit details, and storage IDs are not exposed on share links.
+      </div>
+      <Link className="button dark" to={`/creator/${product.creatorHandle}/edit/${product.slug}`}>
+        Open public edit page
+      </Link>
+    </article>
   );
 }
 
@@ -1221,7 +1743,7 @@ function BookingDetailPage() {
 }
 
 function StudioPage() {
-  const { state, signIn, setMode, updateBookingStatus, saveCreatorDraft, addStudioPost } = useAppState();
+  const { state, updateBookingStatus, saveCreatorDraft, addStudioPost } = useAppState();
   const baseCreator = creators[0];
   const creator = applyCreatorDraft(baseCreator, state.creatorDrafts[baseCreator.handle]);
   const [profileDraft, setProfileDraft] = useState({
@@ -1242,18 +1764,12 @@ function StudioPage() {
       <CenteredPanel>
         <LayoutDashboard size={34} />
         <h1>Creator Studio</h1>
-        <p>Use the creator demo to triage bookings, assemble lookbooks, and manage services.</p>
+        <p>Creator tools require a creator account. Sign in as a creator or apply for access.</p>
         <div className="quick-actions centered">
-          <button
-            className="button dark"
-            onClick={() => {
-              signIn("Amara", "creator");
-              setMode("studio");
-            }}
-          >
+          <Link className="button dark" to="/creator/signin">
             <Sparkles size={18} />
-            Continue as creator
-          </button>
+            Creator sign in
+          </Link>
           <Link className="button light" to="/apply">
             Apply as creator
           </Link>
@@ -1470,14 +1986,198 @@ function StudioPage() {
   );
 }
 
+function RequireCreatorPanel() {
+  return (
+    <CenteredPanel>
+      <LayoutDashboard size={34} />
+      <h1>Creator access required</h1>
+      <p>Sign in with a creator account to manage storefronts, paid edits, services, and analytics.</p>
+      <Link className="button dark" to="/creator/signin">
+        Creator sign in
+      </Link>
+    </CenteredPanel>
+  );
+}
+
+function StorefrontStudioPage() {
+  const { state, saveCreatorDraft } = useAppState();
+  const baseCreator = creators[0];
+  const creator = applyCreatorDraft(baseCreator, state.creatorDrafts[baseCreator.handle]);
+  const [draft, setDraft] = useState({
+    displayName: creator.displayName,
+    bio: creator.bio,
+    location: creator.location,
+    aesthetics: creator.aesthetics.join(", "),
+  });
+
+  if (state.user?.role !== "creator") return <RequireCreatorPanel />;
+
+  return (
+    <div className="page-stack">
+      <section className="workspace-header">
+        <div>
+          <p className="eyebrow">Storefront</p>
+          <h1>Manage your sales page</h1>
+          <p className="lead">The storefront is the direct landing page for followers from Instagram, TikTok, and email.</p>
+        </div>
+        <Link className="button light" to={`/creator/${creator.handle}`}>
+          View storefront
+        </Link>
+      </section>
+      <section className="studio-grid">
+        <form
+          className="form-panel"
+          onSubmit={(event) => {
+            event.preventDefault();
+            saveCreatorDraft(creator.handle, draft);
+          }}
+        >
+          <p className="eyebrow">Profile basics</p>
+          <label>
+            Display name
+            <input value={draft.displayName} onChange={(event) => setDraft({ ...draft, displayName: event.target.value })} />
+          </label>
+          <label>
+            Bio
+            <textarea value={draft.bio} onChange={(event) => setDraft({ ...draft, bio: event.target.value })} />
+          </label>
+          <label>
+            Location
+            <input value={draft.location} onChange={(event) => setDraft({ ...draft, location: event.target.value })} />
+          </label>
+          <label>
+            Aesthetics
+            <input value={draft.aesthetics} onChange={(event) => setDraft({ ...draft, aesthetics: event.target.value })} />
+          </label>
+          <button className="button dark" type="submit">
+            Save storefront draft
+          </button>
+        </form>
+        <div className="detail-panel">
+          <p className="eyebrow">Taste positioning</p>
+          <h2>{creator.tasteSignature}</h2>
+          <p>{creator.storefrontDescription}</p>
+          <div className="principle-list">
+            {creator.tastePrinciples.map((principle) => (
+              <span key={principle}>{principle}</span>
+            ))}
+          </div>
+          <div className="setup-note">
+            <Database size={18} />
+            Production editing should write these fields to `creator_profiles`.
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function StudioEditsPage() {
+  const { state } = useAppState();
+  const creator = creators[0];
+  const products = creatorTasteProducts(creator.handle);
+
+  if (state.user?.role !== "creator") return <RequireCreatorPanel />;
+
+  return (
+    <div className="page-stack">
+      <section className="workspace-header">
+        <div>
+          <p className="eyebrow">Paid edits</p>
+          <h1>One-to-many taste products</h1>
+          <p className="lead">Products your followers can buy without a personal intake process.</p>
+        </div>
+        <Link className="button dark" to="/studio/edits/new">
+          New edit
+        </Link>
+      </section>
+      <div className="product-grid">
+        {products.map((product) => (
+          <TasteProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function EditEditorPage() {
+  const { state } = useAppState();
+
+  if (state.user?.role !== "creator") return <RequireCreatorPanel />;
+
+  return (
+    <div className="page-stack">
+      <section className="workspace-header">
+        <div>
+          <p className="eyebrow">New paid edit</p>
+          <h1>Draft a product followers can buy</h1>
+          <p className="lead">This is the validation surface. The production editor should persist to `taste_products` and item tables.</p>
+        </div>
+      </section>
+      <form className="form-panel">
+        <label>
+          Title
+          <input placeholder="My Zara Sale Picks" />
+        </label>
+        <label>
+          Description
+          <textarea placeholder="Who this is for and what the full edit contains" />
+        </label>
+        <label>
+          Price
+          <input placeholder="$19" />
+        </label>
+        <label>
+          Affiliate disclosure
+          <textarea placeholder="Tell customers whether links may be affiliate links" />
+        </label>
+        <div className="setup-note">
+          <AlertTriangle size={18} />
+          Publishing is intentionally disabled until Supabase product persistence is applied.
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function StudioAnalyticsPage() {
+  const { state } = useAppState();
+  const creator = creators[0];
+  const products = creatorTasteProducts(creator.handle);
+  const gross = products.reduce((total, product) => total + product.priceCents, 0) / 100;
+
+  if (state.user?.role !== "creator") return <RequireCreatorPanel />;
+
+  return (
+    <div className="page-stack">
+      <section className="workspace-header">
+        <div>
+          <p className="eyebrow">Analytics</p>
+          <h1>Creator monetisation pulse</h1>
+          <p className="lead">A lightweight read on storefront views, checkout starts, purchases, and referral intent.</p>
+        </div>
+      </section>
+      <section className="metric-grid">
+        <Metric icon={<Globe2 size={19} />} label="Storefront views" value="1.2k" />
+        <Metric icon={<CreditCard size={19} />} label="Checkout starts" value="84" />
+        <Metric icon={<WalletCards size={19} />} label="Mock gross" value={money.format(gross)} />
+        <Metric icon={<Bookmark size={19} />} label="Products" value={String(products.length)} />
+      </section>
+      <div className="setup-note">
+        <Database size={18} />
+        Production analytics should read `commerce_events` after event tracking is enabled.
+      </div>
+    </div>
+  );
+}
+
 function SignInPage() {
   const { signIn } = useAppState();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const redirect = params.get("redirect") || "/";
+  const redirect = safeRedirectPath(params.get("redirect"), "/");
   const [name, setName] = useState("Maya");
   const [email, setEmail] = useState("maya@example.com");
-  const [role, setRole] = useState<"customer" | "creator" | "admin">("customer");
   const [notice, setNotice] = useState("");
 
   const submit = async (event: FormEvent) => {
@@ -1498,7 +2198,7 @@ function SignInPage() {
       }
     }
 
-    signIn(name, role, email);
+    signIn(name, "customer", email);
     navigate(redirect);
   };
 
@@ -1506,7 +2206,7 @@ function SignInPage() {
     <CenteredPanel>
       <UserRound size={34} />
       <h1>Welcome to FitCheck</h1>
-      <p>Use a demo account to save creators, build a closet, book services, and open Studio.</p>
+      <p>Sign in as a customer to save creators, buy edits, build a closet, and book services.</p>
       <div className={`setup-note compact ${supabaseStatus === "connected" ? "success" : ""}`}>
         <Database size={18} />
         {supabaseStatus === "connected"
@@ -1523,20 +2223,69 @@ function SignInPage() {
           Email
           <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
         </label>
-        <div className="role-choice" aria-label="Account type">
-          <button type="button" className={role === "customer" ? "active" : ""} onClick={() => setRole("customer")}>
-            Customer
-          </button>
-          <button type="button" className={role === "creator" ? "active" : ""} onClick={() => setRole("creator")}>
-            Creator
-          </button>
-          <button type="button" className={role === "admin" ? "active" : ""} onClick={() => setRole("admin")}>
-            Admin
-          </button>
-        </div>
         <button className="button dark full" type="submit">
           Continue
           <ArrowRight size={18} />
+        </button>
+        <Link className="text-button" to={`/creator/signin?redirect=${encodeURIComponent(redirect)}`}>
+          Creator sign in
+          <ArrowRight size={16} />
+        </Link>
+      </form>
+    </CenteredPanel>
+  );
+}
+
+function CreatorSignInPage() {
+  const { signIn, setMode } = useAppState();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const redirect = safeRedirectPath(params.get("redirect"), "/studio/storefront");
+  const [name, setName] = useState("Amara");
+  const [email, setEmail] = useState("amara@example.com");
+  const [notice, setNotice] = useState("");
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    if (supabase && email.includes("@")) {
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          emailRedirectTo: `${window.location.origin}${redirect}`,
+        },
+      });
+
+      if (error) {
+        setNotice(error.message);
+        return;
+      }
+
+      setNotice("Magic link sent. Local creator mode also continues for this prototype.");
+    }
+
+    signIn(name, "creator", email);
+    setMode("studio");
+    navigate(redirect);
+  };
+
+  return (
+    <CenteredPanel>
+      <Sparkles size={34} />
+      <h1>Creator sign in</h1>
+      <p>Manage your storefront, paid edits, service queue, and earnings from Studio.</p>
+      {notice ? <p className="form-error">{notice}</p> : null}
+      <form className="signin-form" onSubmit={submit}>
+        <label>
+          Creator name
+          <input value={name} onChange={(event) => setName(event.target.value)} />
+        </label>
+        <label>
+          Email
+          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
+        </label>
+        <button className="button dark full" type="submit">
+          <LayoutDashboard size={18} />
+          Open Studio
         </button>
       </form>
     </CenteredPanel>
@@ -1618,18 +2367,14 @@ function CreatorApplyPage() {
 }
 
 function AdminPage() {
-  const { state, signIn, updateCreatorApplicationStatus, updateBookingStatus } = useAppState();
+  const { state, updateCreatorApplicationStatus, updateBookingStatus } = useAppState();
 
   if (state.user?.role !== "admin") {
     return (
       <CenteredPanel>
         <LockKeyhole size={34} />
         <h1>Admin console</h1>
-        <p>Creator vetting, disputes, and moderation are admin-only in production. Use demo admin mode locally.</p>
-        <button className="button dark" onClick={() => signIn("FitCheck Admin", "admin", "admin@fitcheck.local")}>
-          <ShieldCheck size={18} />
-          Continue as admin
-        </button>
+        <p>Creator vetting, disputes, and moderation are admin-only. Use a configured admin account to access this route.</p>
       </CenteredPanel>
     );
   }
@@ -1994,6 +2739,89 @@ function NotFoundPage() {
   return <NotFoundPanel title="Page not found" text="That route is not part of the FitCheck MVP." />;
 }
 
+function TasteProductCard({ product, variant = "default" }: { product: TasteProduct; variant?: "default" | "featured" }) {
+  const creator = getCreator(product.creatorHandle);
+
+  return (
+    <article className={`product-card ${variant === "featured" ? "featured-offer" : ""}`}>
+      <Link to={`/creator/${product.creatorHandle}/edit/${product.slug}`}>
+        <img src={product.coverImageUrl} alt={product.title} />
+      </Link>
+      <div>
+        <span>{product.accessType === "paid" ? productMoney(product.priceCents, product.currency) : "Free"}</span>
+        <h3>{product.title}</h3>
+        <p>{product.subtitle}</p>
+        <div className="creator-meta">
+          <span>{product.totalItemCount} products</span>
+          <span>{product.outfitCount} outfits</span>
+          {creator ? <span>{creator.displayName}</span> : null}
+        </div>
+        <Link className="text-button" to={`/creator/${product.creatorHandle}/edit/${product.slug}`}>
+          Open edit
+          <ArrowRight size={16} />
+        </Link>
+      </div>
+    </article>
+  );
+}
+
+function ProductItemCard({ item, unlocked = false }: { item: TasteProductItem; unlocked?: boolean }) {
+  return (
+    <article className="product-item-card">
+      {item.imageUrl ? <img src={item.imageUrl} alt={item.name} /> : null}
+      <div>
+        <span>{unlocked || item.isPreview ? "Creator note" : "Preview"}</span>
+        <h3>{item.name}</h3>
+        <p>{item.brand}</p>
+        {item.priceLabel ? <strong>{item.priceLabel}</strong> : null}
+        <p>{item.creatorNote}</p>
+        {unlocked && item.destinationUrl ? (
+          <a className="text-button" href={item.destinationUrl} target="_blank" rel="noreferrer">
+            Open link
+            <ArrowRight size={16} />
+          </a>
+        ) : null}
+      </div>
+    </article>
+  );
+}
+
+function OutfitCard({ outfit }: { outfit: TasteProductOutfit }) {
+  return (
+    <article className="look-card">
+      {outfit.imageUrl ? <img src={outfit.imageUrl} alt={outfit.title} /> : null}
+      <div>
+        <h3>{outfit.title}</h3>
+        <p>{outfit.creatorNote}</p>
+        <span>{outfit.itemIds.length} linked item(s)</span>
+      </div>
+    </article>
+  );
+}
+
+function LockedPreviewCard({ count }: { count: number }) {
+  return (
+    <article className="locked-card">
+      <LockKeyhole size={28} />
+      <h3>{count} protected picks remain</h3>
+      <p>The public page never loads full paid content. Production access is checked through entitlements.</p>
+    </article>
+  );
+}
+
+function AccessStatePanel({ title, text }: { title: string; text: string }) {
+  return (
+    <CenteredPanel>
+      <LockKeyhole size={34} />
+      <h1>{title}</h1>
+      <p>{text}</p>
+      <Link className="button dark" to="/library">
+        Back to library
+      </Link>
+    </CenteredPanel>
+  );
+}
+
 function CreatorCard({ creator, compact = false }: { creator: Creator; compact?: boolean }) {
   const { state, toggleCreator } = useAppState();
   const saved = state.savedCreatorHandles.includes(creator.handle);
@@ -2031,7 +2859,7 @@ function CreatorCard({ creator, compact = false }: { creator: Creator; compact?:
             <Star size={15} fill="currentColor" />
             {creator.rating.toFixed(2)}
           </span>
-          <span>{creator.followers} followers</span>
+          <span>{formatFollowerCount(creator.followerCount)} followers</span>
           <span>{topService.priceLabel} from</span>
         </div>
         <Link className="text-button" to={`/creator/${creator.handle}`}>
@@ -2093,10 +2921,15 @@ function ServiceCard({ creator, service }: { creator: Creator; service: Service 
       </div>
       <div className="service-footer">
         <strong>{service.priceLabel}</strong>
-        <Link className="button dark small" to={`/book/${creator.handle}/${service.id}`}>
-          Book
-          <ArrowRight size={16} />
-        </Link>
+        <div className="service-actions">
+          <Link className="button light small" to={`/creator/${creator.handle}/service/${service.id}`}>
+            Details
+          </Link>
+          <Link className="button dark small" to={`/book/${creator.handle}/${service.id}`}>
+            Book
+            <ArrowRight size={16} />
+          </Link>
+        </div>
       </div>
     </article>
   );
@@ -2109,7 +2942,7 @@ function CreatorMini({ creator }: { creator: Creator }) {
       <div>
         <strong>{creator.displayName}</strong>
         <span>
-          {creator.rating.toFixed(2)} rating / {creator.followers} followers
+          {creator.rating.toFixed(2)} rating / {formatFollowerCount(creator.followerCount)} followers
         </span>
       </div>
       <ChevronRight size={18} />

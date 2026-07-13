@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1",
+    "prebuild": "node scripts/generate-share-pages.mjs",
     "build": "tsc -b && vite build",
-    "check:api": "tsc --noEmit --skipLibCheck --moduleResolution Node --module ESNext --target ES2020 --esModuleInterop --types node api/_supabaseAdmin.ts api/create-checkout-session.ts api/stripe-webhook.ts api/checkout-status.ts api/health.ts",
+    "check:api": "tsc -p tsconfig.api.json",
     "check": "npm run build && npm run check:api",
     "preview": "vite preview --host 127.0.0.1"
   },

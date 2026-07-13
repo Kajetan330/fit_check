@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { AppState, Booking, ClosetItem, CreatorApplication, CreatorDraft, Post, Role, User } from "./types";
-import { bookingSeed, closetSeed } from "./data";
+import { bookingSeed, closetSeed, entitlementSeed, purchaseSeed } from "./data";
 
 const STORAGE_KEY = "fitcheck-state-v1";
 
@@ -22,6 +22,8 @@ const defaultState: AppState = {
   ],
   creatorDrafts: {},
   studioPosts: [],
+  purchases: purchaseSeed,
+  entitlements: entitlementSeed,
 };
 
 interface AppStateContextValue {
@@ -58,6 +60,8 @@ const loadState = (): AppState => {
         : defaultState.creatorApplications,
       creatorDrafts: parsed.creatorDrafts ?? defaultState.creatorDrafts,
       studioPosts: parsed.studioPosts ?? defaultState.studioPosts,
+      purchases: parsed.purchases?.length ? parsed.purchases : defaultState.purchases,
+      entitlements: parsed.entitlements?.length ? parsed.entitlements : defaultState.entitlements,
     };
   } catch {
     return defaultState;

@@ -38,8 +38,123 @@ export default async function handler(req: any, res: any) {
 
     const supabase = getSupabaseAdmin();
 
+    if (supabase) {
+      const { error: eventInsertError } = await supabase.from("stripe_events").insert({
+        id: event.id,
+        event_type: event.type,
+      });
+
+      if (eventInsertError?.code === "23505") {
+        res.status(200).json({ received: true, duplicate: true });
+        return;
+      }
+
+      if (eventInsertError && eventInsertError.code !== "42P01") {
+        console.error("FitCheck Stripe event log failed", eventInsertError.message);
+      }
+    }
+
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
+      const checkoutType = session.metadata?.checkoutType;
+
+      if (supabase && checkoutType === "taste_product" && session.metadata?.purchaseId) {
+        const paymentIntentId =
+          typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+
+        const { data: purchase, error: purchaseReadError } = await supabase
+          .from("purchases")
+          .select("id,customer_id,product_id,amount_cents,currency")
+          .eq("id", session.metadata.purchaseId)
+          .maybeSingle();
+
+        if (purchaseReadError || !purchase) {
+          console.error("FitCheck purchase lookup failed", purchaseReadError?.message ?? "missing purchase");
+        } else if (session.amount_total !== purchase.amount_cents || session.currency !== purchase.currency) {
+          console.error("FitCheck purchase amount mismatch", {
+            purchaseId: purchase.id,
+            expected: `${purchase.amount_cents} ${purchase.currency}`,
+            actual: `${session.amount_total} ${session.currency}`,
+          });
+        } else {
+          const { error: purchaseUpdateError } = await supabase
+            .from("purchases")
+            .update({
+              payment_status: "paid",
+              stripe_checkout_session_id: session.id,
+              stripe_payment_intent_id: paymentIntentId,
+              purchased_at: new Date().toISOString(),
+              raw_event: event as unknown as Record<string, unknown>,
+            })
+            .eq("id", purchase.id);
+
+          if (purchaseUpdateError) {
+            console.error("FitCheck purchase update failed", purchaseUpdateError.message);
+          } else {
+            const { data: existingEntitlement } = await supabase
+              .from("product_entitlements")
+              .select("id")
+              .eq("customer_id", purchase.customer_id)
+              .eq("product_id", purchase.product_id)
+              .is("revoked_at", null)
+              .maybeSingle();
+
+            const { error: entitlementError } = existingEntitlement
+              ? await supabase
+                  .from("product_entitlements")
+                  .update({ purchase_id: purchase.id })
+                  .eq("id", existingEntitlement.id)
+              : await supabase.from("product_entitlements").insert({
+                  customer_id: purchase.customer_id,
+                  product_id: purchase.product_id,
+                  purchase_id: purchase.id,
+                });
+
+            if (entitlementError) {
+              console.error("FitCheck entitlement grant failed", entitlementError.message);
+            }
+
+            await supabase.from("commerce_events").insert({
+              event_name: "checkout_completed",
+              product_id: purchase.product_id,
+              user_id: purchase.customer_id,
+              metadata: { purchaseId: purchase.id },
+            });
+          }
+        }
+
+        res.status(200).json({ received: true });
+        return;
+      }
+
+      if (supabase && checkoutType === "booking" && session.metadata?.bookingId) {
+        const { error: bookingUpdateError } = await supabase
+          .from("bookings")
+          .update({
+            payment_status: "paid",
+            stripe_checkout_session_id: session.id,
+            stripe_payment_intent_id:
+              typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id,
+          })
+          .eq("id", session.metadata.bookingId);
+
+        if (bookingUpdateError) {
+          console.error("FitCheck booking payment update failed", bookingUpdateError.message);
+        }
+
+        await supabase.from("commerce_events").insert({
+          event_name: "checkout_completed",
+          creator_id: session.metadata.creatorId || null,
+          service_id: session.metadata.serviceId || null,
+          user_id: session.metadata.customerId || null,
+          referral_code: session.metadata.referralCode || null,
+          metadata: { bookingId: session.metadata.bookingId },
+        });
+
+        res.status(200).json({ received: true });
+        return;
+      }
+
       const bookingReference = session.metadata?.bookingId;
 
       if (supabase && bookingReference) {
@@ -65,6 +180,23 @@ export default async function handler(req: any, res: any) {
       const paymentIntent = event.data.object as Stripe.PaymentIntent;
 
       if (supabase) {
+        await supabase
+          .from("bookings")
+          .update({
+            payment_status: "failed",
+            stripe_payment_intent_id: paymentIntent.id,
+          })
+          .eq("stripe_payment_intent_id", paymentIntent.id);
+
+        await supabase
+          .from("purchases")
+          .update({
+            payment_status: "failed",
+            stripe_payment_intent_id: paymentIntent.id,
+            raw_event: event as unknown as Record<string, unknown>,
+          })
+          .eq("stripe_payment_intent_id", paymentIntent.id);
+
         const { error } = await supabase
           .from("checkout_sessions")
           .update({
@@ -85,6 +217,32 @@ export default async function handler(req: any, res: any) {
         typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
 
       if (supabase && paymentIntentId) {
+        await supabase
+          .from("bookings")
+          .update({
+            payment_status: "refunded",
+          })
+          .eq("stripe_payment_intent_id", paymentIntentId);
+
+        const { data: refundedPurchases } = await supabase
+          .from("purchases")
+          .update({
+            payment_status: "refunded",
+            raw_event: event as unknown as Record<string, unknown>,
+          })
+          .eq("stripe_payment_intent_id", paymentIntentId)
+          .select("id");
+
+        if (refundedPurchases?.length) {
+          await supabase
+            .from("product_entitlements")
+            .update({ revoked_at: new Date().toISOString() })
+            .in(
+              "purchase_id",
+              refundedPurchases.map((purchase) => purchase.id),
+            );
+        }
+
         const { error } = await supabase
           .from("checkout_sessions")
           .update({

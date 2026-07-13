@@ -1,4 +1,5 @@
 import type { Booking, ClosetItem, Creator, DesignerPiece, Post, QuizLook, Review, Service } from "./types";
+import type { ProductEntitlement, Purchase, TasteProduct, TasteProductItem, TasteProductOutfit } from "./types/commerce";
 
 const mediaMap: Record<string, string> = {
   "photo-1524504388940-b1c1722653e1": "fitcheck-media-01.jpg",
@@ -85,12 +86,24 @@ export const creators: Creator[] = [
     bio: "Soft minimalist wardrobes with practical polish and warm-weather tailoring.",
     verticals: ["Fashion"],
     aesthetics: ["soft minimalist", "tailoring", "warm neutrals", "workwear"],
-    followers: "87k",
+    followerCount: 87000,
     rating: 4.96,
     reviewCount: 142,
     avgTurnaround: "2d",
     verified: true,
     rising: false,
+    tasteSignature: "Warm minimalism with one precise statement.",
+    tastePrinciples: ["Repeatable outfit formulas", "Soft structure before trend", "Buy fewer gaps, style harder"],
+    storefrontHeadline: "Make your everyday wardrobe feel finished.",
+    storefrontDescription:
+      "Amara sells tight seasonal edits and calm one-to-one styling for followers who want polished outfits without overbuying.",
+    featuredProductId: "11111111-1111-4111-8111-111111111111",
+    featuredServiceId: "quick-take",
+    instagramUrl: "https://instagram.com/amara.styles",
+    tiktokUrl: "https://tiktok.com/@amarafits",
+    socialVerifiedAt: "2026-07-01",
+    storefrontPublished: true,
+    availability: "Taking 6 new bookings this week",
     services: fashionServices.map((service) =>
       service.id === "wardrobe-audit" ? { ...service, price: 95, priceLabel: "$95" } : service,
     ),
@@ -106,12 +119,23 @@ export const creators: Creator[] = [
     bio: "Sharp city uniforms, modular layers, and capsule systems for small closets.",
     verticals: ["Fashion"],
     aesthetics: ["streetwear", "monochrome", "modular", "city"],
-    followers: "34k",
+    followerCount: 34000,
     rating: 4.91,
     reviewCount: 67,
     avgTurnaround: "3d",
     verified: false,
     rising: true,
+    tasteSignature: "Modular city layers that earn their space.",
+    tastePrinciples: ["Weatherproof but intentional", "Small-closet systems", "Black, grey, denim, one tension point"],
+    storefrontHeadline: "Build the city uniform you actually repeat.",
+    storefrontDescription:
+      "Lena turns creator trust into compact shopping edits and outfit systems for followers with small closets and busy weeks.",
+    featuredProductId: "22222222-2222-4222-8222-222222222222",
+    featuredServiceId: "capsule-build",
+    instagramUrl: "https://instagram.com/lena.layers",
+    socialVerifiedAt: "2026-06-22",
+    storefrontPublished: true,
+    availability: "Capsule slots reopen Friday",
     services: fashionServices.map((service) =>
       service.id === "capsule-build" ? { ...service, price: 145, priceLabel: "$145" } : service,
     ),
@@ -127,12 +151,24 @@ export const creators: Creator[] = [
     bio: "Modest occasionwear, elegant proportions, and color stories that photograph beautifully.",
     verticals: ["Fashion"],
     aesthetics: ["modest", "occasionwear", "romantic", "color"],
-    followers: "52k",
+    followerCount: 52000,
     rating: 4.93,
     reviewCount: 88,
     avgTurnaround: "2d",
     verified: true,
     rising: false,
+    tasteSignature: "Elegant coverage, saturated color, camera-ready proportions.",
+    tastePrinciples: ["Modesty without flattening shape", "One color story per event", "Accessories set the formality"],
+    storefrontHeadline: "Occasionwear that photographs beautifully and still feels like you.",
+    storefrontDescription:
+      "Noor packages her event styling taste into wedding-guest edits and personal look selection for modest dressers.",
+    featuredProductId: "33333333-3333-4333-8333-333333333333",
+    featuredServiceId: "quick-take",
+    instagramUrl: "https://instagram.com/noor.edits",
+    tiktokUrl: "https://tiktok.com/@noorwears",
+    socialVerifiedAt: "2026-06-28",
+    storefrontPublished: true,
+    availability: "Event edits available in 48h",
     services: fashionServices,
     socials: { instagram: "@noor.edits", tiktok: "@noorwears" },
   },
@@ -146,14 +182,317 @@ export const creators: Creator[] = [
     bio: "Dark academia, thrifted tailoring, and designer drops for people who love texture.",
     verticals: ["Fashion", "Design"],
     aesthetics: ["dark academia", "vintage", "texture", "designer"],
-    followers: "18k",
+    followerCount: 18000,
     rating: 4.88,
     reviewCount: 31,
     avgTurnaround: "4d",
     verified: false,
     rising: true,
+    tasteSignature: "Texture-led vintage with a designer eye.",
+    tastePrinciples: ["Material first", "Repairable flaws are opportunity", "Academic shapes, modern fit"],
+    storefrontHeadline: "Find the secondhand pieces worth building around.",
+    storefrontDescription:
+      "Ivy monetises a sharp archive eye through weekly vintage edits, texture guides, and slow-fashion styling.",
+    featuredProductId: "44444444-4444-4444-8444-444444444444",
+    featuredServiceId: "style-diagnosis",
+    instagramUrl: "https://instagram.com/ivymakes",
+    storefrontPublished: true,
+    availability: "Weekly vintage edit drops Monday",
     services: fashionServices.filter((service) => service.id !== "quick-take"),
     socials: { instagram: "@ivymakes" },
+  },
+];
+
+export const tasteProducts: TasteProduct[] = [
+  {
+    id: "11111111-1111-4111-8111-111111111111",
+    creatorId: "creator-amara",
+    creatorHandle: "amara-okafor",
+    slug: "copenhagen-2027-edit",
+    title: "Copenhagen 2027 Edit",
+    subtitle: "Twenty warm-minimal pieces I would actually buy now.",
+    description:
+      "A paid seasonal taste product for followers who want Amara's buying eye without booking a full wardrobe audit.",
+    coverImageUrl: image("photo-1515886657613-9f3515b0c78f"),
+    previewText:
+      "The edit is built around soft tailoring, controlled texture, and pieces that can move from office to travel.",
+    previewItemCount: 4,
+    totalItemCount: 20,
+    outfitCount: 6,
+    priceCents: 1900,
+    currency: "usd",
+    status: "published",
+    accessType: "paid",
+    affiliateDisclosure: "Some shopping links may be affiliate links. Amara's notes stay independent of commission.",
+    publishedAt: "2026-07-08",
+    updatedAt: "2026-07-11",
+    whoIsItFor: ["Warm minimalists", "Office-to-weekend wardrobes", "Followers who want fewer, stronger buys"],
+    theme: "Soft tailoring / warm neutrals / polished travel",
+  },
+  {
+    id: "22222222-2222-4222-8222-222222222222",
+    creatorId: "creator-lena",
+    creatorHandle: "lena-park",
+    slug: "rainy-city-capsule",
+    title: "Rainy City Capsule",
+    subtitle: "A compact weatherproof edit for small closets.",
+    description:
+      "Lena's one-to-many shopping list for followers who want city layers that look intentional, not tactical.",
+    coverImageUrl: image("photo-1523398002811-999ca8dec234"),
+    previewText: "Start with one technical shell, one clean trouser, and one bag that can handle weather.",
+    previewItemCount: 3,
+    totalItemCount: 15,
+    outfitCount: 5,
+    priceCents: 1500,
+    currency: "usd",
+    status: "published",
+    accessType: "paid",
+    affiliateDisclosure: "Contains affiliate shopping links where available.",
+    publishedAt: "2026-07-06",
+    updatedAt: "2026-07-10",
+    whoIsItFor: ["Commuters", "Small closets", "Monochrome dressers"],
+    theme: "Weatherproof city uniform",
+  },
+  {
+    id: "33333333-3333-4333-8333-333333333333",
+    creatorId: "creator-noor",
+    creatorHandle: "noor-hassan",
+    slug: "wedding-guest-under-200",
+    title: "Wedding Guest Dresses Under $200",
+    subtitle: "Modest, camera-ready options with accessory formulas.",
+    description:
+      "Noor's paid edit for followers who need event polish fast and want a clear read on fit, color, and formality.",
+    coverImageUrl: image("photo-1487412720507-e7ab37603c6f"),
+    previewText: "The strongest low-stress guest looks usually need one saturated color and one metallic tension point.",
+    previewItemCount: 4,
+    totalItemCount: 18,
+    outfitCount: 7,
+    priceCents: 1700,
+    currency: "usd",
+    status: "published",
+    accessType: "paid",
+    affiliateDisclosure: "Some product links may generate affiliate revenue.",
+    publishedAt: "2026-07-03",
+    updatedAt: "2026-07-09",
+    whoIsItFor: ["Modest dressers", "Wedding guests", "Color-forward occasionwear"],
+    theme: "Romantic event dressing",
+  },
+  {
+    id: "44444444-4444-4444-8444-444444444444",
+    creatorId: "creator-ivy",
+    creatorHandle: "ivy-marlowe",
+    slug: "vintage-listings-worth-buying",
+    title: "Vintage Listings Worth Buying This Week",
+    subtitle: "Texture, tailoring, and repairable finds before they disappear.",
+    description:
+      "A weekly paid edit that turns Ivy's archive eye into a fast shopping decision layer for followers.",
+    coverImageUrl: image("photo-1512436991641-6745cdb1723f"),
+    previewText: "This week is about wool texture, narrow collars, and suede accessories with fixable flaws.",
+    previewItemCount: 3,
+    totalItemCount: 12,
+    outfitCount: 4,
+    priceCents: 1200,
+    currency: "usd",
+    status: "published",
+    accessType: "paid",
+    affiliateDisclosure: "Listings may disappear quickly; some links may be affiliate links.",
+    publishedAt: "2026-07-07",
+    updatedAt: "2026-07-12",
+    whoIsItFor: ["Vintage shoppers", "Dark academia wardrobes", "Texture-led buyers"],
+    theme: "Secondhand texture hunt",
+  },
+];
+
+export const tasteProductItems: TasteProductItem[] = [
+  {
+    id: "item-amara-preview-01",
+    productId: "11111111-1111-4111-8111-111111111111",
+    name: "Washed linen blazer",
+    brand: "Arket",
+    imageUrl: image("photo-1485968579580-b6d095142e6e"),
+    priceLabel: "$189",
+    creatorNote: "Preview: the shoulder is soft enough for travel but still gives the outfit a frame.",
+    isPreview: true,
+    sortOrder: 1,
+  },
+  {
+    id: "item-amara-preview-02",
+    productId: "11111111-1111-4111-8111-111111111111",
+    name: "Cream column tank",
+    brand: "COS",
+    imageUrl: image("photo-1542060748-10c28b62716f"),
+    priceLabel: "$45",
+    creatorNote: "Preview: use this as the quiet base under every stronger texture.",
+    isPreview: true,
+    sortOrder: 2,
+  },
+  {
+    id: "item-amara-locked-01",
+    productId: "11111111-1111-4111-8111-111111111111",
+    name: "Cognac city slingback",
+    brand: "Independent seller",
+    imageUrl: image("photo-1543163521-1bf539c55dd2"),
+    destinationUrl: "https://example.com/cognac-city-slingback",
+    priceLabel: "$128",
+    creatorNote: "Full edit: this warms the entire palette and stops the neutral base from going flat.",
+    isPreview: false,
+    sortOrder: 3,
+  },
+  {
+    id: "item-amara-locked-02",
+    productId: "11111111-1111-4111-8111-111111111111",
+    name: "Structured raffia tote",
+    brand: "Cuyana",
+    imageUrl: image("photo-1542291026-7eec264c27ff"),
+    destinationUrl: "https://example.com/structured-raffia-tote",
+    priceLabel: "$268",
+    creatorNote: "Full edit: the texture makes the office pieces feel summer-specific without becoming beachwear.",
+    isPreview: false,
+    sortOrder: 4,
+  },
+  {
+    id: "item-lena-preview-01",
+    productId: "22222222-2222-4222-8222-222222222222",
+    name: "Matte shell jacket",
+    brand: "Rains",
+    imageUrl: image("photo-1523398002811-999ca8dec234"),
+    priceLabel: "$140",
+    creatorNote: "Preview: matte finish keeps the technical layer from taking over the whole outfit.",
+    isPreview: true,
+    sortOrder: 1,
+  },
+  {
+    id: "item-lena-locked-01",
+    productId: "22222222-2222-4222-8222-222222222222",
+    name: "Nylon midi skirt",
+    brand: "Weekday",
+    imageUrl: image("photo-1529139574466-a303027c1d8b"),
+    destinationUrl: "https://example.com/nylon-midi-skirt",
+    priceLabel: "$69",
+    creatorNote: "Full edit: gives the capsule motion while staying weather-safe.",
+    isPreview: false,
+    sortOrder: 2,
+  },
+  {
+    id: "item-noor-preview-01",
+    productId: "33333333-3333-4333-8333-333333333333",
+    name: "Long-sleeve satin dress",
+    brand: "Aab",
+    imageUrl: image("photo-1487412720507-e7ab37603c6f"),
+    priceLabel: "$178",
+    creatorNote: "Preview: the sleeve and drape give coverage without losing occasion softness.",
+    isPreview: true,
+    sortOrder: 1,
+  },
+  {
+    id: "item-noor-locked-01",
+    productId: "33333333-3333-4333-8333-333333333333",
+    name: "Metallic low mule",
+    brand: "Reformation",
+    imageUrl: image("photo-1543163521-1bf539c55dd2"),
+    destinationUrl: "https://example.com/metallic-low-mule",
+    priceLabel: "$168",
+    creatorNote: "Full edit: a low metallic shoe raises formality while keeping the dress wearable.",
+    isPreview: false,
+    sortOrder: 2,
+  },
+  {
+    id: "item-ivy-preview-01",
+    productId: "44444444-4444-4444-8444-444444444444",
+    name: "Narrow-collar wool blazer",
+    brand: "Vintage",
+    imageUrl: image("photo-1512436991641-6745cdb1723f"),
+    priceLabel: "$88",
+    creatorNote: "Preview: inspect collar roll and lining first; this shape is worth tailoring.",
+    isPreview: true,
+    sortOrder: 1,
+  },
+  {
+    id: "item-ivy-locked-01",
+    productId: "44444444-4444-4444-8444-444444444444",
+    name: "Deadstock ribbon bag",
+    brand: "Archive seller",
+    imageUrl: image("photo-1542291026-7eec264c27ff"),
+    destinationUrl: "https://example.com/deadstock-ribbon-bag",
+    priceLabel: "$126",
+    creatorNote: "Full edit: the trim reads intentional with wool, not costume, if the outfit stays otherwise matte.",
+    isPreview: false,
+    sortOrder: 2,
+  },
+];
+
+export const tasteProductOutfits: TasteProductOutfit[] = [
+  {
+    id: "outfit-amara-preview-01",
+    productId: "11111111-1111-4111-8111-111111111111",
+    title: "Arrival day tailoring",
+    imageUrl: image("photo-1485968579580-b6d095142e6e"),
+    creatorNote: "Preview outfit: blazer, column tank, and linen trouser. Keep accessories warm, not black.",
+    itemIds: ["item-amara-preview-01", "item-amara-preview-02"],
+    isPreview: true,
+    sortOrder: 1,
+  },
+  {
+    id: "outfit-amara-locked-01",
+    productId: "11111111-1111-4111-8111-111111111111",
+    title: "Office to dinner without changing clothes",
+    imageUrl: image("photo-1516762689617-e1cffcef479d"),
+    creatorNote: "Full edit: the shoe and tote do the evening work; do not add jewelry unless it is sculptural.",
+    itemIds: ["item-amara-preview-02", "item-amara-locked-01", "item-amara-locked-02"],
+    isPreview: false,
+    sortOrder: 2,
+  },
+  {
+    id: "outfit-lena-preview-01",
+    productId: "22222222-2222-4222-8222-222222222222",
+    title: "Rain commute, gallery after",
+    imageUrl: image("photo-1523398002811-999ca8dec234"),
+    creatorNote: "Preview outfit: keep the shell matte and the base column dark.",
+    itemIds: ["item-lena-preview-01"],
+    isPreview: true,
+    sortOrder: 1,
+  },
+  {
+    id: "outfit-noor-preview-01",
+    productId: "33333333-3333-4333-8333-333333333333",
+    title: "Garden ceremony",
+    imageUrl: image("photo-1487412720507-e7ab37603c6f"),
+    creatorNote: "Preview outfit: saturated dress, low metallic shoe, and one soft wrap.",
+    itemIds: ["item-noor-preview-01"],
+    isPreview: true,
+    sortOrder: 1,
+  },
+  {
+    id: "outfit-ivy-preview-01",
+    productId: "44444444-4444-4444-8444-444444444444",
+    title: "Library texture stack",
+    imageUrl: image("photo-1512436991641-6745cdb1723f"),
+    creatorNote: "Preview outfit: narrow wool over heavy cotton with one small decorative texture.",
+    itemIds: ["item-ivy-preview-01"],
+    isPreview: true,
+    sortOrder: 1,
+  },
+];
+
+export const purchaseSeed: Purchase[] = [
+  {
+    id: "purchase-demo-amara-copenhagen",
+    customerId: "demo-customer",
+    productId: "11111111-1111-4111-8111-111111111111",
+    paymentStatus: "paid",
+    amountCents: 1900,
+    currency: "usd",
+    purchasedAt: "2026-07-12",
+  },
+];
+
+export const entitlementSeed: ProductEntitlement[] = [
+  {
+    id: "entitlement-demo-amara-copenhagen",
+    customerId: "demo-customer",
+    productId: "11111111-1111-4111-8111-111111111111",
+    sourcePurchaseId: "purchase-demo-amara-copenhagen",
+    grantedAt: "2026-07-12",
   },
 ];
 
@@ -446,3 +785,27 @@ export const creatorReviews = (handle: string) => reviews.filter((review) => rev
 
 export const creatorDesignerPieces = (handle: string) =>
   designerPieces.filter((piece) => piece.creatorHandle === handle);
+
+export const creatorTasteProducts = (handle: string) =>
+  tasteProducts.filter((product) => product.creatorHandle === handle && product.status === "published");
+
+export const getTasteProduct = (creatorHandle: string, slug: string) =>
+  tasteProducts.find((product) => product.creatorHandle === creatorHandle && product.slug === slug);
+
+export const getTasteProductById = (productId: string) => tasteProducts.find((product) => product.id === productId);
+
+export const tasteProductPreviewItems = (productId: string) =>
+  tasteProductItems
+    .filter((item) => item.productId === productId && item.isPreview)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+export const tasteProductFullItems = (productId: string) =>
+  tasteProductItems.filter((item) => item.productId === productId).sort((a, b) => a.sortOrder - b.sortOrder);
+
+export const tasteProductPreviewOutfits = (productId: string) =>
+  tasteProductOutfits
+    .filter((outfit) => outfit.productId === productId && outfit.isPreview)
+    .sort((a, b) => a.sortOrder - b.sortOrder);
+
+export const tasteProductFullOutfits = (productId: string) =>
+  tasteProductOutfits.filter((outfit) => outfit.productId === productId).sort((a, b) => a.sortOrder - b.sortOrder);

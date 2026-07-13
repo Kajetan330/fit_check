@@ -1,3 +1,5 @@
+import type { ProductEntitlement, Purchase } from "./types/commerce";
+
 export type Role = "customer" | "creator" | "admin";
 export type AppMode = "browse" | "studio";
 export type BookingStatus = "intake" | "in_progress" | "ready" | "completed";
@@ -32,13 +34,24 @@ export interface Creator {
   bio: string;
   verticals: string[];
   aesthetics: string[];
-  followers: string;
+  followerCount: number;
   rating: number;
   reviewCount: number;
   avgTurnaround: string;
   verified: boolean;
   rising: boolean;
   services: Service[];
+  tasteSignature: string;
+  tastePrinciples: string[];
+  storefrontHeadline: string;
+  storefrontDescription: string;
+  featuredProductId?: string;
+  featuredServiceId?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  socialVerifiedAt?: string;
+  storefrontPublished: boolean;
+  availability: string;
   socials: {
     instagram: string;
     tiktok?: string;
@@ -141,6 +154,8 @@ export interface AppState {
   creatorApplications: CreatorApplication[];
   creatorDrafts: Record<string, CreatorDraft>;
   studioPosts: Post[];
+  purchases: Purchase[];
+  entitlements: ProductEntitlement[];
 }
 
 export interface CreatorApplication {

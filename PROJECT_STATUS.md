@@ -22,6 +22,7 @@
 - Stripe checkout and webhook Vercel function scaffolding is included.
 - Stripe checkout session status persistence is scaffolded through `checkout_sessions` and `/api/checkout-status`.
 - Production health checks are exposed through `/api/health` and shown on `/launch` without displaying secret values.
+- Creator-led commerce architecture is scaffolded with paid edits, entitlement tables, share-link hashing, trusted checkout endpoints, generated share metadata pages, and storefront/library routes.
 - The final finish plan is tracked in `docs/FINAL_FINISH_PLAN.md`.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
 - Remote stock-photo dependencies were removed. The app now uses local generated original placeholder media in `public/assets/media/`.
@@ -103,6 +104,7 @@ npm run dev
 - Supabase migration for Stripe checkout session persistence.
 - Stripe checkout and webhook serverless API scaffolding.
 - Production health endpoint for checking Stripe/Supabase deployment wiring.
+- Paid-edit commerce migration, server endpoints, storefront UI, customer library, creator Studio entries, and generated social-preview pages.
 - PWA service worker for production shell caching.
 - Local original media assets replacing external image URLs.
 - Brand assets and brand usage notes.
