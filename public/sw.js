@@ -1,5 +1,29 @@
-const CACHE_NAME = "fitcheck-shell-v1";
-const APP_SHELL = ["/", "/manifest.webmanifest", "/icon.svg"];
+const CACHE_NAME = "fitcheck-shell-v2-20260713";
+const APP_SHELL = ["/manifest.webmanifest", "/icon.svg"];
+
+function shouldNetworkFirst(requestUrl, request) {
+  return (
+    request.mode === "navigate" ||
+    request.destination === "script" ||
+    request.destination === "style" ||
+    requestUrl.pathname === "/" ||
+    requestUrl.pathname === "/index.html"
+  );
+}
+
+function shouldSkipCache(requestUrl) {
+  return requestUrl.pathname.startsWith("/api/");
+}
+
+async function fetchAndUpdateCache(request) {
+  const response = await fetch(request);
+  if (response.ok) {
+    const copy = response.clone();
+    const cache = await caches.open(CACHE_NAME);
+    await cache.put(request, copy);
+  }
+  return response;
+}
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)));
@@ -10,18 +34,26 @@ self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))),
+      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
+      .then(() => self.clients.claim()),
   );
-  self.clients.claim();
+});
+
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
+  const requestUrl = new URL(request.url);
 
   if (request.method !== "GET") return;
+  if (shouldSkipCache(requestUrl)) return;
 
-  if (request.mode === "navigate") {
-    event.respondWith(fetch(request).catch(() => caches.match("/")));
+  if (shouldNetworkFirst(requestUrl, request)) {
+    event.respondWith(fetchAndUpdateCache(request).catch(() => caches.match(request).then((cached) => cached || caches.match("/"))));
     return;
   }
 
