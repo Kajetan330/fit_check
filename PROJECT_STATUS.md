@@ -23,6 +23,7 @@
 - Stripe checkout session status persistence is scaffolded through `checkout_sessions` and `/api/checkout-status`.
 - Production health checks are exposed through `/api/health` and shown on `/launch` without displaying secret values.
 - Creator-led commerce architecture is scaffolded with paid edits, entitlement tables, share-link hashing, trusted checkout endpoints, generated share metadata pages, and storefront/library routes.
+- The latest implementation handoff for future developers is tracked in `docs/NEXT_DEVELOPER_HANDOFF.md`.
 - The final finish plan is tracked in `docs/FINAL_FINISH_PLAN.md`.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
 - Remote stock-photo dependencies were removed. The app now uses local generated original placeholder media in `public/assets/media/`.
