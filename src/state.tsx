@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { AppState, Booking, ClosetItem, CreatorApplication, CreatorDraft, Post, Role, User } from "./types";
 import { bookingSeed, closetSeed, entitlementSeed, purchaseSeed } from "./data";
+import { supabaseSignOut, userFromSession } from "./lib/auth";
+import { supabase } from "./lib/supabase";
 
 const STORAGE_KEY = "fitcheck-state-v1";
 
@@ -75,6 +77,41 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 
+  // Real identity: mirror the Supabase session into app state. Demo sign-in
+  // (no supabaseId) is left untouched so local prototype flows keep working.
+  useEffect(() => {
+    if (!supabase) return;
+
+    let cancelled = false;
+
+    const applySession = async (session: import("@supabase/supabase-js").Session | null) => {
+      if (cancelled) return;
+      if (session) {
+        const user = await userFromSession(session);
+        if (cancelled) return;
+        setState((current) => ({
+          ...current,
+          user:
+            current.user && current.user.supabaseId === user.supabaseId
+              ? { ...user, mode: current.user.mode }
+              : user,
+        }));
+      } else {
+        setState((current) => (current.user?.supabaseId ? { ...current, user: null } : current));
+      }
+    };
+
+    supabase.auth.getSession().then(({ data }) => applySession(data.session));
+    const { data: subscription } = supabase.auth.onAuthStateChange((_event, session) => {
+      void applySession(session);
+    });
+
+    return () => {
+      cancelled = true;
+      subscription.subscription.unsubscribe();
+    };
+  }, []);
+
   const value = useMemo<AppStateContextValue>(
     () => ({
       state,
@@ -89,7 +126,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           },
         }));
       },
-      signOut: () => setState((current) => ({ ...current, user: null })),
+      signOut: () => {
+        void supabaseSignOut();
+        setState((current) => ({ ...current, user: null }));
+      },
       setMode: (mode) => {
         setState((current) => ({
           ...current,

@@ -63,7 +63,9 @@ import {
 } from "./data";
 import { useAppState } from "./state";
 import { ShareButton } from "./features/sharing/ShareButton";
-import { createCommerceCheckout } from "./lib/commerce";
+import { track } from "@vercel/analytics";
+import { consumeAuthRedirect, sendMagicLink, signInWithGoogle } from "./lib/auth";
+import { createCommerceCheckout, isCommerceEnabled } from "./lib/commerce";
 import { getProductionHealth, type ProductionHealth } from "./lib/health";
 import { createCheckoutSession, getCheckoutStatus } from "./lib/payments";
 import { captureReferral, creatorSharePath, editSharePath, safeRedirectPath, serviceSharePath, sharePageUrl } from "./lib/sharing";
@@ -150,6 +152,7 @@ export function App() {
         <Route path="/launch" element={<LaunchReadinessPage />} />
         <Route path="/legal/:slug" element={<LegalPage />} />
         <Route path="/signin" element={<SignInPage />} />
+        <Route path="/auth/callback" element={<AuthCallbackPage />} />
         <Route path="/creator/signin" element={<CreatorSignInPage />} />
         <Route path="/apply" element={<CreatorApplyPage />} />
         <Route path="*" element={<NotFoundPage />} />
@@ -192,6 +195,7 @@ function AppShell() {
           : [
               ["/", "Discover"],
               [`/creator/${creators[0].handle}/edit/${creatorTasteProducts(creators[0].handle)[0]?.slug ?? ""}`, "Edits"],
+              ["/#how-it-works", "How it works"],
               ["/apply", "Become a creator"],
             ];
 
@@ -291,6 +295,13 @@ function AppShell() {
 }
 
 function DiscoverPage() {
+
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash === "#how-it-works") {
+      document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [hash]);
   const { state } = useAppState();
   const [query, setQuery] = useState("");
   const [activeTag, setActiveTag] = useState("all");
@@ -399,6 +410,27 @@ function DiscoverPage() {
           ))}
         </div>
       </section>
+
+      <section className="section-block" id="how-it-works">
+        <SectionHeading eyebrow="How it works" title="From their taste to your wardrobe in three steps" />
+        <div className="how-steps">
+          <div className="how-step">
+            <span className="how-step-number">1</span>
+            <h3>Find a creator whose taste fits</h3>
+            <p>Every creator has a Taste Signature: what they favor, what they avoid, and who they help best.</p>
+          </div>
+          <div className="how-step">
+            <span className="how-step-number">2</span>
+            <h3>Shop their edits or book a service</h3>
+            <p>Browse curated edits with real reasoning, or book a wardrobe review, outfit plan, or capsule build.</p>
+          </div>
+          <div className="how-step">
+            <span className="how-step-number">3</span>
+            <h3>Approve the delivery</h3>
+            <p>Payment is held until you approve. Every service includes one revision round within 72 hours.</p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
@@ -413,6 +445,10 @@ function CreatorProfilePage() {
   const { state, toggleCreator } = useAppState();
   const baseCreator = getCreator(handle);
   const [activeTab, setActiveTab] = useState<"posts" | "portfolio" | "services">("posts");
+
+  useEffect(() => {
+    if (handle) track("creator_profile_viewed", { handle });
+  }, [handle]);
 
   if (!baseCreator) {
     return <NotFoundPanel title="Creator not found" text="This profile URL does not match an active FitCheck creator." />;
@@ -660,6 +696,10 @@ function EditLandingPage() {
   const [checkoutMessage, setCheckoutMessage] = useState("");
   const [startingCheckout, setStartingCheckout] = useState(false);
 
+  useEffect(() => {
+    if (handle && slug) track("edit_viewed", { handle, slug });
+  }, [handle, slug]);
+
   if (!creator || !product) {
     return <NotFoundPanel title="Edit not found" text="This paid edit is not published on FitCheck." />;
   }
@@ -678,6 +718,7 @@ function EditLandingPage() {
 
     setStartingCheckout(true);
     setCheckoutMessage("");
+    track("edit_checkout_clicked", { slug });
     const result = await createCommerceCheckout({ checkoutType: "taste_product", referenceId: product.id });
     setStartingCheckout(false);
 
@@ -706,11 +747,18 @@ function EditLandingPage() {
             <span>Updated {formatDate(product.updatedAt)}</span>
           </div>
           <div className="quick-actions">
-            <button className="button dark" onClick={startCheckout} disabled={startingCheckout}>
-              {startingCheckout ? <Loader2 className="spin" size={18} /> : <CreditCard size={18} />}
-              {hasLocalEntitlement ? "Buy another copy" : `Buy ${productMoney(product.priceCents, product.currency)}`}
-            </button>
-            {hasLocalEntitlement ? (
+            {isCommerceEnabled ? (
+              <button className="button dark" onClick={startCheckout} disabled={startingCheckout}>
+                {startingCheckout ? <Loader2 className="spin" size={18} /> : <CreditCard size={18} />}
+                {hasLocalEntitlement ? "Buy another copy" : `Buy ${productMoney(product.priceCents, product.currency)}`}
+              </button>
+            ) : (
+              <span className="button light" aria-disabled="true">
+                <LockKeyhole size={18} />
+                Paid edits launch soon · {productMoney(product.priceCents, product.currency)}
+              </span>
+            )}
+            {hasLocalEntitlement && import.meta.env.DEV ? (
               <Link className="button light" to="/library/edits/purchase-demo-amara-copenhagen">
                 Open owned demo
               </Link>
@@ -724,7 +772,7 @@ function EditLandingPage() {
           {checkoutMessage ? <p className="form-error">{checkoutMessage}</p> : null}
           <div className="setup-note">
             <LockKeyhole size={18} />
-            Preview rows are public. Full rows are designed to load only after a Supabase entitlement exists.
+            You can preview part of this edit for free. The full edit unlocks after purchase.
           </div>
         </div>
       </section>
@@ -950,10 +998,12 @@ function PaidEditReaderPage() {
           Entitled
         </span>
       </section>
-      <div className="setup-note">
-        <Database size={18} />
-        This reader uses a local demo entitlement. Production access is enforced by `/api/paid-edit-access`.
-      </div>
+      {import.meta.env.DEV ? (
+        <div className="setup-note">
+          <Database size={18} />
+          This reader uses a local demo entitlement. Production access is enforced by `/api/paid-edit-access`.
+        </div>
+      ) : null}
       <section className="section-block">
         <SectionHeading eyebrow="All products" title={`${items.length} creator-vetted picks`} />
         <div className="product-item-grid">
@@ -1095,6 +1145,10 @@ function BookingPage() {
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const [uploadCount, setUploadCount] = useState(0);
+
+  useEffect(() => {
+    if (handle && serviceId) track("booking_started", { handle, serviceId });
+  }, [handle, serviceId]);
   const [submitting, setSubmitting] = useState(false);
   const [selectedCloset, setSelectedCloset] = useState<string[]>(state.closet.slice(0, 3).map((item) => item.id));
   const [form, setForm] = useState({
@@ -1153,6 +1207,7 @@ function BookingPage() {
     addBooking({ ...booking, paymentStatus: checkout.ok ? "requires_payment" : "demo" });
 
     if (checkout.ok && checkout.checkoutUrl) {
+      track("checkout_redirected", { serviceId });
       window.location.href = checkout.checkoutUrl;
       return;
     }
@@ -2054,66 +2109,128 @@ function StudioAnalyticsPage() {
 }
 
 function SignInPage() {
-  const { signIn } = useAppState();
+  const { state, signIn } = useAppState();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const redirect = safeRedirectPath(params.get("redirect"), "/");
-  const [name, setName] = useState("Maya");
-  const [email, setEmail] = useState("maya@example.com");
+  const [email, setEmail] = useState("");
   const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [sending, setSending] = useState(false);
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault();
-    if (supabase && email.includes("@")) {
-      const { error } = await supabase.auth.signInWithOtp({
-        email,
-        options: {
-          emailRedirectTo: `${window.location.origin}${redirect}`,
-        },
-      });
+  useEffect(() => {
+    if (state.user) navigate(redirect, { replace: true });
+  }, [state.user, navigate, redirect]);
 
-      if (error) {
-        setNotice(error.message);
-        return;
-      } else {
-        setNotice("Magic link sent. Demo mode also continues locally so you can keep testing.");
-      }
-    }
-
-    signIn(name, "customer", email);
-    navigate(redirect);
+  const google = async () => {
+    setError("");
+    track("signin_google_clicked");
+    const result = await signInWithGoogle(redirect);
+    if (!result.ok && result.message) setError(result.message);
   };
+
+  const submitEmail = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!email.includes("@") || sending) return;
+    setError("");
+    setSending(true);
+    const result = await sendMagicLink(email, redirect);
+    setSending(false);
+    if (result.ok) {
+      track("signin_magic_link_sent");
+      setNotice(result.message);
+    } else {
+      setError(result.message);
+    }
+  };
+
+  const demoAvailable = !supabase || import.meta.env.DEV;
 
   return (
     <CenteredPanel>
       <UserRound size={34} />
       <h1>Welcome to FitCheck</h1>
-      <p>Sign in as a customer to save creators, buy edits, build a closet, and book services.</p>
-      <div className={`setup-note compact ${supabaseStatus === "connected" ? "success" : ""}`}>
-        <Database size={18} />
-        {supabaseStatus === "connected"
-          ? "Supabase is configured. Magic-link auth is enabled."
-          : "Demo auth is active until Supabase environment variables are added."}
-      </div>
-      {notice ? <p className="form-error">{notice}</p> : null}
-      <form className="signin-form" onSubmit={submit}>
-        <label>
-          Name
-          <input value={name} onChange={(event) => setName(event.target.value)} />
-        </label>
-        <label>
-          Email
-          <input type="email" value={email} onChange={(event) => setEmail(event.target.value)} />
-        </label>
-        <button className="button dark full" type="submit">
-          Continue
-          <ArrowRight size={18} />
-        </button>
-        <Link className="text-button" to={`/creator/signin?redirect=${encodeURIComponent(redirect)}`}>
-          Creator sign in
-          <ArrowRight size={16} />
+      <p>Save creators, build a closet, and book styling services. No password needed.</p>
+      {notice ? (
+        <div className="setup-note compact success">
+          <ShieldCheck size={18} />
+          {notice}
+        </div>
+      ) : (
+        <div className="signin-form">
+          {supabase ? (
+            <button className="button light full" type="button" onClick={google}>
+              Continue with Google
+            </button>
+          ) : null}
+          <form onSubmit={submitEmail}>
+            <label>
+              Email
+              <input
+                type="email"
+                value={email}
+                placeholder="you@example.com"
+                onChange={(event) => setEmail(event.target.value)}
+              />
+            </label>
+            <button className="button dark full" type="submit" disabled={sending || !email.includes("@")}>
+              {sending ? <Loader2 className="spin" size={18} /> : <ArrowRight size={18} />}
+              Email me a sign-in link
+            </button>
+          </form>
+          {error ? <p className="form-error">{error}</p> : null}
+          {demoAvailable ? (
+            <button
+              className="text-button"
+              type="button"
+              onClick={() => {
+                signIn(email.includes("@") ? email.split("@")[0] : "Maya", "customer", email || undefined);
+                navigate(redirect);
+              }}
+            >
+              Continue in demo mode
+              <ArrowRight size={16} />
+            </button>
+          ) : null}
+          <Link className="text-button" to={`/creator/signin?redirect=${encodeURIComponent(redirect)}`}>
+            Creator sign in
+            <ArrowRight size={16} />
+          </Link>
+        </div>
+      )}
+    </CenteredPanel>
+  );
+}
+
+function AuthCallbackPage() {
+  const { state } = useAppState();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const [slow, setSlow] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setSlow(true), 6000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  useEffect(() => {
+    if (state.user) {
+      track("auth_completed");
+      const next = safeRedirectPath(params.get("next"), consumeAuthRedirect());
+      navigate(next, { replace: true });
+    }
+  }, [state.user, navigate, params]);
+
+  return (
+    <CenteredPanel>
+      <Loader2 className="spin" size={34} />
+      <h1>Signing you in</h1>
+      <p>{slow ? "This is taking longer than usual. You can head back and try the link again." : "One moment while we finish setting up your session."}</p>
+      {slow ? (
+        <Link className="button dark" to="/signin">
+          Back to sign in
         </Link>
-      </form>
+      ) : null}
     </CenteredPanel>
   );
 }
@@ -2142,7 +2259,7 @@ function CreatorSignInPage() {
         return;
       }
 
-      setNotice("Magic link sent. Local creator mode also continues for this prototype.");
+      setNotice("Magic link sent. The creator workspace also continues locally while onboarding is finished.");
     }
 
     signIn(name, "creator", email);
@@ -2346,6 +2463,7 @@ function AdminPage() {
 }
 
 function LaunchReadinessPage() {
+  const { state } = useAppState();
   const [health, setHealth] = useState<ProductionHealth | null>(null);
   const [healthChecked, setHealthChecked] = useState(false);
 
@@ -2362,6 +2480,10 @@ function LaunchReadinessPage() {
       active = false;
     };
   }, []);
+
+  if (state.user?.role !== "admin") {
+    return <NotFoundPanel title="Page not found" text="This page does not exist." />;
+  }
 
   const productionChecks = [
     ["Supabase project", supabaseStatus === "connected", "Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY."],
@@ -2928,6 +3050,10 @@ function CenteredPanel({ children }: { children: ReactNode }) {
 }
 
 function AuthGate({ title, text, redirect }: { title: string; text: string; redirect: string }) {
+  useEffect(() => {
+    track("auth_gate_shown", { redirect });
+  }, [redirect]);
+
   return (
     <CenteredPanel>
       <ShieldCheck size={34} />

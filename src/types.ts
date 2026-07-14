@@ -9,6 +9,8 @@ export interface User {
   email?: string;
   role: Role;
   mode: AppMode;
+  /** Present when the user is signed in through Supabase auth (real identity). */
+  supabaseId?: string;
 }
 
 export interface Service {

@@ -1,6 +1,13 @@
 import { getStoredReferral } from "./sharing";
 import { supabase } from "./supabase";
 
+/**
+ * Paid-edit purchasing is frozen until the Supabase commerce migration (0003)
+ * is applied and seeded. Flip on with VITE_COMMERCE_ENABLED="true" in Vercel.
+ * Bookings are unaffected by this flag.
+ */
+export const isCommerceEnabled = import.meta.env.VITE_COMMERCE_ENABLED === "true";
+
 export type CommerceCheckoutType = "booking" | "taste_product";
 
 export interface CommerceCheckoutResult {

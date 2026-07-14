@@ -1889,3 +1889,38 @@ select:focus {
     padding: 14px;
   }
 }
+
+.how-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.how-step h3 {
+  margin: 10px 0 6px;
+  font-size: 1.05rem;
+}
+
+.how-step p {
+  margin: 0;
+  color: var(--text-soft, #555);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.how-step-number {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1px solid currentColor;
+  font-weight: 600;
+}
+
+@media (max-width: 720px) {
+  .how-steps {
+    grid-template-columns: 1fr;
+  }
+}
