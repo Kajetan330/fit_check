@@ -9,6 +9,7 @@ Production URL: https://fit-check-ecru.vercel.app
 Latest pushed implementation commits before this handoff:
 
 ```text
+7db0ac7 feat: rebrand to ByTaste
 86ad8a0 feat: seed commerce catalog and guard paid edits
 8e65a52 fix: harden checkout and launch security
 23c8660 Real Supabase auth foundation, commerce freeze flag, funnel analytics, trust fixes
