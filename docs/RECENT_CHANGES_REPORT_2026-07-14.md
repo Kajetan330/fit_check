@@ -68,6 +68,26 @@ This keeps the current tested booking path working while avoiding a half-live pa
 - Removed unused `STRIPE_CONNECT_CLIENT_ID` from `.env.example`.
 - Removed Netlify-only `public/_redirects`; Vercel is the production deployment target.
 
+### Supabase Commerce Seed
+
+- Tightened the original `0003` commerce migration so fresh installs create authenticated-only `commerce_events` inserts.
+- Added `supabase/config.toml` for Supabase CLI local development and seed execution.
+- Added `supabase/seed/0001_seed_catalog.sql` for the launch creator catalog:
+  - creator profiles;
+  - service prices;
+  - paid edits;
+  - product picks;
+  - outfit formulas and outfit-item links;
+  - referral links.
+- Documented the seed requirement: sign in once first so `public.profiles` has an auth-backed owner row.
+
+### Paid-Edit Reader Guard
+
+- Updated `/api/paid-edit-access` to return the entitled product, creator handle, product items, outfits, and outfit-item links.
+- Added `src/lib/paidEditAccess.ts` to request entitlement-gated content with the active Supabase session token.
+- Updated the paid-edit reader so Supabase-configured environments verify purchases and entitlements through the API instead of trusting local state.
+- Kept the local reader fallback only for no-credential demo development.
+
 ## Verification Run
 
 Latest local verification should include:
@@ -88,9 +108,10 @@ Run these in Supabase SQL Editor, in order if not already applied:
 
 Then:
 
+- sign in once through the app so `public.profiles` has an auth-backed owner row;
+- run `supabase/seed/0001_seed_catalog.sql`;
 - enable the Google provider in Supabase Auth if Google sign-in should be live;
 - verify storage buckets exist and are private where required;
-- seed real creators, services, paid edits, paid edit items, and outfits;
 - keep `VITE_COMMERCE_ENABLED` off until paid-edit data is seeded and tested;
 - test booking checkout after deploy;
 - test paid-edit checkout only after enabling the commerce flag.
@@ -98,9 +119,9 @@ Then:
 ## Remaining Engineering Priorities
 
 1. Finish the booking wizard with guest-draft preservation through auth.
-2. Move creators, services, and paid edits into Supabase seed data.
-3. Read storefronts and paid edits from Supabase with seeded fallback only for demo mode.
-4. Wire the paid-edit reader to `/api/paid-edit-access`.
-5. Move bookings fully onto the trusted commerce checkout path.
+2. Read storefronts and paid edits from Supabase with seeded fallback only for demo mode.
+3. Move bookings fully onto the trusted commerce checkout path.
+4. Wire creator Studio forms to Supabase writes.
+5. Add signed media reads for private `paid-product-media` assets once product media leaves public launch assets.
 6. Add Stripe Connect Express before claiming automated creator payouts.
-7. Add smoke tests for browse, auth, booking checkout, webhook, and entitlement flows.
+7. Add smoke tests for browse, auth, booking checkout, webhook, entitlement, signed media, and controlled share flows.

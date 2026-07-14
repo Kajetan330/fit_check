@@ -23,6 +23,17 @@ Implemented from the same-day technical review:
 - The service worker now skips caching Supabase-hosted URLs so signed URLs and auth/storage resources do not become stale.
 - Removed the unused `STRIPE_CONNECT_CLIENT_ID` placeholder and the Netlify-only `public/_redirects` file. Vercel remains the production deployment target.
 
+### Change 2026-07-14: Supabase Commerce Seed And Paid Reader Guard
+
+Implemented from the remaining launch implementation plan:
+
+- `supabase/migrations/0003_paid_edits_and_entitlements.sql` now creates the authenticated-only `commerce_events` insert policy directly for fresh installs. `0005_security_hardening.sql` remains as an existing-project backstop.
+- `supabase/config.toml` adopts Supabase CLI defaults for local development, auth redirect URLs, storage, Studio, and seed execution.
+- `supabase/seed/0001_seed_catalog.sql` seeds the current launch catalog into Supabase: creators, services, paid edits, product items, outfit formulas, outfit-item links, and referral links. It is idempotent and attaches seeded creators to an existing auth-backed profile.
+- `api/paid-edit-access.ts` now returns creator handle and outfit-item links with entitled paid content.
+- `src/lib/paidEditAccess.ts` maps the entitlement API payload into frontend commerce models.
+- `PaidEditReaderPage` now calls `/api/paid-edit-access` whenever Supabase is configured, with loading, pending, refunded, revoked, missing, and network states. The old local entitlement path remains only for no-credential demo development.
+
 ### Change 2026-07-14: Real Auth Foundation, Commerce Freeze, Analytics
 
 Implemented from `docs/FITCHECK_PHASE2_SPEC.md` with a bookings-first launch decision:
@@ -79,6 +90,7 @@ The app still supports the original demo journey. Do not remove the seeded/local
 - `src/state.tsx` - local MVP state store plus Supabase auth session mirroring.
 - `src/lib/auth.ts` - Supabase Google OAuth, magic-link auth, redirect preservation, sign-out, and session-to-user mapping.
 - `src/lib/commerce.ts` - frontend helper for trusted commerce checkout and `VITE_COMMERCE_ENABLED` freeze flag.
+- `src/lib/paidEditAccess.ts` - frontend helper for entitlement-gated paid edit reads.
 - `src/lib/sharing.ts` - referral capture, safe redirects, and share URL helpers.
 - `src/features/sharing/ShareButton.tsx` - Web Share API with clipboard/manual fallback.
 - `api/create-commerce-checkout.ts` - trusted checkout endpoint. Browser should send only trusted IDs, not price/title.
@@ -89,6 +101,8 @@ The app still supports the original demo journey. Do not remove the seeded/local
 - `supabase/migrations/0003_paid_edits_and_entitlements.sql` - paid edit, purchase, entitlement, referral, share, and commerce-event schema.
 - `supabase/migrations/0004_profiles.sql` - Supabase auth profile table, signup trigger, RLS, and role guard.
 - `supabase/migrations/0005_security_hardening.sql` - profile role hardening and commerce-event insert policy consolidation.
+- `supabase/config.toml` - Supabase CLI local project config.
+- `supabase/seed/0001_seed_catalog.sql` - idempotent Supabase seed for the launch catalog.
 - `scripts/generate-share-pages.mjs` - build-time static share/OG page generator.
 - `docs/COMMERCE_IMPLEMENTATION_STATUS.md` - implementation status for the commerce slice.
 - `docs/FITCHECK_PHASE2_SPEC.md` - Phase 2 plan and acceptance criteria.
@@ -100,6 +114,7 @@ Real/scaffolded production controls:
 
 - Supabase auth session plumbing now exists and can map sessions to app users.
 - Paid edit access is modeled through `product_entitlements`.
+- Paid edit reader access calls the entitlement API in Supabase-configured environments.
 - Checkout prices are designed to load server-side from Supabase.
 - Legacy booking checkout has server-side service price validation while the real booking UUID flow is being finished.
 - Paid-edit checkout is frozen behind `VITE_COMMERCE_ENABLED` until the database is ready.
@@ -114,7 +129,7 @@ Still prototype/demo:
 - Most visible app data still comes from `src/data.ts` and `localStorage`.
 - Creator Studio forms do not yet write to Supabase.
 - Booking creation still has legacy demo behavior unless a real booking UUID exists.
-- Paid edit products, items, outfits, services, and creators need real Supabase seed data before secure paid-edit checkout can be tested end to end.
+- Storefront and paid-edit landing pages still read from seeded frontend data first, even though Supabase seed data now exists.
 - Static share pages are generated SVG/HTML cards for seeded data only.
 - The booking wizard still needs guest-draft preservation and the progressive conversion pass.
 
@@ -123,8 +138,10 @@ Still prototype/demo:
 1. Run `supabase/migrations/0003_paid_edits_and_entitlements.sql` in the Supabase SQL Editor.
 2. Run `supabase/migrations/0004_profiles.sql` in the Supabase SQL Editor.
 3. Run `supabase/migrations/0005_security_hardening.sql` in the Supabase SQL Editor.
-4. Enable Google provider in Supabase Auth if you want the Google button live.
-5. Verify these commerce tables exist:
+4. Sign in once through the app so `public.profiles` has at least one auth-backed owner row.
+5. Run `supabase/seed/0001_seed_catalog.sql` in the Supabase SQL Editor.
+6. Enable Google provider in Supabase Auth if you want the Google button live.
+7. Verify these commerce tables exist:
    - `taste_products`
    - `taste_product_items`
    - `taste_product_outfits`
@@ -134,24 +151,22 @@ Still prototype/demo:
    - `creator_referral_links`
    - `commerce_events`
    - `stripe_events`
-6. Verify the `paid-product-media` storage bucket exists.
-7. Seed real Supabase rows for creators, creator profiles, services, paid edits, paid edit preview/full items, and outfits.
-8. Only after 0003 is applied and seeded, set `VITE_COMMERCE_ENABLED=true` in Vercel if paid-edit purchasing should launch.
-9. Test paid-edit checkout using a real `taste_products.id`.
-10. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.
+8. Verify the `paid-product-media` storage bucket exists.
+9. Only after 0003 is applied and seeded, set `VITE_COMMERCE_ENABLED=true` in Vercel if paid-edit purchasing should launch.
+10. Test paid-edit checkout using a real `taste_products.id`.
+11. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.
 
 ## Recommended Next Engineering Phase
 
 Do this in small commits:
 
 1. Finish the booking wizard with guest-draft preservation.
-2. Move seeded creators/services/paid edits into Supabase seed data.
-3. Add typed Supabase query helpers for creators, services, and paid edits.
-4. Update storefront and paid-edit landing pages to read from Supabase, with fallback seeded data only for local demo mode.
-5. Update the paid-edit reader to call `/api/paid-edit-access` with the Supabase session token.
-6. Replace legacy booking checkout from browser-provided service details with the trusted `booking` path in `/api/create-commerce-checkout`.
-7. Wire creator Studio forms to Supabase writes and RLS.
-8. Add integration tests or scripted smoke tests for checkout, webhook, entitlement, signed media, controlled share links, and auth.
+2. Add typed Supabase query helpers for creators, services, and paid edits.
+3. Update storefront and paid-edit landing pages to read from Supabase, with fallback seeded data only for local demo mode.
+4. Wire signed media reads for `paid-product-media` where product/item media stops using public launch assets.
+5. Replace legacy booking checkout from browser-provided service details with the trusted `booking` path in `/api/create-commerce-checkout`.
+6. Wire creator Studio forms to Supabase writes and RLS.
+7. Add integration tests or scripted smoke tests for checkout, webhook, entitlement, signed media, controlled share links, and auth.
 
 ## Safety Notes
 

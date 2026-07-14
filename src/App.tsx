@@ -68,6 +68,7 @@ import { consumeAuthRedirect, sendMagicLink, signInWithGoogle } from "./lib/auth
 import { createCommerceCheckout, isCommerceEnabled } from "./lib/commerce";
 import { getProductionHealth, type ProductionHealth } from "./lib/health";
 import { createCheckoutSession, getCheckoutStatus } from "./lib/payments";
+import { getPaidEditAccess, type PaidEditAccessResult } from "./lib/paidEditAccess";
 import { captureReferral, creatorSharePath, editSharePath, safeRedirectPath, serviceSharePath, sharePageUrl } from "./lib/sharing";
 import { supabase, supabaseStatus } from "./lib/supabase";
 import { uploadPrivateImage } from "./lib/uploads";
@@ -104,6 +105,47 @@ const paymentLabel: Record<NonNullable<Booking["paymentStatus"]>, string> = {
   released: "Released",
   refunded: "Refunded",
   failed: "Payment failed",
+};
+
+const paidEditAccessCopy: Record<
+  PaidEditAccessResult["state"],
+  {
+    title: string;
+    text: string;
+  }
+> = {
+  entitled: {
+    title: "Access confirmed",
+    text: "Your entitlement is active.",
+  },
+  not_signed_in: {
+    title: "Sign in to read this edit",
+    text: "Paid edits require an active FitCheck account.",
+  },
+  purchase_pending: {
+    title: "Payment pending",
+    text: "Finish checkout before the full edit opens.",
+  },
+  refunded: {
+    title: "Purchase refunded",
+    text: "This paid edit is no longer available for this purchase.",
+  },
+  revoked: {
+    title: "Access revoked",
+    text: "This purchase no longer has an active entitlement.",
+  },
+  missing_product: {
+    title: "Product unavailable",
+    text: "This paid edit is not available for your account.",
+  },
+  missing_purchase: {
+    title: "Purchase not found",
+    text: "This paid edit is not in your library.",
+  },
+  network_error: {
+    title: "Access check unavailable",
+    text: "We could not verify this entitlement right now. Try again in a moment.",
+  },
 };
 
 const newBookingReference = () =>
@@ -949,6 +991,23 @@ function PaidEditReaderPage() {
   const { purchaseId = "" } = useParams();
   const { state } = useAppState();
   const location = useLocation();
+  const [remoteAccess, setRemoteAccess] = useState<
+    PaidEditAccessResult | { state: "loading"; items: TasteProductItem[]; outfits: TasteProductOutfit[] }
+  >({ state: "loading", items: [], outfits: [] });
+
+  useEffect(() => {
+    if (!supabase || !state.user) return;
+
+    let isCurrent = true;
+    setRemoteAccess({ state: "loading", items: [], outfits: [] });
+    getPaidEditAccess(purchaseId).then((result) => {
+      if (isCurrent) setRemoteAccess(result);
+    });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [purchaseId, state.user?.email, state.user?.supabaseId]);
 
   if (!state.user) {
     return (
@@ -956,6 +1015,32 @@ function PaidEditReaderPage() {
         title="Sign in to read this edit"
         text="Paid edits require an account and an active entitlement."
         redirect={location.pathname}
+      />
+    );
+  }
+
+  if (supabase) {
+    if (remoteAccess.state === "loading") {
+      return (
+        <CenteredPanel>
+          <Loader2 className="spin" size={34} />
+          <h1>Checking edit access</h1>
+          <p>FitCheck is verifying your purchase and entitlement before loading paid content.</p>
+        </CenteredPanel>
+      );
+    }
+
+    if (remoteAccess.state !== "entitled" || !remoteAccess.product) {
+      const copy = paidEditAccessCopy[remoteAccess.state] ?? paidEditAccessCopy.network_error;
+      return <AccessStatePanel title={copy.title} text={remoteAccess.message ?? copy.text} />;
+    }
+
+    return (
+      <PaidEditReaderContent
+        product={remoteAccess.product}
+        items={remoteAccess.items}
+        outfits={remoteAccess.outfits}
+        source="supabase"
       />
     );
   }
@@ -985,6 +1070,20 @@ function PaidEditReaderPage() {
   const items = tasteProductFullItems(product.id);
   const outfits = tasteProductFullOutfits(product.id);
 
+  return <PaidEditReaderContent product={product} items={items} outfits={outfits} source="local" />;
+}
+
+function PaidEditReaderContent({
+  product,
+  items,
+  outfits,
+  source,
+}: {
+  product: TasteProduct;
+  items: TasteProductItem[];
+  outfits: TasteProductOutfit[];
+  source: "local" | "supabase";
+}) {
   return (
     <div className="page-stack">
       <section className="workspace-header">
@@ -998,7 +1097,7 @@ function PaidEditReaderPage() {
           Entitled
         </span>
       </section>
-      {import.meta.env.DEV ? (
+      {source === "local" && import.meta.env.DEV ? (
         <div className="setup-note">
           <Database size={18} />
           This reader uses a local demo entitlement. Production access is enforced by `/api/paid-edit-access`.

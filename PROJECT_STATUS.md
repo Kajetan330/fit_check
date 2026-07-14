@@ -23,6 +23,8 @@
 - Stripe checkout session status persistence is scaffolded through `checkout_sessions` and `/api/checkout-status`.
 - Production health checks are exposed through `/api/health` and shown on `/launch` without displaying secret values.
 - Creator-led commerce architecture is scaffolded with paid edits, entitlement tables, share-link hashing, trusted checkout endpoints, generated share metadata pages, and storefront/library routes.
+- Paid-edit reader access now uses `/api/paid-edit-access` whenever Supabase is configured, so production access depends on real purchases and entitlements instead of local state.
+- Supabase CLI config and an idempotent catalog seed are included for creators, services, paid edits, item picks, outfit formulas, and referral links.
 - The latest implementation handoff for future developers is tracked in `docs/NEXT_DEVELOPER_HANDOFF.md`.
 - The final finish plan is tracked in `docs/FINAL_FINISH_PLAN.md`.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
@@ -104,6 +106,8 @@ npm run dev
 - Stripe checkout and webhook serverless API scaffolding.
 - Production health endpoint for checking Stripe/Supabase deployment wiring.
 - Paid-edit commerce migration, server endpoints, storefront UI, customer library, creator Studio entries, and generated social-preview pages.
+- Authenticated-only commerce event policy and Supabase catalog seed for the commerce launch catalog.
+- Supabase-backed paid-edit reader guard with loading, missing purchase, pending payment, refunded, revoked, and network states.
 - PWA service worker for production shell caching.
 - Local original media assets replacing external image URLs.
 - Brand assets and brand usage notes.
@@ -118,6 +122,7 @@ npm run dev
 
 - Create Supabase and Stripe projects and add live credentials.
 - Run Supabase migrations `0001_initial_schema.sql` and `0002_checkout_sessions.sql`, then verify RLS/storage policies.
+- Run Supabase migrations `0003_paid_edits_and_entitlements.sql`, `0004_profiles.sql`, and `0005_security_hardening.sql`, then run `seed/0001_seed_catalog.sql` after at least one auth profile exists.
 - Replace local demo persistence with Supabase reads/writes in the app state layer.
 - Connect full booking records to Supabase once creator/service IDs are live in the database.
 - Connect real upload/storage for closet and booking images.

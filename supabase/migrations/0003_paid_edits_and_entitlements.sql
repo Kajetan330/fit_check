@@ -361,8 +361,10 @@ create policy "Creators manage own referral links" on public.creator_referral_li
   with check (public.owns_creator_profile(creator_id) or public.is_admin());
 
 drop policy if exists "Anyone may create limited commerce events" on public.commerce_events;
-create policy "Anyone may create limited commerce events" on public.commerce_events
-  for insert with check (true);
+drop policy if exists "Authenticated users create limited commerce events" on public.commerce_events;
+create policy "Authenticated users create limited commerce events" on public.commerce_events
+  for insert to authenticated
+  with check (user_id = auth.uid());
 
 drop policy if exists "Creators read own commerce events" on public.commerce_events;
 create policy "Creators read own commerce events" on public.commerce_events

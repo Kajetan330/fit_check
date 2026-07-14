@@ -1,6 +1,6 @@
 # FitCheck Commerce Implementation Status
 
-Last updated: July 13, 2026
+Last updated: July 14, 2026
 
 ## Implemented In This Slice
 
@@ -19,6 +19,8 @@ Last updated: July 13, 2026
 - New migration `0003_paid_edits_and_entitlements.sql` adds paid edits, purchases, entitlements, controlled share links, referrals, commerce events, Stripe event logs, and private paid media bucket.
 - New server endpoints provide trusted commerce checkout, paid-edit access checks, private media signed URLs, controlled share resource reads, and controlled share link creation.
 - Stripe webhook processing is idempotent through `stripe_events` and can grant/revoke paid-edit entitlements.
+- Supabase CLI config and `seed/0001_seed_catalog.sql` now seed the current launch catalog into the commerce schema.
+- The paid-edit reader calls `/api/paid-edit-access` in Supabase-configured environments and falls back to local entitlements only when Supabase is not configured.
 
 ## Security Controls Added
 
@@ -35,10 +37,8 @@ Last updated: July 13, 2026
 
 ## Still Prototype
 
-- The current visible paid-edit reader uses seeded local entitlements for demo continuity.
-- Full production paid-edit access should switch the reader to `/api/paid-edit-access` with a Supabase session token.
 - Creator storefront/edit Studio forms are not yet writing to Supabase.
-- Static creators/services are still seeded in `src/data.ts`; production should seed or read them from Supabase.
+- Static creators/services are still rendered from `src/data.ts`; production seed data now exists, but storefront and edit landing pages still need Supabase reads.
 - Booking creation still uses the legacy local demo flow until the real booking persistence step is wired into the frontend.
 - The share social images are generated SVG cards. Replace with generated or designed PNG/JPG cards if platform compatibility becomes an issue.
 
@@ -49,6 +49,10 @@ Run:
 ```sql
 -- Supabase SQL Editor
 -- paste and run supabase/migrations/0003_paid_edits_and_entitlements.sql
+-- then run supabase/migrations/0004_profiles.sql if it is not already applied
+-- then run supabase/migrations/0005_security_hardening.sql if it is not already applied
+-- sign in once through the app so public.profiles has an auth-backed row
+-- then paste and run supabase/seed/0001_seed_catalog.sql
 ```
 
 Then verify:
@@ -66,4 +70,4 @@ Then verify:
 
 ## Recommended Next Phase
 
-Move the current seeded creators, services, and paid edits into Supabase and update the frontend reader/storefront queries to use Supabase data with RLS. After that, wire the paid-edit reader to `/api/paid-edit-access` and wire creator Studio forms to the new tables.
+Update storefront and paid-edit landing pages to read from Supabase with local data as a no-credential fallback. After that, wire creator Studio forms to Supabase writes and add smoke tests for checkout, webhook, entitlement reads, signed media, and controlled share links.

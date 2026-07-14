@@ -58,7 +58,7 @@ export default async function handler(req: any, res: any) {
   }
 
   if (!purchase) {
-    res.status(404).json({ state: "missing_product", message: "Purchase was not found for this account." });
+    res.status(404).json({ state: "missing_purchase", message: "Purchase was not found for this account." });
     return;
   }
 
@@ -97,5 +97,33 @@ export default async function handler(req: any, res: any) {
     supabase.from("taste_product_outfits").select("*").eq("product_id", purchase.product_id).order("sort_order"),
   ]);
 
-  res.status(200).json({ state: "entitled", purchase, entitlement, product, items: items ?? [], outfits: outfits ?? [] });
+  if (!product) {
+    res.status(404).json({ state: "missing_product", purchase, message: "Product was not found." });
+    return;
+  }
+
+  const [{ data: creator }, { data: outfitItems }] = await Promise.all([
+    supabase.from("creator_profiles").select("handle").eq("id", product.creator_id).maybeSingle(),
+    outfits?.length
+      ? supabase
+          .from("taste_product_outfit_items")
+          .select("outfit_id,item_id,sort_order")
+          .in(
+            "outfit_id",
+            outfits.map((item: any) => item.id),
+          )
+          .order("sort_order")
+      : Promise.resolve({ data: [] }),
+  ]);
+
+  res.status(200).json({
+    state: "entitled",
+    purchase,
+    entitlement,
+    product,
+    creator,
+    items: items ?? [],
+    outfits: outfits ?? [],
+    outfitItems: outfitItems ?? [],
+  });
 }

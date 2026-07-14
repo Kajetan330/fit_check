@@ -31,8 +31,9 @@ create policy "Users can update own profile details" on public.profiles
 -- Do not let anonymous clients flood analytics. Server-side API writes use the
 -- service role and bypass RLS; signed-in clients may only write their own event.
 drop policy if exists "Anyone may create limited commerce events" on public.commerce_events;
+drop policy if exists "Authenticated users create limited commerce events" on public.commerce_events;
 drop policy if exists "Authenticated users create own commerce events" on public.commerce_events;
 create policy "Authenticated users create own commerce events" on public.commerce_events
   for insert
   to authenticated
-  with check (auth.uid() is not null and (user_id is null or user_id = auth.uid()));
+  with check (user_id = auth.uid());

@@ -13,7 +13,11 @@ Create a Supabase project, then run:
 -- then paste and run supabase/migrations/0003_paid_edits_and_entitlements.sql
 -- then paste and run supabase/migrations/0004_profiles.sql
 -- then paste and run supabase/migrations/0005_security_hardening.sql
+-- sign in once through the app so public.profiles has an owner row
+-- then paste and run supabase/seed/0001_seed_catalog.sql
 ```
+
+The seed mirrors the current creator catalog into Supabase: creator profiles, service prices, paid edits, product picks, outfit formulas, and referral links. It is idempotent. If it reports that it was skipped, create one auth-backed profile first, then rerun it.
 
 Add these frontend variables in Vercel and `.env.local`:
 
@@ -32,8 +36,12 @@ Also configure Auth redirect URLs:
 
 ```text
 http://127.0.0.1:5173
+http://127.0.0.1:5173/**
 https://your-production-domain.com
+https://your-production-domain.com/**
 ```
+
+For Google sign-in, enable the Google provider in Supabase Auth, add the provider credentials, and keep email magic link enabled as the fallback path.
 
 ## 2. Stripe
 
