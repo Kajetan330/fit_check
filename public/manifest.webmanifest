@@ -1,11 +1,11 @@
 {
-  "name": "FitCheck",
-  "short_name": "FitCheck",
+  "name": "BYTASTE",
+  "short_name": "BYTASTE",
   "description": "Fashion creator profiles, styling services, and lookbooks.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#fbfbf8",
-  "theme_color": "#111111",
+  "background_color": "#f5f1f0",
+  "theme_color": "#1b1418",
   "icons": [
     {
       "src": "/icon.svg",

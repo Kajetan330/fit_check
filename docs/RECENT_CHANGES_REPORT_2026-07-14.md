@@ -1,4 +1,4 @@
-# FitCheck Recent Changes Report
+# ByTaste Recent Changes Report
 
 Date: July 14, 2026
 
@@ -6,7 +6,7 @@ This report summarizes the recent implementation work on top of the creator-comm
 
 ## Product Direction
 
-FitCheck is now clearly on a bookings-first launch path:
+ByTaste is now clearly on a bookings-first launch path:
 
 - one-to-one styling bookings remain the active revenue path;
 - one-to-many paid edits remain browsable as editorial taste proof;
@@ -21,7 +21,7 @@ This keeps the current tested booking path working while avoiding a half-live pa
 - Deleted the Style Quiz page, quiz data, quiz type, and quiz CSS.
 - `/quiz` now redirects to `/` so old links do not break.
 - Removed quiz CTAs and quiz references from customer-facing docs and QA flow.
-- Added `docs/FITCHECK_PHASE2_SPEC.md` to capture the Phase 2 plan.
+- Added `docs/BYTASTE_PHASE2_SPEC.md` to capture the Phase 2 plan.
 
 ### Real Auth Foundation
 
@@ -79,6 +79,7 @@ This keeps the current tested booking path working while avoiding a half-live pa
   - product picks;
   - outfit formulas and outfit-item links;
   - referral links.
+- Added `supabase/migrations/0006_taste_item_verdict.sql` for chosen versus rejected product picks.
 - Documented the seed requirement: sign in once first so `public.profiles` has an auth-backed owner row.
 
 ### Paid-Edit Reader Guard
@@ -105,6 +106,7 @@ Run these in Supabase SQL Editor, in order if not already applied:
 1. `supabase/migrations/0003_paid_edits_and_entitlements.sql`
 2. `supabase/migrations/0004_profiles.sql`
 3. `supabase/migrations/0005_security_hardening.sql`
+4. `supabase/migrations/0006_taste_item_verdict.sql`
 
 Then:
 

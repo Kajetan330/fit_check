@@ -1,20 +1,21 @@
-# FitCheck Brand Assets
+# ByTaste Brand Assets
 
 Project-owned vector assets are included in `public/brand/`.
 
 ## Files
 
-- `public/brand/fitcheck-mark.svg`: square app/social mark.
-- `public/brand/fitcheck-wordmark.svg`: horizontal wordmark with tagline.
+- `public/brand/bytaste-mark.svg`: square app/social mark.
+- `public/brand/bytaste-wordmark.svg`: horizontal wordmark.
 - `public/icon.svg`: browser/PWA icon derived from the mark.
 
 ## Brand Decisions
 
-- Primary ink: `#151515`
-- Paper: `#FBFBF8`
-- Accent: `#D7FF4F`
-- Secondary support colors: muted teal, burgundy, denim, charcoal, ivory.
-- Tone: premium, practical, creator-first, not luxury-gatekept.
+- Primary ink: `#1B1418`
+- Paper: `#F5F1F0`
+- Accent: `#7C2237`
+- Blush panel wash: `#E9DCDC`
+- Stone text: `#8B8084`
+- Tone: premium, practical, creator-first, editorial, not luxury-gatekept.
 
 ## Media Assets
 

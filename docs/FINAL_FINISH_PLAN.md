@@ -1,10 +1,10 @@
-# FitCheck Final Finish Plan
+# ByTaste Final Finish Plan
 
 Last updated: July 6, 2026
 
 ## Current State
 
-FitCheck is deployed at:
+ByTaste is deployed at:
 
 ```text
 https://fit-check-ecru.vercel.app
@@ -93,7 +93,7 @@ The app has:
 
 - Standard creator take rate: 18%.
 - Founding/Pro creator take rate: 12%.
-- Capsule affiliate split: 70% creator / 30% FitCheck.
+- Capsule affiliate split: 70% creator / 30% ByTaste.
 - Customer approval window: 72 hours after delivery.
 - Cancellation refund: before creator work starts or within 2 hours of booking.
 - Dispute window: 7 days after delivery.

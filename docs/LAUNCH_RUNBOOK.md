@@ -1,4 +1,4 @@
-# FitCheck Launch Runbook
+# ByTaste Launch Runbook
 
 Status as of 2026-07-13. Everything below is verified or has exact steps.
 
@@ -49,7 +49,7 @@ generated people/customer imagery with creator-provided or licensed photos
 and collect written releases. Mechanically:
 
 1. Drop replacement JPGs into `public/assets/media/` using the same
-   filenames (`fitcheck-media-01.jpg` ... `-16.jpg`), or
+   filenames (`bytaste-media-01.jpg` ... `-16.jpg`), or
 2. Edit the `mediaMap` at the top of `src/data.ts` to point at new files.
 3. Keep a signed release on file for every identifiable person.
 4. Commit, push, redeploy.

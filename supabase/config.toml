@@ -1,4 +1,4 @@
-project_id = "fitcheck"
+project_id = "bytaste"
 
 [api]
 enabled = true

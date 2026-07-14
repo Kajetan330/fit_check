@@ -1,4 +1,4 @@
--- FitCheck catalog seed.
+-- ByTaste catalog seed.
 --
 -- Run after migrations 0001-0005. The seed intentionally attaches the demo
 -- creator catalog to an existing Supabase profile instead of inserting auth
@@ -26,7 +26,7 @@ begin
   limit 1;
 
   if owner_id is null then
-    raise notice 'FitCheck seed skipped: create at least one Supabase auth profile, then rerun supabase/seed/0001_seed_catalog.sql.';
+    raise notice 'ByTaste seed skipped: create at least one Supabase auth profile, then rerun supabase/seed/0001_seed_catalog.sql.';
     return;
   end if;
 
@@ -67,8 +67,8 @@ begin
       'Amara Okafor',
       'Lagos and London',
       'Soft minimalist wardrobes with practical polish and warm-weather tailoring.',
-      '/assets/media/fitcheck-media-03.jpg',
-      '/assets/media/fitcheck-media-01.jpg',
+      '/assets/media/bytaste-media-03.jpg',
+      '/assets/media/bytaste-media-01.jpg',
       array['Fashion']::text[],
       array['soft minimalist', 'tailoring', 'warm neutrals', 'workwear']::text[],
       '@amara.styles',
@@ -96,8 +96,8 @@ begin
       'Lena Park',
       'Seoul',
       'Sharp city uniforms, modular layers, and capsule systems for small closets.',
-      '/assets/media/fitcheck-media-08.jpg',
-      '/assets/media/fitcheck-media-07.jpg',
+      '/assets/media/bytaste-media-08.jpg',
+      '/assets/media/bytaste-media-07.jpg',
       array['Fashion']::text[],
       array['streetwear', 'monochrome', 'modular', 'city']::text[],
       '@lena.layers',
@@ -125,8 +125,8 @@ begin
       'Noor Hassan',
       'Toronto',
       'Modest occasionwear, elegant proportions, and color stories that photograph beautifully.',
-      '/assets/media/fitcheck-media-13.jpg',
-      '/assets/media/fitcheck-media-10.jpg',
+      '/assets/media/bytaste-media-13.jpg',
+      '/assets/media/bytaste-media-10.jpg',
       array['Fashion']::text[],
       array['modest', 'occasionwear', 'romantic', 'color']::text[],
       '@noor.edits',
@@ -154,8 +154,8 @@ begin
       'Ivy Marlowe',
       'New York',
       'Dark academia, thrifted tailoring, and designer drops for people who love texture.',
-      '/assets/media/fitcheck-media-14.jpg',
-      '/assets/media/fitcheck-media-15.jpg',
+      '/assets/media/bytaste-media-14.jpg',
+      '/assets/media/bytaste-media-15.jpg',
       array['Fashion', 'Design']::text[],
       array['dark academia', 'vintage', 'texture', 'designer']::text[],
       '@ivymakes',
@@ -268,10 +268,10 @@ begin
     published_at
   )
   values
-    ('11111111-1111-4111-8111-111111111111', amara_id, 'copenhagen-2027-edit', 'Copenhagen 2027 Edit', 'Twenty warm-minimal pieces I would actually buy now.', 'A paid seasonal taste product for followers who want Amara''s buying eye without booking a full wardrobe audit.', '/assets/media/fitcheck-media-03.jpg', 'The edit is built around soft tailoring, controlled texture, and pieces that can move from office to travel.', 1900, 'usd', 'paid', 'published', 'Some shopping links may be affiliate links. Amara''s notes stay independent of commission.', '2026-07-08'::timestamptz),
-    ('22222222-2222-4222-8222-222222222222', lena_id, 'rainy-city-capsule', 'Rainy City Capsule', 'A compact weatherproof edit for small closets.', 'Lena''s one-to-many shopping list for followers who want city layers that look intentional, not tactical.', '/assets/media/fitcheck-media-09.jpg', 'Start with one technical shell, one clean trouser, and one bag that can handle weather.', 1500, 'usd', 'paid', 'published', 'Contains affiliate shopping links where available.', '2026-07-06'::timestamptz),
-    ('33333333-3333-4333-8333-333333333333', noor_id, 'wedding-guest-under-200', 'Wedding Guest Dresses Under $200', 'Modest, camera-ready options with accessory formulas.', 'Noor''s paid edit for followers who need event polish fast and want a clear read on fit, color, and formality.', '/assets/media/fitcheck-media-11.jpg', 'The strongest low-stress guest looks usually need one saturated color and one metallic tension point.', 1700, 'usd', 'paid', 'published', 'Some product links may generate affiliate revenue.', '2026-07-03'::timestamptz),
-    ('44444444-4444-4444-8444-444444444444', ivy_id, 'vintage-listings-worth-buying', 'Vintage Listings Worth Buying This Week', 'Texture, tailoring, and repairable finds before they disappear.', 'A weekly paid edit that turns Ivy''s archive eye into a fast shopping decision layer for followers.', '/assets/media/fitcheck-media-12.jpg', 'This week is about wool texture, narrow collars, and suede accessories with fixable flaws.', 1200, 'usd', 'paid', 'published', 'Listings may disappear quickly; some links may be affiliate links.', '2026-07-07'::timestamptz)
+    ('11111111-1111-4111-8111-111111111111', amara_id, 'copenhagen-2027-edit', 'Copenhagen 2027 Edit', 'Twenty warm-minimal pieces I would actually buy now.', 'A paid seasonal taste product for followers who want Amara''s buying eye without booking a full wardrobe audit.', '/assets/media/bytaste-media-03.jpg', 'The edit is built around soft tailoring, controlled texture, and pieces that can move from office to travel.', 1900, 'usd', 'paid', 'published', 'Some shopping links may be affiliate links. Amara''s notes stay independent of commission.', '2026-07-08'::timestamptz),
+    ('22222222-2222-4222-8222-222222222222', lena_id, 'rainy-city-capsule', 'Rainy City Capsule', 'A compact weatherproof edit for small closets.', 'Lena''s one-to-many shopping list for followers who want city layers that look intentional, not tactical.', '/assets/media/bytaste-media-09.jpg', 'Start with one technical shell, one clean trouser, and one bag that can handle weather.', 1500, 'usd', 'paid', 'published', 'Contains affiliate shopping links where available.', '2026-07-06'::timestamptz),
+    ('33333333-3333-4333-8333-333333333333', noor_id, 'wedding-guest-under-200', 'Wedding Guest Dresses Under $200', 'Modest, camera-ready options with accessory formulas.', 'Noor''s paid edit for followers who need event polish fast and want a clear read on fit, color, and formality.', '/assets/media/bytaste-media-11.jpg', 'The strongest low-stress guest looks usually need one saturated color and one metallic tension point.', 1700, 'usd', 'paid', 'published', 'Some product links may generate affiliate revenue.', '2026-07-03'::timestamptz),
+    ('44444444-4444-4444-8444-444444444444', ivy_id, 'vintage-listings-worth-buying', 'Vintage Listings Worth Buying This Week', 'Texture, tailoring, and repairable finds before they disappear.', 'A weekly paid edit that turns Ivy''s archive eye into a fast shopping decision layer for followers.', '/assets/media/bytaste-media-12.jpg', 'This week is about wool texture, narrow collars, and suede accessories with fixable flaws.', 1200, 'usd', 'paid', 'published', 'Listings may disappear quickly; some links may be affiliate links.', '2026-07-07'::timestamptz)
   on conflict (id) do update set
     creator_id = excluded.creator_id,
     slug = excluded.slug,
@@ -322,19 +322,21 @@ begin
     price_label,
     creator_note,
     is_preview,
+    verdict,
     sort_order
   )
   values
-    ('11111111-aaaa-4aaa-8aaa-000000000001', '11111111-1111-4111-8111-111111111111', 'Washed linen blazer', 'Arket', '/assets/media/fitcheck-media-16.jpg', null, '$189', 'Preview: the shoulder is soft enough for travel but still gives the outfit a frame.', true, 1),
-    ('11111111-aaaa-4aaa-8aaa-000000000002', '11111111-1111-4111-8111-111111111111', 'Cream column tank', 'COS', '/assets/media/fitcheck-media-05.jpg', null, '$45', 'Preview: use this as the quiet base under every stronger texture.', true, 2),
-    ('11111111-aaaa-4aaa-8aaa-000000000003', '11111111-1111-4111-8111-111111111111', 'Cognac city slingback', 'Independent seller', '/assets/media/fitcheck-media-06.jpg', 'https://example.com/cognac-city-slingback', '$128', 'Full edit: this warms the entire palette and stops the neutral base from going flat.', false, 3),
-    ('11111111-aaaa-4aaa-8aaa-000000000004', '11111111-1111-4111-8111-111111111111', 'Structured raffia tote', 'Cuyana', '/assets/media/fitcheck-media-06.jpg', 'https://example.com/structured-raffia-tote', '$268', 'Full edit: the texture makes the office pieces feel summer-specific without becoming beachwear.', false, 4),
-    ('22222222-aaaa-4aaa-8aaa-000000000001', '22222222-2222-4222-8222-222222222222', 'Matte shell jacket', 'Rains', '/assets/media/fitcheck-media-09.jpg', null, '$140', 'Preview: matte finish keeps the technical layer from taking over the whole outfit.', true, 1),
-    ('22222222-aaaa-4aaa-8aaa-000000000002', '22222222-2222-4222-8222-222222222222', 'Nylon midi skirt', 'Weekday', '/assets/media/fitcheck-media-08.jpg', 'https://example.com/nylon-midi-skirt', '$69', 'Full edit: gives the capsule motion while staying weather-safe.', false, 2),
-    ('33333333-aaaa-4aaa-8aaa-000000000001', '33333333-3333-4333-8333-333333333333', 'Long-sleeve satin dress', 'Aab', '/assets/media/fitcheck-media-11.jpg', null, '$178', 'Preview: the sleeve and drape give coverage without losing occasion softness.', true, 1),
-    ('33333333-aaaa-4aaa-8aaa-000000000002', '33333333-3333-4333-8333-333333333333', 'Metallic low mule', 'Reformation', '/assets/media/fitcheck-media-06.jpg', 'https://example.com/metallic-low-mule', '$168', 'Full edit: a low metallic shoe raises formality while keeping the dress wearable.', false, 2),
-    ('44444444-aaaa-4aaa-8aaa-000000000001', '44444444-4444-4444-8444-444444444444', 'Narrow-collar wool blazer', 'Vintage', '/assets/media/fitcheck-media-12.jpg', null, '$88', 'Preview: inspect collar roll and lining first; this shape is worth tailoring.', true, 1),
-    ('44444444-aaaa-4aaa-8aaa-000000000002', '44444444-4444-4444-8444-444444444444', 'Deadstock ribbon bag', 'Archive seller', '/assets/media/fitcheck-media-06.jpg', 'https://example.com/deadstock-ribbon-bag', '$126', 'Full edit: the trim reads intentional with wool, not costume, if the outfit stays otherwise matte.', false, 2)
+    ('11111111-aaaa-4aaa-8aaa-000000000001', '11111111-1111-4111-8111-111111111111', 'Washed linen blazer', 'Arket', '/assets/media/bytaste-media-16.jpg', null, '$189', 'Preview: the shoulder is soft enough for travel but still gives the outfit a frame.', true, 'chosen', 1),
+    ('11111111-aaaa-4aaa-8aaa-000000000002', '11111111-1111-4111-8111-111111111111', 'Cream column tank', 'COS', '/assets/media/bytaste-media-05.jpg', null, '$45', 'Preview: use this as the quiet base under every stronger texture.', true, 'chosen', 2),
+    ('11111111-aaaa-4aaa-8aaa-000000000003', '11111111-1111-4111-8111-111111111111', 'Cognac city slingback', 'Independent seller', '/assets/media/bytaste-media-06.jpg', 'https://example.com/cognac-city-slingback', '$128', 'Full edit: this warms the entire palette and stops the neutral base from going flat.', false, 'chosen', 3),
+    ('11111111-aaaa-4aaa-8aaa-000000000004', '11111111-1111-4111-8111-111111111111', 'Structured raffia tote', 'Cuyana', '/assets/media/bytaste-media-06.jpg', 'https://example.com/structured-raffia-tote', '$268', 'Full edit: the texture makes the office pieces feel summer-specific without becoming beachwear.', false, 'chosen', 4),
+    ('11111111-aaaa-4aaa-8aaa-000000000005', '11111111-1111-4111-8111-111111111111', 'Cropped puffer', 'Trend rack', '/assets/media/bytaste-media-03.jpg', null, null, 'Preview: skip it here. The cropped volume fights the long-line tailoring this edit is built around.', true, 'rejected', 5),
+    ('22222222-aaaa-4aaa-8aaa-000000000001', '22222222-2222-4222-8222-222222222222', 'Matte shell jacket', 'Rains', '/assets/media/bytaste-media-09.jpg', null, '$140', 'Preview: matte finish keeps the technical layer from taking over the whole outfit.', true, 'chosen', 1),
+    ('22222222-aaaa-4aaa-8aaa-000000000002', '22222222-2222-4222-8222-222222222222', 'Nylon midi skirt', 'Weekday', '/assets/media/bytaste-media-08.jpg', 'https://example.com/nylon-midi-skirt', '$69', 'Full edit: gives the capsule motion while staying weather-safe.', false, 'chosen', 2),
+    ('33333333-aaaa-4aaa-8aaa-000000000001', '33333333-3333-4333-8333-333333333333', 'Long-sleeve satin dress', 'Aab', '/assets/media/bytaste-media-11.jpg', null, '$178', 'Preview: the sleeve and drape give coverage without losing occasion softness.', true, 'chosen', 1),
+    ('33333333-aaaa-4aaa-8aaa-000000000002', '33333333-3333-4333-8333-333333333333', 'Metallic low mule', 'Reformation', '/assets/media/bytaste-media-06.jpg', 'https://example.com/metallic-low-mule', '$168', 'Full edit: a low metallic shoe raises formality while keeping the dress wearable.', false, 'chosen', 2),
+    ('44444444-aaaa-4aaa-8aaa-000000000001', '44444444-4444-4444-8444-444444444444', 'Narrow-collar wool blazer', 'Vintage', '/assets/media/bytaste-media-12.jpg', null, '$88', 'Preview: inspect collar roll and lining first; this shape is worth tailoring.', true, 'chosen', 1),
+    ('44444444-aaaa-4aaa-8aaa-000000000002', '44444444-4444-4444-8444-444444444444', 'Deadstock ribbon bag', 'Archive seller', '/assets/media/bytaste-media-06.jpg', 'https://example.com/deadstock-ribbon-bag', '$126', 'Full edit: the trim reads intentional with wool, not costume, if the outfit stays otherwise matte.', false, 'chosen', 2)
   on conflict (id) do update set
     product_id = excluded.product_id,
     name = excluded.name,
@@ -344,6 +346,7 @@ begin
     price_label = excluded.price_label,
     creator_note = excluded.creator_note,
     is_preview = excluded.is_preview,
+    verdict = excluded.verdict,
     sort_order = excluded.sort_order,
     updated_at = now();
 
@@ -357,11 +360,11 @@ begin
     sort_order
   )
   values
-    ('11111111-bbbb-4bbb-8bbb-000000000001', '11111111-1111-4111-8111-111111111111', 'Arrival day tailoring', '/assets/media/fitcheck-media-16.jpg', 'Preview outfit: blazer, column tank, and linen trouser. Keep accessories warm, not black.', true, 1),
-    ('11111111-bbbb-4bbb-8bbb-000000000002', '11111111-1111-4111-8111-111111111111', 'Office to dinner without changing clothes', '/assets/media/fitcheck-media-02.jpg', 'Full edit: the shoe and tote do the evening work; do not add jewelry unless it is sculptural.', false, 2),
-    ('22222222-bbbb-4bbb-8bbb-000000000001', '22222222-2222-4222-8222-222222222222', 'Rain commute, gallery after', '/assets/media/fitcheck-media-09.jpg', 'Preview outfit: keep the shell matte and the base column dark.', true, 1),
-    ('33333333-bbbb-4bbb-8bbb-000000000001', '33333333-3333-4333-8333-333333333333', 'Garden ceremony', '/assets/media/fitcheck-media-11.jpg', 'Preview outfit: saturated dress, low metallic shoe, and one soft wrap.', true, 1),
-    ('44444444-bbbb-4bbb-8bbb-000000000001', '44444444-4444-4444-8444-444444444444', 'Library texture stack', '/assets/media/fitcheck-media-12.jpg', 'Preview outfit: narrow wool over heavy cotton with one small decorative texture.', true, 1)
+    ('11111111-bbbb-4bbb-8bbb-000000000001', '11111111-1111-4111-8111-111111111111', 'Arrival day tailoring', '/assets/media/bytaste-media-16.jpg', 'Preview outfit: blazer, column tank, and linen trouser. Keep accessories warm, not black.', true, 1),
+    ('11111111-bbbb-4bbb-8bbb-000000000002', '11111111-1111-4111-8111-111111111111', 'Office to dinner without changing clothes', '/assets/media/bytaste-media-02.jpg', 'Full edit: the shoe and tote do the evening work; do not add jewelry unless it is sculptural.', false, 2),
+    ('22222222-bbbb-4bbb-8bbb-000000000001', '22222222-2222-4222-8222-222222222222', 'Rain commute, gallery after', '/assets/media/bytaste-media-09.jpg', 'Preview outfit: keep the shell matte and the base column dark.', true, 1),
+    ('33333333-bbbb-4bbb-8bbb-000000000001', '33333333-3333-4333-8333-333333333333', 'Garden ceremony', '/assets/media/bytaste-media-11.jpg', 'Preview outfit: saturated dress, low metallic shoe, and one soft wrap.', true, 1),
+    ('44444444-bbbb-4bbb-8bbb-000000000001', '44444444-4444-4444-8444-444444444444', 'Library texture stack', '/assets/media/bytaste-media-12.jpg', 'Preview outfit: narrow wool over heavy cotton with one small decorative texture.', true, 1)
   on conflict (id) do update set
     product_id = excluded.product_id,
     title = excluded.title,

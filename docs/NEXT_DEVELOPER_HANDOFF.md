@@ -1,4 +1,6 @@
-# FitCheck Next Developer Handoff
+# ByTaste Next Developer Handoff
+
+ByTaste is the new trade name for the project formerly called FitCheck. Preserve the existing `fitcheck-*` browser storage keys until a deliberate migration shim is added.
 
 Last updated: July 14, 2026
 
@@ -14,6 +16,17 @@ e7d16f4 Remove style quiz; update handoff note + Phase 2 spec
 ```
 
 ## Current State
+
+### Change 2026-07-14: ByTaste Rebrand
+
+Implemented the Phase 1-2 code-side rebrand:
+
+- Swapped visible product copy, package metadata, manifest metadata, Stripe-visible line-item prefixes, share-page metadata, and docs from FitCheck to ByTaste/BYTASTE.
+- Added the supplied BYTASTE mark and wordmark in `public/brand/`, replaced `public/icon.svg`, and renamed generated placeholder media to `bytaste-media-*`.
+- Reworked the CSS tokens to pressed powder, aubergine ink, claret, blush, stone, Archivo, Bodoni Moda, 3px corners, and subtler shadows.
+- Added chosen/rejected taste-product item support in TypeScript, local demo data, Supabase migration `0006_taste_item_verdict.sql`, Supabase seed data, API mapping, and paid-edit cards.
+- Regenerated static share pages with BYTASTE Open Graph metadata and claret/powder social cards.
+- Kept `fitcheck-state-v1`, `fitcheck:referral:v1`, and `fitcheck-auth-redirect` untouched to avoid wiping saved visitor state.
 
 ### Change 2026-07-14: Launch Security Hardening
 
@@ -38,7 +51,7 @@ Implemented from the remaining launch implementation plan:
 
 ### Change 2026-07-14: Real Auth Foundation, Commerce Freeze, Analytics
 
-Implemented from `docs/FITCHECK_PHASE2_SPEC.md` with a bookings-first launch decision:
+Implemented from `docs/BYTASTE_PHASE2_SPEC.md` with a bookings-first launch decision:
 
 - **Real Supabase auth**: `src/lib/auth.ts` adds Google OAuth, email magic link, and session-to-user mapping with graceful fallback when `profiles` is missing. Session lifecycle is mirrored into app state, `/auth/callback` exists, customer sign-in has no name field or internal wording, and `signOut` ends the Supabase session too.
 - **Profiles migration**: `supabase/migrations/0004_profiles.sql` adds `profiles`, a signup trigger, RLS, and a role-escalation guard. Manual step: run 0004 in the Supabase SQL Editor and enable the Google provider. Magic link can work with Supabase default email settings.
@@ -51,7 +64,7 @@ Remaining from the Phase 2 spec: booking wizard guest-draft preservation (D1), p
 
 ### Change 2026-07-14: Style Quiz Removed
 
-The Style Quiz has been removed from the product entirely. The implementation follows `docs/FITCHECK_PHASE2_SPEC.md`, Workstream A:
+The Style Quiz has been removed from the product entirely. The implementation follows `docs/BYTASTE_PHASE2_SPEC.md`, Workstream A:
 
 - `StyleQuizPage`, `quizLooks`, `QuizLook`, and `.quiz-*` styles were deleted.
 - `/quiz` now redirects to `/` so old links do not 404.
@@ -66,7 +79,7 @@ Phase 2 status:
 - Real Supabase auth foundation is partially implemented.
 - Booking wizard, analytics verification, and edits-lite remain.
 
-FitCheck is a responsive React/Vite fashion-tech MVP with seeded creator data, local demo state, Supabase schema migrations, Vercel serverless API routes, and Stripe checkout/webhook scaffolding.
+ByTaste is a responsive React/Vite fashion-tech MVP with seeded creator data, local demo state, Supabase schema migrations, Vercel serverless API routes, and Stripe checkout/webhook scaffolding.
 
 The latest work added the first real architecture for creator-led monetisation:
 
@@ -103,11 +116,12 @@ The app still supports the original demo journey. Do not remove the seeded/local
 - `supabase/migrations/0003_paid_edits_and_entitlements.sql` - paid edit, purchase, entitlement, referral, share, and commerce-event schema.
 - `supabase/migrations/0004_profiles.sql` - Supabase auth profile table, signup trigger, RLS, and role guard.
 - `supabase/migrations/0005_security_hardening.sql` - profile role hardening and commerce-event insert policy consolidation.
+- `supabase/migrations/0006_taste_item_verdict.sql` - chosen/rejected product item verdict field.
 - `supabase/config.toml` - Supabase CLI local project config.
 - `supabase/seed/0001_seed_catalog.sql` - idempotent Supabase seed for the launch catalog.
 - `scripts/generate-share-pages.mjs` - build-time static share/OG page generator.
 - `docs/COMMERCE_IMPLEMENTATION_STATUS.md` - implementation status for the commerce slice.
-- `docs/FITCHECK_PHASE2_SPEC.md` - Phase 2 plan and acceptance criteria.
+- `docs/BYTASTE_PHASE2_SPEC.md` - Phase 2 plan and acceptance criteria.
 - `docs/RECENT_CHANGES_REPORT_2026-07-14.md` - concise report of the recent product, auth, commerce, and hardening changes.
 
 ## What Is Real Versus Prototype
@@ -140,10 +154,11 @@ Still prototype/demo:
 1. Run `supabase/migrations/0003_paid_edits_and_entitlements.sql` in the Supabase SQL Editor.
 2. Run `supabase/migrations/0004_profiles.sql` in the Supabase SQL Editor.
 3. Run `supabase/migrations/0005_security_hardening.sql` in the Supabase SQL Editor.
-4. Sign in once through the app so `public.profiles` has at least one auth-backed owner row.
-5. Run `supabase/seed/0001_seed_catalog.sql` in the Supabase SQL Editor.
-6. Enable Google provider in Supabase Auth if you want the Google button live.
-7. Verify these commerce tables exist:
+4. Run `supabase/migrations/0006_taste_item_verdict.sql` in the Supabase SQL Editor.
+5. Sign in once through the app so `public.profiles` has at least one auth-backed owner row.
+6. Run `supabase/seed/0001_seed_catalog.sql` in the Supabase SQL Editor.
+7. Enable Google provider in Supabase Auth if you want the Google button live.
+8. Verify these commerce tables exist:
    - `taste_products`
    - `taste_product_items`
    - `taste_product_outfits`
@@ -153,10 +168,11 @@ Still prototype/demo:
    - `creator_referral_links`
    - `commerce_events`
    - `stripe_events`
-8. Verify the `paid-product-media` storage bucket exists.
-9. Only after 0003 is applied and seeded, set `VITE_COMMERCE_ENABLED=true` in Vercel if paid-edit purchasing should launch.
-10. Test paid-edit checkout using a real `taste_products.id`.
-11. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.
+9. Verify `taste_product_items.verdict` exists.
+10. Verify the `paid-product-media` storage bucket exists.
+11. Only after 0003 is applied and seeded, set `VITE_COMMERCE_ENABLED=true` in Vercel if paid-edit purchasing should launch.
+12. Test paid-edit checkout using a real `taste_products.id`.
+13. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.
 
 ## Recommended Next Engineering Phase
 

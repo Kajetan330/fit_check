@@ -2,27 +2,27 @@ import type { Booking, ClosetItem, Creator, DesignerPiece, Post, Review, Service
 import type { ProductEntitlement, Purchase, TasteProduct, TasteProductItem, TasteProductOutfit } from "./types/commerce";
 
 const mediaMap: Record<string, string> = {
-  "photo-1524504388940-b1c1722653e1": "fitcheck-media-01.jpg",
-  "photo-1515886657613-9f3515b0c78f": "fitcheck-media-03.jpg",
-  "photo-1494790108377-be9c29b29330": "fitcheck-media-07.jpg",
-  "photo-1529139574466-a303027c1d8b": "fitcheck-media-08.jpg",
-  "photo-1531123897727-8f129e1688ce": "fitcheck-media-10.jpg",
-  "photo-1496747611176-843222e1e57c": "fitcheck-media-13.jpg",
-  "photo-1534528741775-53994a69daeb": "fitcheck-media-15.jpg",
-  "photo-1503342217505-b0a15ec3261c": "fitcheck-media-14.jpg",
-  "photo-1516762689617-e1cffcef479d": "fitcheck-media-02.jpg",
-  "photo-1485968579580-b6d095142e6e": "fitcheck-media-16.jpg",
-  "photo-1523398002811-999ca8dec234": "fitcheck-media-09.jpg",
-  "photo-1487412720507-e7ab37603c6f": "fitcheck-media-11.jpg",
-  "photo-1512436991641-6745cdb1723f": "fitcheck-media-12.jpg",
-  "photo-1542291026-7eec264c27ff": "fitcheck-media-06.jpg",
-  "photo-1506629905607-d9c297d1461d": "fitcheck-media-04.jpg",
-  "photo-1542060748-10c28b62716f": "fitcheck-media-05.jpg",
-  "photo-1543163521-1bf539c55dd2": "fitcheck-media-06.jpg",
-  "photo-1551488831-00ddcb6c6bd3": "fitcheck-media-14.jpg",
+  "photo-1524504388940-b1c1722653e1": "bytaste-media-01.jpg",
+  "photo-1515886657613-9f3515b0c78f": "bytaste-media-03.jpg",
+  "photo-1494790108377-be9c29b29330": "bytaste-media-07.jpg",
+  "photo-1529139574466-a303027c1d8b": "bytaste-media-08.jpg",
+  "photo-1531123897727-8f129e1688ce": "bytaste-media-10.jpg",
+  "photo-1496747611176-843222e1e57c": "bytaste-media-13.jpg",
+  "photo-1534528741775-53994a69daeb": "bytaste-media-15.jpg",
+  "photo-1503342217505-b0a15ec3261c": "bytaste-media-14.jpg",
+  "photo-1516762689617-e1cffcef479d": "bytaste-media-02.jpg",
+  "photo-1485968579580-b6d095142e6e": "bytaste-media-16.jpg",
+  "photo-1523398002811-999ca8dec234": "bytaste-media-09.jpg",
+  "photo-1487412720507-e7ab37603c6f": "bytaste-media-11.jpg",
+  "photo-1512436991641-6745cdb1723f": "bytaste-media-12.jpg",
+  "photo-1542291026-7eec264c27ff": "bytaste-media-06.jpg",
+  "photo-1506629905607-d9c297d1461d": "bytaste-media-04.jpg",
+  "photo-1542060748-10c28b62716f": "bytaste-media-05.jpg",
+  "photo-1543163521-1bf539c55dd2": "bytaste-media-06.jpg",
+  "photo-1551488831-00ddcb6c6bd3": "bytaste-media-14.jpg",
 };
 
-const image = (id: string, _width = 1200) => `/assets/media/${mediaMap[id] ?? "fitcheck-media-01.jpg"}`;
+const image = (id: string, _width = 1200) => `/assets/media/${mediaMap[id] ?? "bytaste-media-01.jpg"}`;
 
 const fashionServices: Service[] = [
   {
@@ -313,6 +313,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$189",
     creatorNote: "Preview: the shoulder is soft enough for travel but still gives the outfit a frame.",
     isPreview: true,
+    verdict: "chosen",
     sortOrder: 1,
   },
   {
@@ -324,6 +325,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$45",
     creatorNote: "Preview: use this as the quiet base under every stronger texture.",
     isPreview: true,
+    verdict: "chosen",
     sortOrder: 2,
   },
   {
@@ -336,6 +338,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$128",
     creatorNote: "Full edit: this warms the entire palette and stops the neutral base from going flat.",
     isPreview: false,
+    verdict: "chosen",
     sortOrder: 3,
   },
   {
@@ -348,7 +351,19 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$268",
     creatorNote: "Full edit: the texture makes the office pieces feel summer-specific without becoming beachwear.",
     isPreview: false,
+    verdict: "chosen",
     sortOrder: 4,
+  },
+  {
+    id: "item-amara-rejected-01",
+    productId: "11111111-1111-4111-8111-111111111111",
+    name: "Cropped puffer",
+    brand: "Trend rack",
+    imageUrl: image("photo-1515886657613-9f3515b0c78f"),
+    creatorNote: "Preview: skip it here. The cropped volume fights the long-line tailoring this edit is built around.",
+    isPreview: true,
+    verdict: "rejected",
+    sortOrder: 5,
   },
   {
     id: "item-lena-preview-01",
@@ -359,6 +374,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$140",
     creatorNote: "Preview: matte finish keeps the technical layer from taking over the whole outfit.",
     isPreview: true,
+    verdict: "chosen",
     sortOrder: 1,
   },
   {
@@ -371,6 +387,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$69",
     creatorNote: "Full edit: gives the capsule motion while staying weather-safe.",
     isPreview: false,
+    verdict: "chosen",
     sortOrder: 2,
   },
   {
@@ -382,6 +399,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$178",
     creatorNote: "Preview: the sleeve and drape give coverage without losing occasion softness.",
     isPreview: true,
+    verdict: "chosen",
     sortOrder: 1,
   },
   {
@@ -394,6 +412,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$168",
     creatorNote: "Full edit: a low metallic shoe raises formality while keeping the dress wearable.",
     isPreview: false,
+    verdict: "chosen",
     sortOrder: 2,
   },
   {
@@ -405,6 +424,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$88",
     creatorNote: "Preview: inspect collar roll and lining first; this shape is worth tailoring.",
     isPreview: true,
+    verdict: "chosen",
     sortOrder: 1,
   },
   {
@@ -417,6 +437,7 @@ export const tasteProductItems: TasteProductItem[] = [
     priceLabel: "$126",
     creatorNote: "Full edit: the trim reads intentional with wool, not costume, if the outfit stays otherwise matte.",
     isPreview: false,
+    verdict: "chosen",
     sortOrder: 2,
   },
 ];

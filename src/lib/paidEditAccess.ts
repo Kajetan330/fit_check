@@ -39,6 +39,7 @@ interface ApiItem {
   price_label?: string | null;
   creator_note?: string | null;
   is_preview: boolean;
+  verdict?: "chosen" | "rejected" | null;
   sort_order: number;
 }
 
@@ -118,6 +119,7 @@ function mapItem(row: ApiItem): TasteProductItem {
     priceLabel: row.price_label ?? undefined,
     creatorNote: row.creator_note ?? "",
     isPreview: row.is_preview,
+    verdict: row.verdict ?? "chosen",
     sortOrder: row.sort_order,
   };
 }

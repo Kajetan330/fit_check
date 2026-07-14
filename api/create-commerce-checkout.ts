@@ -95,7 +95,7 @@ export default async function handler(req: any, res: any) {
             currency: "usd",
             unit_amount: booking.price_cents,
             product_data: {
-              name: `FitCheck ${serviceTitle}`,
+              name: `ByTaste ${serviceTitle}`,
             },
           },
         },
@@ -197,7 +197,7 @@ export default async function handler(req: any, res: any) {
           currency: product.currency,
           unit_amount: product.price_cents,
           product_data: {
-            name: `FitCheck ${product.title}`,
+            name: `ByTaste ${product.title}`,
           },
         },
       },

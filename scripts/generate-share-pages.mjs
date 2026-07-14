@@ -12,28 +12,28 @@ const creators = [
     name: "Amara Okafor",
     taste: "Warm minimalism with one precise statement.",
     description: "Soft minimalist wardrobes with practical polish and warm-weather tailoring.",
-    image: "/assets/media/fitcheck-media-03.jpg",
+    image: "/assets/media/bytaste-media-03.jpg",
   },
   {
     handle: "lena-park",
     name: "Lena Park",
     taste: "Modular city layers that earn their space.",
     description: "Sharp city uniforms, modular layers, and capsule systems for small closets.",
-    image: "/assets/media/fitcheck-media-08.jpg",
+    image: "/assets/media/bytaste-media-08.jpg",
   },
   {
     handle: "noor-hassan",
     name: "Noor Hassan",
     taste: "Elegant coverage, saturated color, camera-ready proportions.",
     description: "Modest occasionwear, elegant proportions, and color stories that photograph beautifully.",
-    image: "/assets/media/fitcheck-media-13.jpg",
+    image: "/assets/media/bytaste-media-13.jpg",
   },
   {
     handle: "ivy-marlowe",
     name: "Ivy Marlowe",
     taste: "Texture-led vintage with a designer eye.",
     description: "Dark academia, thrifted tailoring, and designer drops for people who love texture.",
-    image: "/assets/media/fitcheck-media-14.jpg",
+    image: "/assets/media/bytaste-media-14.jpg",
   },
 ];
 
@@ -44,7 +44,7 @@ const edits = [
     title: "Copenhagen 2027 Edit",
     description: "Twenty warm-minimal pieces Amara would actually buy now.",
     price: "$19",
-    image: "/assets/media/fitcheck-media-03.jpg",
+    image: "/assets/media/bytaste-media-03.jpg",
   },
   {
     handle: "lena-park",
@@ -52,7 +52,7 @@ const edits = [
     title: "Rainy City Capsule",
     description: "A compact weatherproof edit for small closets.",
     price: "$15",
-    image: "/assets/media/fitcheck-media-09.jpg",
+    image: "/assets/media/bytaste-media-09.jpg",
   },
   {
     handle: "noor-hassan",
@@ -60,7 +60,7 @@ const edits = [
     title: "Wedding Guest Dresses Under $200",
     description: "Modest, camera-ready options with accessory formulas.",
     price: "$17",
-    image: "/assets/media/fitcheck-media-11.jpg",
+    image: "/assets/media/bytaste-media-11.jpg",
   },
   {
     handle: "ivy-marlowe",
@@ -68,7 +68,7 @@ const edits = [
     title: "Vintage Listings Worth Buying This Week",
     description: "Texture, tailoring, and repairable finds before they disappear.",
     price: "$12",
-    image: "/assets/media/fitcheck-media-12.jpg",
+    image: "/assets/media/bytaste-media-12.jpg",
   },
 ];
 
@@ -81,17 +81,17 @@ function escapeHtml(value) {
 
 function socialSvg({ title, subtitle, image, price }) {
   const accent = price
-    ? `\n  <text x="68" y="560" fill="#d7ff4f" font-size="42" font-weight="800">${escapeHtml(price)}</text>`
+    ? `\n  <text x="68" y="560" fill="#7c2237" font-family="Archivo, Arial, sans-serif" font-size="42" font-weight="800">${escapeHtml(price)}</text>`
     : "";
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#151515"/>
+  <rect width="1200" height="630" fill="#f5f1f0"/>
   <image href="${escapeHtml(image)}" x="690" y="0" width="510" height="630" preserveAspectRatio="xMidYMid slice"/>
-  <rect x="0" y="0" width="760" height="630" fill="#151515"/>
-  <text x="68" y="86" fill="#d7ff4f" font-size="30" font-weight="800">FitCheck</text>
-  <text x="68" y="210" fill="#ffffff" font-size="66" font-weight="900">${escapeHtml(title)}</text>
+  <rect x="0" y="0" width="760" height="630" fill="#1b1418"/>
+  <text x="68" y="86" fill="#7c2237" font-family="Archivo, Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="4">BYTASTE</text>
+  <text x="68" y="210" fill="#f5f1f0" font-family="Bodoni Moda, Didot, serif" font-size="66" font-weight="700">${escapeHtml(title)}</text>
   <foreignObject x="68" y="250" width="560" height="210">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial,sans-serif;color:#d8d8d2;font-size:34px;line-height:1.22;font-weight:600">${escapeHtml(subtitle)}</div>
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Archivo,Arial,sans-serif;color:#e9dcdc;font-size:34px;line-height:1.22;font-weight:600">${escapeHtml(subtitle)}</div>
   </foreignObject>${accent}
 </svg>`;
 }
@@ -112,6 +112,7 @@ function page({ title, description, canonicalPath, imagePath }) {
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:url" content="${canonical}" />
     <meta property="og:image" content="${image}" />
+    <meta property="og:site_name" content="BYTASTE" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
@@ -119,7 +120,7 @@ function page({ title, description, canonicalPath, imagePath }) {
     <meta http-equiv="refresh" content="0; url=${canonicalPath}" />
   </head>
   <body>
-    <p><a href="${canonicalPath}">Open ${escapeHtml(title)} on FitCheck</a></p>
+    <p><a href="${canonicalPath}">Open ${escapeHtml(title)}</a></p>
   </body>
 </html>`;
 }
@@ -135,7 +136,7 @@ for (const creator of creators) {
   writeFileSync(
     join(outDir, `creator-${creator.handle}.html`),
     page({
-      title: `${creator.name} on FitCheck`,
+      title: `${creator.name} on ByTaste`,
       description: creator.description,
       canonicalPath: `/creator/${creator.handle}`,
       imagePath: `/share/${imageName}`,
@@ -152,7 +153,7 @@ for (const edit of edits) {
   writeFileSync(
     join(outDir, `edit-${edit.handle}-${edit.slug}.html`),
     page({
-      title: `${edit.title} on FitCheck`,
+      title: `${edit.title} on ByTaste`,
       description: edit.description,
       canonicalPath: `/creator/${edit.handle}/edit/${edit.slug}`,
       imagePath: `/share/${imageName}`,

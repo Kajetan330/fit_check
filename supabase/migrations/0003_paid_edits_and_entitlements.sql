@@ -40,6 +40,7 @@ create table if not exists public.taste_product_items (
   price_label text,
   creator_note text not null default '',
   is_preview boolean not null default false,
+  verdict text not null default 'chosen' check (verdict in ('chosen', 'rejected')),
   sort_order integer not null default 0,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()

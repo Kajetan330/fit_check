@@ -73,7 +73,7 @@ export async function userFromSession(session: Session): Promise<User> {
   const email = session.user.email ?? "";
   const fallbackName =
     (session.user.user_metadata?.full_name as string | undefined) ||
-    (email ? email.split("@")[0] : "FitCheck member");
+    (email ? email.split("@")[0] : "ByTaste member");
 
   let role: Role = "customer";
   let name = fallbackName;

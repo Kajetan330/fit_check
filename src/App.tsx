@@ -120,7 +120,7 @@ const paidEditAccessCopy: Record<
   },
   not_signed_in: {
     title: "Sign in to read this edit",
-    text: "Paid edits require an active FitCheck account.",
+    text: "Paid edits require an active ByTaste account.",
   },
   purchase_pending: {
     title: "Payment pending",
@@ -244,9 +244,9 @@ function AppShell() {
   return (
     <div className="app-shell">
       <header className="topbar">
-        <Link className="brand" to="/" aria-label="FitCheck home">
-          <span className="brand-mark">F</span>
-          <span>FitCheck</span>
+        <Link className="brand" to="/" aria-label="ByTaste home">
+          <img className="brand-mark" src="/brand/bytaste-mark.svg" alt="" aria-hidden="true" />
+          <span>BYTASTE</span>
         </Link>
 
         <nav className="desktop-nav" aria-label="Primary navigation">
@@ -493,7 +493,7 @@ function CreatorProfilePage() {
   }, [handle]);
 
   if (!baseCreator) {
-    return <NotFoundPanel title="Creator not found" text="This profile URL does not match an active FitCheck creator." />;
+    return <NotFoundPanel title="Creator not found" text="This profile URL does not match an active ByTaste creator." />;
   }
 
   const creator = applyCreatorDraft(baseCreator, state.creatorDrafts[baseCreator.handle]);
@@ -559,7 +559,7 @@ function CreatorProfilePage() {
             {isSaved ? "Following" : "Follow"}
           </button>
           <ShareButton
-            title={`${creator.displayName} on FitCheck`}
+            title={`${creator.displayName} on ByTaste`}
             text={creator.tasteSignature}
             url={sharePageUrl(creatorSharePath(creator.handle))}
           />
@@ -743,7 +743,7 @@ function EditLandingPage() {
   }, [handle, slug]);
 
   if (!creator || !product) {
-    return <NotFoundPanel title="Edit not found" text="This paid edit is not published on FitCheck." />;
+    return <NotFoundPanel title="Edit not found" text="This paid edit is not published on ByTaste." />;
   }
 
   const previewItems = tasteProductPreviewItems(product.id);
@@ -874,7 +874,7 @@ function ServiceDetailPage() {
   const service = getService(handle, serviceSlug);
 
   if (!creator || !service) {
-    return <NotFoundPanel title="Service not found" text="This service is not active on FitCheck." />;
+    return <NotFoundPanel title="Service not found" text="This service is not active on ByTaste." />;
   }
 
   return (
@@ -1025,7 +1025,7 @@ function PaidEditReaderPage() {
         <CenteredPanel>
           <Loader2 className="spin" size={34} />
           <h1>Checking edit access</h1>
-          <p>FitCheck is verifying your purchase and entitlement before loading paid content.</p>
+          <p>ByTaste is verifying your purchase and entitlement before loading paid content.</p>
         </CenteredPanel>
       );
     }
@@ -1490,7 +1490,7 @@ function ClosetPage() {
     event.preventDefault();
     if (!form.name.trim()) return;
     setUploadError("");
-    let imageUrl = "/assets/media/fitcheck-media-14.jpg";
+    let imageUrl = "/assets/media/bytaste-media-14.jpg";
 
     if (itemFile) {
       try {
@@ -1692,7 +1692,7 @@ function BookingDetailPage() {
   }, [booking, checkoutResult, updateBookingPaymentStatus]);
 
   if (!booking) {
-    return <NotFoundPanel title="Booking not found" text="This booking is not in your local FitCheck workspace." />;
+    return <NotFoundPanel title="Booking not found" text="This booking is not in your local ByTaste workspace." />;
   }
 
   const creator = getCreator(booking.creatorHandle);
@@ -2164,6 +2164,13 @@ function EditEditorPage() {
           <input placeholder="$19" />
         </label>
         <label>
+          Item verdict
+          <select defaultValue="chosen">
+            <option value="chosen">Chosen pick</option>
+            <option value="rejected">Rejected with reason</option>
+          </select>
+        </label>
+        <label>
           Affiliate disclosure
           <textarea placeholder="Tell customers whether links may be affiliate links" />
         </label>
@@ -2248,7 +2255,7 @@ function SignInPage() {
   return (
     <CenteredPanel>
       <UserRound size={34} />
-      <h1>Welcome to FitCheck</h1>
+      <h1>Welcome to ByTaste</h1>
       <p>Save creators, build a closet, and book styling services. No password needed.</p>
       {notice ? (
         <div className="setup-note compact success">
@@ -2404,7 +2411,7 @@ function CreatorApplyPage() {
       <CenteredPanel>
         <Check size={34} />
         <h1>Application received</h1>
-        <p>Your creator profile is in mock review. Approved creators get Studio access and a public FitCheck URL.</p>
+        <p>Your creator profile is in mock review. Approved creators get Studio access and a public ByTaste URL.</p>
         <Link className="button dark" to="/studio">
           Open Studio
         </Link>
@@ -2417,7 +2424,7 @@ function CreatorApplyPage() {
       <section>
         <p className="eyebrow">Creator application</p>
         <h1>Build your profile, then sell structured styling work.</h1>
-        <p className="lead">FitCheck is taste-led, not audience-size-led. Small creators with a sharp point of view belong here.</p>
+        <p className="lead">ByTaste is taste-led, not audience-size-led. Small creators with a sharp point of view belong here.</p>
       </section>
       <form className="form-panel" onSubmit={(event) => {
         event.preventDefault();
@@ -2606,7 +2613,7 @@ function LaunchReadinessPage() {
         <div>
           <p className="eyebrow">Launch</p>
           <h1>Readiness checklist</h1>
-          <p className="lead">Everything that has to be true before FitCheck can accept real users and payments.</p>
+          <p className="lead">Everything that has to be true before ByTaste can accept real users and payments.</p>
         </div>
         <Link className="button dark" to="/admin">
           <ShieldCheck size={18} />
@@ -2700,28 +2707,28 @@ const legalContent: Record<string, { title: string; body: string[] }> = {
     title: "Terms of Service (Draft for Counsel)",
     body: [
       "Last updated: [DATE]. Operator: [LEGAL ENTITY NAME], [REGISTERED ADDRESS], Slovenia ([COMPANY REG NO / VAT ID]). Contact: [SUPPORT EMAIL].",
-      "## 1. What FitCheck Is",
-      "FitCheck is an online marketplace that connects customers with independent fashion creators who provide asynchronous styling deliverables such as wardrobe audits, outfit reviews, and capsule plans. FitCheck provides the platform, payment processing, and dispute framework. The styling service itself is provided by the creator, who acts as an independent provider and not as an employee or agent of FitCheck.",
+      "## 1. What ByTaste Is",
+      "ByTaste is an online marketplace that connects customers with independent fashion creators who provide asynchronous styling deliverables such as wardrobe audits, outfit reviews, and capsule plans. ByTaste provides the platform, payment processing, and dispute framework. The styling service itself is provided by the creator, who acts as an independent provider and not as an employee or agent of ByTaste.",
       "## 2. Eligibility and Accounts",
-      "You must be at least 18 years old to create an account or use FitCheck. You are responsible for keeping your login credentials confidential and for all activity under your account. You must provide accurate information and keep it current.",
+      "You must be at least 18 years old to create an account or use ByTaste. You are responsible for keeping your login credentials confidential and for all activity under your account. You must provide accurate information and keep it current.",
       "## 3. Bookings and Customer Responsibilities",
       "Customers are responsible for providing an accurate brief, appropriate uploads, and timely responses to revision requests. Each service listing states its scope, expected turnaround, number of revision rounds, and deliverables. The listing at the time of booking is the agreed scope.",
       "## 4. Creator Responsibilities",
       "Creators must deliver the purchased scope within the stated turnaround, keep customer uploads confidential, and use customer materials only to complete the booked service. Public use of customer content, including before-and-after posts, requires the customer's explicit prior permission.",
       "## 5. Payments, Fees, and Currency",
-      "Payments are processed by Stripe. FitCheck charges a marketplace fee on completed services as described in the Platform Policies. Prices are shown at checkout, including applicable VAT where required. FitCheck does not store full card numbers; payment data is handled by Stripe under its own terms and privacy policy.",
+      "Payments are processed by Stripe. ByTaste charges a marketplace fee on completed services as described in the Platform Policies. Prices are shown at checkout, including applicable VAT where required. ByTaste does not store full card numbers; payment data is handled by Stripe under its own terms and privacy policy.",
       "## 6. Payment Hold, Approval, and Release",
       "Customer payments are held until delivery approval. After the creator delivers, the customer has 72 hours to approve, request the included revision, or open a dispute. If the customer takes no action within 72 hours, the booking auto-approves and funds become releasable to the creator. This is a contractual payment-hold arrangement, not a regulated escrow service. [COUNSEL: confirm this characterization and whether any payment-services licensing analysis is needed given Stripe intermediation.]",
       "## 7. Right of Withdrawal (EU Consumers)",
       "EU consumers normally have a 14-day right of withdrawal for online purchases. By booking a service and requesting that work begin before the 14-day period ends, you expressly consent to early performance and acknowledge that once the service has been fully performed, the right of withdrawal is lost, and if you withdraw after work has started but before completion, you may owe a proportionate amount for work already performed. Cancellation before work starts is governed by the Refund Policy. [COUNSEL: confirm wording against Directive 2011/83/EU and Slovenian ZVPot-1 implementation.]",
       "## 8. Content and Licenses",
-      "You retain ownership of content you upload. You grant FitCheck a limited, non-exclusive license to host, process, and display your content solely to operate the platform and deliver the booked services. Creators grant FitCheck a license to display their public profile content for marketing the platform. You must not upload content that infringes others' rights, is unlawful, or depicts anyone without appropriate consent.",
+      "You retain ownership of content you upload. You grant ByTaste a limited, non-exclusive license to host, process, and display your content solely to operate the platform and deliver the booked services. Creators grant ByTaste a license to display their public profile content for marketing the platform. You must not upload content that infringes others' rights, is unlawful, or depicts anyone without appropriate consent.",
       "## 9. Prohibited Conduct",
-      "No off-platform payment circumvention for services initiated on FitCheck, no harassment, no scraping, no impersonation, no uploading of unlawful or infringing content, and no use of the platform by or for anyone under 18.",
+      "No off-platform payment circumvention for services initiated on ByTaste, no harassment, no scraping, no impersonation, no uploading of unlawful or infringing content, and no use of the platform by or for anyone under 18.",
       "## 10. Termination",
-      "You may close your account at any time. FitCheck may suspend or terminate accounts that violate these terms, with notice where legally required. Bookings in progress at termination are handled under the Refund Policy.",
+      "You may close your account at any time. ByTaste may suspend or terminate accounts that violate these terms, with notice where legally required. Bookings in progress at termination are handled under the Refund Policy.",
       "## 11. Liability",
-      "FitCheck provides the platform 'as is' to the fullest extent permitted by law. FitCheck is not a party to the styling service and is not liable for creator advice or outcomes. Nothing in these terms limits liability that cannot be limited under applicable law, including liability for intent or gross negligence. [COUNSEL: align limitation clause with Slovenian / EU consumer law.]",
+      "ByTaste provides the platform 'as is' to the fullest extent permitted by law. ByTaste is not a party to the styling service and is not liable for creator advice or outcomes. Nothing in these terms limits liability that cannot be limited under applicable law, including liability for intent or gross negligence. [COUNSEL: align limitation clause with Slovenian / EU consumer law.]",
       "## 12. Governing Law and Disputes",
       "These terms are governed by the law of the Republic of Slovenia. EU consumers retain the protection of mandatory provisions of the law of their country of residence and may use the platform's internal dispute process before, and without prejudice to, any court or ADR route. [COUNSEL: advise on arbitration/ADR clause and ODR references.]",
       "## 13. Changes",
@@ -2746,7 +2753,7 @@ const legalContent: Record<string, { title: string; body: string[] }> = {
       "## 6. Your Rights",
       "You have the right to access, rectify, erase, and receive a copy of your data, to restrict or object to processing, and to withdraw consent. To exercise these rights, contact [PRIVACY EMAIL]. You also have the right to lodge a complaint with your supervisory authority; in Slovenia this is the Information Commissioner (Informacijski pooblascenec, www.ip-rs.si).",
       "## 7. Minors",
-      "FitCheck is not directed at anyone under 18, and we do not knowingly process minors' data. If you believe a minor has provided data, contact us and we will delete it.",
+      "ByTaste is not directed at anyone under 18, and we do not knowingly process minors' data. If you believe a minor has provided data, contact us and we will delete it.",
       "## 8. Cookies and Local Storage",
       "The app uses strictly necessary local storage for sessions and app state. If analytics or marketing cookies are added, they will require consent and will be listed here. [COUNSEL: confirm ePrivacy/ZEKom position for current storage use.]",
       "## 9. Security",
@@ -2757,28 +2764,28 @@ const legalContent: Record<string, { title: string; body: string[] }> = {
   "creator-terms": {
     title: "Creator Terms (Draft for Counsel)",
     body: [
-      "Last updated: [DATE]. These terms apply to creators offering services on FitCheck and supplement the Terms of Service.",
+      "Last updated: [DATE]. These terms apply to creators offering services on ByTaste and supplement the Terms of Service.",
       "## 1. Independent Status",
-      "Creators are independent providers, not employees, workers, or agents of FitCheck. Creators are responsible for their own taxes, social contributions, registrations, and legal compliance in their country. [COUNSEL: confirm classification language for Slovenian and cross-border creators.]",
+      "Creators are independent providers, not employees, workers, or agents of ByTaste. Creators are responsible for their own taxes, social contributions, registrations, and legal compliance in their country. [COUNSEL: confirm classification language for Slovenian and cross-border creators.]",
       "## 2. Content Standards",
       "Creators must publish original or properly licensed content, must not upload third-party material without rights, and must never disclose or reuse private customer uploads. Verification is a quality signal, not a guaranteed discovery boost.",
       "## 3. Service Templates and Scope",
       "Services follow platform templates so customers can understand scope, turnaround, revision rounds, and deliverables. The published listing at the time of booking defines the agreed scope. Creators must deliver within the stated turnaround or proactively communicate delays.",
       "## 4. Economics",
-      "Standard platform take rate: 18% of the service price. Founding Creator / Pro take rate: 12%. Payment processing fees are passed through before payout. Capsule Build affiliate revenue is split 70% to the creator and 30% to FitCheck. Affiliate recommendations must be disclosed to customers as such.",
+      "Standard platform take rate: 18% of the service price. Founding Creator / Pro take rate: 12%. Payment processing fees are passed through before payout. Capsule Build affiliate revenue is split 70% to the creator and 30% to ByTaste. Affiliate recommendations must be disclosed to customers as such.",
       "## 5. Payouts",
       "Funds become releasable after customer approval or 72-hour auto-approval; disputed bookings remain held until resolved. Payouts are batched weekly on Friday through Stripe Connect. New creators have a 7-day payout hold on their first 5 completed bookings. Creators must complete Stripe Connect onboarding, including identity verification, before receiving payouts.",
       "## 6. Refunds and Disputes",
-      "Creators participate in the dispute process in good faith. Where a refund is issued under the Refund Policy, the corresponding creator earnings and platform fee are reversed. Chargebacks initiated by customers follow Stripe's process; FitCheck may pass on chargeback outcomes.",
+      "Creators participate in the dispute process in good faith. Where a refund is issued under the Refund Policy, the corresponding creator earnings and platform fee are reversed. Chargebacks initiated by customers follow Stripe's process; ByTaste may pass on chargeback outcomes.",
       "## 7. Termination",
-      "Either side may end the relationship at any time. Bookings in progress must be completed or refunded. FitCheck may suspend creators for content, confidentiality, or conduct violations, with notice where legally required.",
+      "Either side may end the relationship at any time. Bookings in progress must be completed or refunded. ByTaste may suspend creators for content, confidentiality, or conduct violations, with notice where legally required.",
       "This document is a working draft prepared for lawyer review. It must not be treated as legally approved until counsel signs off.",
     ],
   },
   refunds: {
     title: "Refund and Revision Policy (Draft for Counsel)",
     body: [
-      "Last updated: [DATE]. This policy applies to all paid services booked on FitCheck.",
+      "Last updated: [DATE]. This policy applies to all paid services booked on ByTaste.",
       "## 1. Included Revision",
       "Every paid service includes one revision round. Revision requests must stay within the originally booked scope.",
       "## 2. Approval Window",
@@ -2797,9 +2804,9 @@ const legalContent: Record<string, { title: string; body: string[] }> = {
   "platform-policies": {
     title: "Platform Policies (Draft for Counsel)",
     body: [
-      "Last updated: [DATE]. Operational policies for the FitCheck marketplace.",
+      "Last updated: [DATE]. Operational policies for the ByTaste marketplace.",
       "## 1. Economics",
-      "Standard creator take rate: 18%. Founding Creator / Pro take rate: 12%. Capsule affiliate split: 70% creator and 30% FitCheck. Payment processing fees are passed through before payout.",
+      "Standard creator take rate: 18%. Founding Creator / Pro take rate: 12%. Capsule affiliate split: 70% creator and 30% ByTaste. Payment processing fees are passed through before payout.",
       "## 2. Funds Flow",
       "Funds become releasable after customer approval or 72-hour auto-approval. Disputed bookings remain held until resolved. Creator payouts are batched weekly on Friday through Stripe Connect. New creators have a 7-day payout hold for their first 5 completed bookings.",
       "## 3. Language Rule",
@@ -2839,7 +2846,7 @@ function LegalPage() {
 }
 
 function NotFoundPage() {
-  return <NotFoundPanel title="Page not found" text="That route is not part of the FitCheck MVP." />;
+  return <NotFoundPanel title="Page not found" text="That route is not part of the ByTaste MVP." />;
 }
 
 function TasteProductCard({ product, variant = "default" }: { product: TasteProduct; variant?: "default" | "featured" }) {
@@ -2869,11 +2876,14 @@ function TasteProductCard({ product, variant = "default" }: { product: TasteProd
 }
 
 function ProductItemCard({ item, unlocked = false }: { item: TasteProductItem; unlocked?: boolean }) {
+  const verdict = item.verdict ?? "chosen";
+  const label = verdict === "rejected" ? "Creator skipped" : unlocked || item.isPreview ? "Creator chose" : "Preview";
+
   return (
-    <article className="product-item-card">
+    <article className={`product-item-card ${verdict}`}>
       {item.imageUrl ? <img src={item.imageUrl} alt={item.name} /> : null}
       <div>
-        <span>{unlocked || item.isPreview ? "Creator note" : "Preview"}</span>
+        <span>{label}</span>
         <h3>{item.name}</h3>
         <p>{item.brand}</p>
         {item.priceLabel ? <strong>{item.priceLabel}</strong> : null}

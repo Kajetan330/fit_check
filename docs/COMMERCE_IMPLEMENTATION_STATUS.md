@@ -1,4 +1,4 @@
-# FitCheck Commerce Implementation Status
+# ByTaste Commerce Implementation Status
 
 Last updated: July 14, 2026
 
@@ -17,6 +17,7 @@ Last updated: July 14, 2026
 - Creator sign-in has a separate `/creator/signin` route.
 - Studio has storefront, edits, new-edit, and analytics entry points.
 - New migration `0003_paid_edits_and_entitlements.sql` adds paid edits, purchases, entitlements, controlled share links, referrals, commerce events, Stripe event logs, and private paid media bucket.
+- Migration `0006_taste_item_verdict.sql` adds `taste_product_items.verdict` for chosen versus rejected creator picks.
 - New server endpoints provide trusted commerce checkout, paid-edit access checks, private media signed URLs, controlled share resource reads, and controlled share link creation.
 - Stripe webhook processing is idempotent through `stripe_events` and can grant/revoke paid-edit entitlements.
 - Supabase CLI config and `seed/0001_seed_catalog.sql` now seed the current launch catalog into the commerce schema.
@@ -51,6 +52,7 @@ Run:
 -- paste and run supabase/migrations/0003_paid_edits_and_entitlements.sql
 -- then run supabase/migrations/0004_profiles.sql if it is not already applied
 -- then run supabase/migrations/0005_security_hardening.sql if it is not already applied
+-- then run supabase/migrations/0006_taste_item_verdict.sql if it is not already applied
 -- sign in once through the app so public.profiles has an auth-backed row
 -- then paste and run supabase/seed/0001_seed_catalog.sql
 ```

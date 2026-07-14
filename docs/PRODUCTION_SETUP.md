@@ -1,6 +1,6 @@
 # Production Setup
 
-FitCheck now runs in demo mode without credentials and is wired for production services when environment variables are added.
+ByTaste now runs in demo mode without credentials and is wired for production services when environment variables are added.
 
 ## 1. Supabase
 
@@ -13,6 +13,7 @@ Create a Supabase project, then run:
 -- then paste and run supabase/migrations/0003_paid_edits_and_entitlements.sql
 -- then paste and run supabase/migrations/0004_profiles.sql
 -- then paste and run supabase/migrations/0005_security_hardening.sql
+-- then paste and run supabase/migrations/0006_taste_item_verdict.sql
 -- sign in once through the app so public.profiles has an owner row
 -- then paste and run supabase/seed/0001_seed_catalog.sql
 ```

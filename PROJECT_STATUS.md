@@ -1,4 +1,4 @@
-# FitCheck Project Status
+# ByTaste Project Status
 
 ## Audit
 
@@ -25,6 +25,8 @@
 - Creator-led commerce architecture is scaffolded with paid edits, entitlement tables, share-link hashing, trusted checkout endpoints, generated share metadata pages, and storefront/library routes.
 - Paid-edit reader access now uses `/api/paid-edit-access` whenever Supabase is configured, so production access depends on real purchases and entitlements instead of local state.
 - Supabase CLI config and an idempotent catalog seed are included for creators, services, paid edits, item picks, outfit formulas, and referral links.
+- The visible product brand is now ByTaste/BYTASTE, while internal `fitcheck-*` browser storage keys remain for saved-state continuity.
+- Taste-product items support a `chosen` or `rejected` verdict across the frontend model, demo data, Supabase migration, seed data, API mapping, and paid-edit cards.
 - The latest implementation handoff for future developers is tracked in `docs/NEXT_DEVELOPER_HANDOFF.md`.
 - The final finish plan is tracked in `docs/FINAL_FINISH_PLAN.md`.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.
@@ -42,7 +44,7 @@
 
 ## Implemented MVP
 
-The practical MVP is a responsive web app that feels native on mobile and supports the main FitCheck journey:
+The practical MVP is a responsive web app that feels native on mobile and supports the main ByTaste journey:
 
 1. A customer discovers creators through curated surfaces, Rising Stars, and filters.
 2. A customer opens a creator profile and can inspect posts, portfolio work, services, designer pieces, and reviews.
@@ -122,7 +124,7 @@ npm run dev
 
 - Create Supabase and Stripe projects and add live credentials.
 - Run Supabase migrations `0001_initial_schema.sql` and `0002_checkout_sessions.sql`, then verify RLS/storage policies.
-- Run Supabase migrations `0003_paid_edits_and_entitlements.sql`, `0004_profiles.sql`, and `0005_security_hardening.sql`, then run `seed/0001_seed_catalog.sql` after at least one auth profile exists.
+- Run Supabase migrations `0003_paid_edits_and_entitlements.sql`, `0004_profiles.sql`, `0005_security_hardening.sql`, and `0006_taste_item_verdict.sql`, then run `seed/0001_seed_catalog.sql` after at least one auth profile exists.
 - Replace local demo persistence with Supabase reads/writes in the app state layer.
 - Connect full booking records to Supabase once creator/service IDs are live in the database.
 - Connect real upload/storage for closet and booking images.

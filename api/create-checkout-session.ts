@@ -93,7 +93,7 @@ export default async function handler(req: any, res: any) {
           currency: "usd",
           unit_amount: cents,
           product_data: {
-            name: `FitCheck ${serviceTitle}`,
+            name: `ByTaste ${serviceTitle}`,
             description: `Booking ${bookingId} with ${creatorHandle}`,
           },
         },
@@ -124,7 +124,7 @@ export default async function handler(req: any, res: any) {
     );
 
     if (error) {
-      console.error("FitCheck checkout session persistence failed", error.message);
+      console.error("ByTaste checkout session persistence failed", error.message);
     }
   }
 

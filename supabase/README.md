@@ -1,6 +1,6 @@
 # Supabase Setup
 
-This folder contains the production database foundation for FitCheck.
+This folder contains the production database foundation for ByTaste.
 
 ## Apply Locally
 
@@ -28,6 +28,7 @@ supabase db reset
    - `migrations/0003_paid_edits_and_entitlements.sql`
    - `migrations/0004_profiles.sql`
    - `migrations/0005_security_hardening.sql`
+   - `migrations/0006_taste_item_verdict.sql`
 4. Sign in once through the production app so `public.profiles` has an owner row.
 5. Run `seed/0001_seed_catalog.sql` in SQL Editor to seed the creator catalog, services, paid edits, item picks, outfit formulas, and referral links.
 6. Add the values from the project settings to `.env.local`.

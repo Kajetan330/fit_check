@@ -1,13 +1,13 @@
-# FitCheck Deployment And Configuration Change Log
+# ByTaste Deployment And Configuration Change Log
 
-Project: FitCheck  
+Project: ByTaste
 Production URL: `https://fit-check-ecru.vercel.app`  
 GitHub repo: `github.com/Kajetan330/fit_check`  
 Date of work: July 5, 2026
 
 ## Overview
 
-This document records infrastructure and configuration changes made across Vercel, Stripe, and Supabase to bring FitCheck to a working deployed test state.
+This document records infrastructure and configuration changes made across Vercel, Stripe, and Supabase to bring ByTaste to a working deployed test state.
 
 No secret values are stored here. Any credentials pasted into chat or screenshots should be considered exposed and rotated.
 

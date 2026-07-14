@@ -1,4 +1,4 @@
-const CACHE_NAME = "fitcheck-shell-v2-20260713";
+const CACHE_NAME = "bytaste-shell-v1-20260714";
 const APP_SHELL = ["/manifest.webmanifest", "/icon.svg"];
 
 function shouldNetworkFirst(requestUrl, request) {

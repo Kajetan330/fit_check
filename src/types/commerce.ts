@@ -1,5 +1,6 @@
 export type TasteProductStatus = "draft" | "published" | "archived";
 export type TasteProductAccess = "free" | "paid";
+export type TasteProductItemVerdict = "chosen" | "rejected";
 
 export interface TasteProduct {
   id: string;
@@ -35,6 +36,7 @@ export interface TasteProductItem {
   priceLabel?: string;
   creatorNote: string;
   isPreview: boolean;
+  verdict?: TasteProductItemVerdict;
   sortOrder: number;
 }
 

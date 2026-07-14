@@ -50,7 +50,7 @@ export default async function handler(req: any, res: any) {
       }
 
       if (eventInsertError && eventInsertError.code !== "42P01") {
-        console.error("FitCheck Stripe event log failed", eventInsertError.message);
+        console.error("ByTaste Stripe event log failed", eventInsertError.message);
       }
     }
 
@@ -69,9 +69,9 @@ export default async function handler(req: any, res: any) {
           .maybeSingle();
 
         if (purchaseReadError || !purchase) {
-          console.error("FitCheck purchase lookup failed", purchaseReadError?.message ?? "missing purchase");
+          console.error("ByTaste purchase lookup failed", purchaseReadError?.message ?? "missing purchase");
         } else if (session.amount_total !== purchase.amount_cents || session.currency !== purchase.currency) {
-          console.error("FitCheck purchase amount mismatch", {
+          console.error("ByTaste purchase amount mismatch", {
             purchaseId: purchase.id,
             expected: `${purchase.amount_cents} ${purchase.currency}`,
             actual: `${session.amount_total} ${session.currency}`,
@@ -89,7 +89,7 @@ export default async function handler(req: any, res: any) {
             .eq("id", purchase.id);
 
           if (purchaseUpdateError) {
-            console.error("FitCheck purchase update failed", purchaseUpdateError.message);
+            console.error("ByTaste purchase update failed", purchaseUpdateError.message);
           } else {
             const { data: existingEntitlement } = await supabase
               .from("product_entitlements")
@@ -111,7 +111,7 @@ export default async function handler(req: any, res: any) {
                 });
 
             if (entitlementError) {
-              console.error("FitCheck entitlement grant failed", entitlementError.message);
+              console.error("ByTaste entitlement grant failed", entitlementError.message);
             }
 
             await supabase.from("commerce_events").insert({
@@ -139,7 +139,7 @@ export default async function handler(req: any, res: any) {
           .eq("id", session.metadata.bookingId);
 
         if (bookingUpdateError) {
-          console.error("FitCheck booking payment update failed", bookingUpdateError.message);
+          console.error("ByTaste booking payment update failed", bookingUpdateError.message);
         }
 
         await supabase.from("commerce_events").insert({
@@ -169,11 +169,11 @@ export default async function handler(req: any, res: any) {
           .eq("booking_reference", bookingReference);
 
         if (error) {
-          console.error("FitCheck checkout session update failed", error.message);
+          console.error("ByTaste checkout session update failed", error.message);
         }
       }
 
-      console.info("FitCheck checkout completed", session.metadata);
+      console.info("ByTaste checkout completed", session.metadata);
     }
 
     if (event.type === "payment_intent.payment_failed") {
@@ -206,7 +206,7 @@ export default async function handler(req: any, res: any) {
           .eq("stripe_payment_intent_id", paymentIntent.id);
 
         if (error) {
-          console.error("FitCheck payment failure update failed", error.message);
+          console.error("ByTaste payment failure update failed", error.message);
         }
       }
     }
@@ -252,7 +252,7 @@ export default async function handler(req: any, res: any) {
           .eq("stripe_payment_intent_id", paymentIntentId);
 
         if (error) {
-          console.error("FitCheck refund update failed", error.message);
+          console.error("ByTaste refund update failed", error.message);
         }
       }
     }

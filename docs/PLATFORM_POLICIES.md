@@ -1,4 +1,4 @@
-# FitCheck Platform Policies
+# ByTaste Platform Policies
 
 These are the product decisions for the launch version. They are implemented as business rules for product copy and payment planning, but must still be reviewed by counsel before accepting real money.
 
@@ -7,7 +7,7 @@ These are the product decisions for the launch version. They are implemented as 
 - Standard creator take rate: **18%** of the service price.
 - Founding Creator / Pro take rate: **12%** of the service price.
 - Payment processing fees are passed through before creator payout.
-- Capsule Build affiliate revenue split: **70% creator / 30% FitCheck**.
+- Capsule Build affiliate revenue split: **70% creator / 30% ByTaste**.
 - No creator subscription is required at launch. A paid Pro tier can be introduced after the first active creator cohort.
 
 ## Refund And Revision Window

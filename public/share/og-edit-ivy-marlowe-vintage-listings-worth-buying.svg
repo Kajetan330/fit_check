@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#151515"/>
-  <image href="/assets/media/fitcheck-media-12.jpg" x="690" y="0" width="510" height="630" preserveAspectRatio="xMidYMid slice"/>
-  <rect x="0" y="0" width="760" height="630" fill="#151515"/>
-  <text x="68" y="86" fill="#d7ff4f" font-size="30" font-weight="800">FitCheck</text>
-  <text x="68" y="210" fill="#ffffff" font-size="66" font-weight="900">Vintage Listings Worth Buying This Week</text>
+  <rect width="1200" height="630" fill="#f5f1f0"/>
+  <image href="/assets/media/bytaste-media-12.jpg" x="690" y="0" width="510" height="630" preserveAspectRatio="xMidYMid slice"/>
+  <rect x="0" y="0" width="760" height="630" fill="#1b1418"/>
+  <text x="68" y="86" fill="#7c2237" font-family="Archivo, Arial, sans-serif" font-size="30" font-weight="800" letter-spacing="4">BYTASTE</text>
+  <text x="68" y="210" fill="#f5f1f0" font-family="Bodoni Moda, Didot, serif" font-size="66" font-weight="700">Vintage Listings Worth Buying This Week</text>
   <foreignObject x="68" y="250" width="560" height="210">
-    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Arial,sans-serif;color:#d8d8d2;font-size:34px;line-height:1.22;font-weight:600">Texture, tailoring, and repairable finds before they disappear.</div>
+    <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Archivo,Arial,sans-serif;color:#e9dcdc;font-size:34px;line-height:1.22;font-weight:600">Texture, tailoring, and repairable finds before they disappear.</div>
   </foreignObject>
-  <text x="68" y="560" fill="#d7ff4f" font-size="42" font-weight="800">$12</text>
+  <text x="68" y="560" fill="#7c2237" font-family="Archivo, Arial, sans-serif" font-size="42" font-weight="800">$12</text>
 </svg>

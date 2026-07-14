@@ -1,4 +1,4 @@
-# FitCheck Phase 2 Implementation Plan
+# ByTaste Phase 2 Implementation Plan
 
 Last updated: July 14, 2026
 
@@ -163,7 +163,7 @@ Role escalation must happen only through service-role/admin actions, never from 
   - `signOut`
 - Listen to `supabase.auth.onAuthStateChange`.
 - On sign-in, fetch the user's `profiles` row and populate `state.user`.
-- Stop persisting `state.user` into FitCheck localStorage. Supabase should own the session.
+- Stop persisting `state.user` into ByTaste localStorage. Supabase should own the session.
 - Keep localStorage for non-critical local MVP state for now:
   - saved creators
   - saved posts
