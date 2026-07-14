@@ -12,7 +12,7 @@ function shouldNetworkFirst(requestUrl, request) {
 }
 
 function shouldSkipCache(requestUrl) {
-  return requestUrl.pathname.startsWith("/api/");
+  return requestUrl.pathname.startsWith("/api/") || requestUrl.hostname.endsWith(".supabase.co");
 }
 
 async function fetchAndUpdateCache(request) {

@@ -13,6 +13,16 @@ e7d16f4 Remove style quiz; update handoff note + Phase 2 spec
 
 ## Current State
 
+### Change 2026-07-14: Launch Security Hardening
+
+Implemented from the same-day technical review:
+
+- Legacy booking checkout (`api/create-checkout-session.ts`) now rate-limits requests and validates the creator/service/price against a server-side catalog before creating Stripe Checkout.
+- Trusted commerce checkout (`api/create-commerce-checkout.ts`) now fails closed when `VITE_APP_URL` is missing instead of falling back to wildcard CORS.
+- `supabase/migrations/0005_security_hardening.sql` consolidates profile role-update protection and restricts `commerce_events` inserts to authenticated users.
+- The service worker now skips caching Supabase-hosted URLs so signed URLs and auth/storage resources do not become stale.
+- Removed the unused `STRIPE_CONNECT_CLIENT_ID` placeholder and the Netlify-only `public/_redirects` file. Vercel remains the production deployment target.
+
 ### Change 2026-07-14: Real Auth Foundation, Commerce Freeze, Analytics
 
 Implemented from `docs/FITCHECK_PHASE2_SPEC.md` with a bookings-first launch decision:
@@ -78,9 +88,11 @@ The app still supports the original demo journey. Do not remove the seeded/local
 - `api/media/signed-url.ts` - authorised private media signed URL flow.
 - `supabase/migrations/0003_paid_edits_and_entitlements.sql` - paid edit, purchase, entitlement, referral, share, and commerce-event schema.
 - `supabase/migrations/0004_profiles.sql` - Supabase auth profile table, signup trigger, RLS, and role guard.
+- `supabase/migrations/0005_security_hardening.sql` - profile role hardening and commerce-event insert policy consolidation.
 - `scripts/generate-share-pages.mjs` - build-time static share/OG page generator.
 - `docs/COMMERCE_IMPLEMENTATION_STATUS.md` - implementation status for the commerce slice.
 - `docs/FITCHECK_PHASE2_SPEC.md` - Phase 2 plan and acceptance criteria.
+- `docs/RECENT_CHANGES_REPORT_2026-07-14.md` - concise report of the recent product, auth, commerce, and hardening changes.
 
 ## What Is Real Versus Prototype
 
@@ -89,6 +101,7 @@ Real/scaffolded production controls:
 - Supabase auth session plumbing now exists and can map sessions to app users.
 - Paid edit access is modeled through `product_entitlements`.
 - Checkout prices are designed to load server-side from Supabase.
+- Legacy booking checkout has server-side service price validation while the real booking UUID flow is being finished.
 - Paid-edit checkout is frozen behind `VITE_COMMERCE_ENABLED` until the database is ready.
 - Webhook processing records Stripe event IDs to reduce duplicate processing.
 - Controlled share links store SHA-256 token hashes, not raw tokens.
@@ -109,8 +122,9 @@ Still prototype/demo:
 
 1. Run `supabase/migrations/0003_paid_edits_and_entitlements.sql` in the Supabase SQL Editor.
 2. Run `supabase/migrations/0004_profiles.sql` in the Supabase SQL Editor.
-3. Enable Google provider in Supabase Auth if you want the Google button live.
-4. Verify these commerce tables exist:
+3. Run `supabase/migrations/0005_security_hardening.sql` in the Supabase SQL Editor.
+4. Enable Google provider in Supabase Auth if you want the Google button live.
+5. Verify these commerce tables exist:
    - `taste_products`
    - `taste_product_items`
    - `taste_product_outfits`
@@ -120,11 +134,11 @@ Still prototype/demo:
    - `creator_referral_links`
    - `commerce_events`
    - `stripe_events`
-5. Verify the `paid-product-media` storage bucket exists.
-6. Seed real Supabase rows for creators, creator profiles, services, paid edits, paid edit preview/full items, and outfits.
-7. Only after 0003 is applied and seeded, set `VITE_COMMERCE_ENABLED=true` in Vercel if paid-edit purchasing should launch.
-8. Test paid-edit checkout using a real `taste_products.id`.
-9. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.
+6. Verify the `paid-product-media` storage bucket exists.
+7. Seed real Supabase rows for creators, creator profiles, services, paid edits, paid edit preview/full items, and outfits.
+8. Only after 0003 is applied and seeded, set `VITE_COMMERCE_ENABLED=true` in Vercel if paid-edit purchasing should launch.
+9. Test paid-edit checkout using a real `taste_products.id`.
+10. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.
 
 ## Recommended Next Engineering Phase
 

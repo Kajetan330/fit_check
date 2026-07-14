@@ -48,13 +48,13 @@ The check script runs the browser production build and type-checks the serverles
 
 ## Deploy
 
-The app is static and can be deployed to Vercel, Netlify, Cloudflare Pages, or any static host:
+The app is deployed on Vercel:
 
 ```bash
 npm run build
 ```
 
-Deploy the `dist/` directory. SPA rewrites are included for Vercel (`vercel.json`) and Netlify (`public/_redirects`).
+Deploy the `dist/` directory. SPA rewrites are included for Vercel in `vercel.json`.
 
 ## Production Integrations
 
@@ -69,6 +69,6 @@ The app runs without credentials in demo mode. Production-ready scaffolding is i
 - Brand mark, wordmark, and PWA icon assets.
 - Launch policy decisions for take rate, refunds, revisions, and creator payouts.
 
-For the latest developer handoff, start with [Next Developer Handoff](docs/NEXT_DEVELOPER_HANDOFF.md).
+For the latest developer handoff, start with [Next Developer Handoff](docs/NEXT_DEVELOPER_HANDOFF.md). For a concise history of the July 14 implementation work, see [Recent Changes Report](docs/RECENT_CHANGES_REPORT_2026-07-14.md).
 
 See [Production Setup](docs/PRODUCTION_SETUP.md), [Commerce Implementation Status](docs/COMMERCE_IMPLEMENTATION_STATUS.md), [Final Finish Plan](docs/FINAL_FINISH_PLAN.md), [QA Checklist](docs/QA_CHECKLIST.md), [Brand Assets](docs/BRAND_ASSETS.md), [Media Provenance](docs/MEDIA_PROVENANCE.md), [Platform Policies](docs/PLATFORM_POLICIES.md), and [Legal Review Packet](docs/LEGAL_REVIEW_PACKET.md).

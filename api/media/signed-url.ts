@@ -1,23 +1,31 @@
 import { getRequester, isAdmin } from "../_auth.js";
 import { rateLimit } from "../_rateLimit.js";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": process.env.VITE_APP_URL || "*",
-  "Access-Control-Allow-Methods": "POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+const setCorsHeaders = (res: any, appUrl: string) => {
+  res.setHeader("Access-Control-Allow-Origin", appUrl);
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 };
 
 export default async function handler(req: any, res: any) {
-  Object.entries(corsHeaders).forEach(([key, value]) => res.setHeader(key, value));
+  const appUrl = process.env.VITE_APP_URL;
+  if (appUrl) {
+    setCorsHeaders(res, appUrl);
+  }
   res.setHeader("Cache-Control", "no-store");
 
   if (req.method === "OPTIONS") {
-    res.status(204).end();
+    res.status(appUrl ? 204 : 501).end();
     return;
   }
 
   if (req.method !== "POST") {
     res.status(405).json({ message: "Method not allowed" });
+    return;
+  }
+
+  if (!appUrl) {
+    res.status(501).json({ message: "App URL is not configured." });
     return;
   }
 

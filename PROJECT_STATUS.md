@@ -146,4 +146,4 @@ Build the static app and deploy `dist/`:
 npm run build
 ```
 
-Vercel rewrites are in `vercel.json`. Netlify rewrites are in `public/_redirects`.
+Vercel rewrites are in `vercel.json`.

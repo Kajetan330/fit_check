@@ -10,6 +10,9 @@ Create a Supabase project, then run:
 -- Supabase SQL editor
 -- paste and run supabase/migrations/0001_initial_schema.sql
 -- then paste and run supabase/migrations/0002_checkout_sessions.sql
+-- then paste and run supabase/migrations/0003_paid_edits_and_entitlements.sql
+-- then paste and run supabase/migrations/0004_profiles.sql
+-- then paste and run supabase/migrations/0005_security_hardening.sql
 ```
 
 Add these frontend variables in Vercel and `.env.local`:
@@ -55,7 +58,7 @@ payment_intent.payment_failed
 charge.refunded
 ```
 
-The checkout function is at `api/create-checkout-session.ts`. The webhook validates events and updates the `checkout_sessions` table created by `supabase/migrations/0002_checkout_sessions.sql`.
+The legacy booking checkout function is at `api/create-checkout-session.ts` and validates service prices server-side. The trusted commerce checkout function is at `api/create-commerce-checkout.ts`. The webhook validates events and updates booking/payment records.
 
 ## 3. Deploy
 
