@@ -138,13 +138,6 @@ export interface Booking {
   };
 }
 
-export interface QuizLook {
-  id: string;
-  image: string;
-  title: string;
-  tags: string[];
-}
-
 export interface AppState {
   user: User | null;
   savedCreatorHandles: string[];

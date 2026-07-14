@@ -12,7 +12,6 @@ npm run check
 
 - Open `/`.
 - Search/filter creators.
-- Complete `/quiz`.
 - Open `/creator/amara-okafor`.
 - Save creator and save a post.
 - Sign in as customer.
@@ -44,7 +43,7 @@ npm run check
 ## Brand And Media
 
 - Verify no external stock image URLs remain in source.
-- Verify `public/assets/media/` images render on Discover, profiles, posts, quiz, closet, and lookbook.
+- Verify `public/assets/media/` images render on Discover, profiles, posts, closet, and lookbook.
 - Verify `public/brand/fitcheck-mark.svg`, `fitcheck-wordmark.svg`, and `public/icon.svg` open correctly.
 
 ## Responsive Checks

@@ -30,7 +30,7 @@ npm run preview
 
 The working MVP includes:
 
-- Discovering creators through editorial cards, search, filters, Rising Stars, and a short style quiz.
+- Discovering creators through editorial cards, search, filters, and Rising Stars.
 - Viewing a shareable creator profile with hero, pinned work, services, posts, portfolio, designer pieces, and reviews.
 - Booking a service through a guided intake flow with clear scope, turnaround, price, mock escrow, and confirmation.
 - Managing a lightweight customer area with closet items, saved creators/posts, and booking history.

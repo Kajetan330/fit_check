@@ -28,7 +28,6 @@ import {
   Upload,
   UserRound,
   WalletCards,
-  X,
 } from "lucide-react";
 import { type FormEvent, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
@@ -57,7 +56,6 @@ import {
   getTasteProduct,
   getTasteProductById,
   posts,
-  quizLooks,
   tasteProductFullItems,
   tasteProductFullOutfits,
   tasteProductPreviewItems,
@@ -130,7 +128,7 @@ export function App() {
     <Routes>
       <Route element={<AppShell />}>
         <Route path="/" element={<DiscoverPage />} />
-        <Route path="/quiz" element={<StyleQuizPage />} />
+        <Route path="/quiz" element={<Navigate to="/" replace />} />
         <Route path="/c/:handle" element={<CreatorRedirectPage />} />
         <Route path="/creator/:handle" element={<CreatorProfilePage />} />
         <Route path="/creator/:handle/edit/:slug" element={<EditLandingPage />} />
@@ -194,7 +192,6 @@ function AppShell() {
           : [
               ["/", "Discover"],
               [`/creator/${creators[0].handle}/edit/${creatorTasteProducts(creators[0].handle)[0]?.slug ?? ""}`, "Edits"],
-              ["/quiz", "How it works"],
               ["/apply", "Become a creator"],
             ];
 
@@ -335,11 +332,7 @@ function DiscoverPage() {
             />
           </div>
           <div className="quick-actions">
-            <Link className="button dark" to="/quiz">
-              <Sparkles size={18} />
-              Take style quiz
-            </Link>
-            <Link className="button light" to={`/creator/${featured.handle}`}>
+            <Link className="button dark" to={`/creator/${featured.handle}`}>
               <ArrowRight size={18} />
               Open featured profile
             </Link>
@@ -373,7 +366,6 @@ function DiscoverPage() {
         <SectionHeading
           eyebrow="Profiles"
           title={filteredCreators.length ? "Creators to book now" : "No creators matched"}
-          action={<Link to="/quiz">Try quiz</Link>}
         />
         {filteredCreators.length ? (
           <div className="creator-grid">
@@ -385,7 +377,7 @@ function DiscoverPage() {
           <EmptyState
             icon={<Search size={26} />}
             title="No profile found"
-            text="Try a different aesthetic, city, creator name, or use the style quiz."
+            text="Try a different aesthetic, city, or creator name."
           />
         )}
       </section>
@@ -405,116 +397,6 @@ function DiscoverPage() {
           {recentPosts.map((post) => (
             <PostCard key={post.id} post={post} />
           ))}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function StyleQuizPage() {
-  const [index, setIndex] = useState(0);
-  const [likedTags, setLikedTags] = useState<string[]>([]);
-  const [matching, setMatching] = useState(false);
-  const isDone = index >= quizLooks.length;
-  const current = quizLooks[index];
-
-  const matches = useMemo(() => {
-    const tagScore = new Map<string, number>();
-    likedTags.forEach((tag) => tagScore.set(tag, (tagScore.get(tag) ?? 0) + 1));
-    return [...creators]
-      .map((creator) => ({
-        creator,
-        score: creator.aesthetics.reduce((total, tag) => total + (tagScore.get(tag) ?? 0), 0),
-      }))
-      .sort((a, b) => b.score - a.score || b.creator.rating - a.creator.rating)
-      .map((item) => item.creator)
-      .slice(0, 3);
-  }, [likedTags]);
-
-  const vote = (liked: boolean) => {
-    if (!current) return;
-    const nextTags = liked ? [...likedTags, ...current.tags] : likedTags;
-    if (liked) setLikedTags(nextTags);
-
-    if (index + 1 >= quizLooks.length) {
-      setMatching(true);
-      window.setTimeout(() => {
-        setIndex(index + 1);
-        setMatching(false);
-      }, 650);
-      return;
-    }
-
-    setIndex(index + 1);
-  };
-
-  const reset = () => {
-    setIndex(0);
-    setLikedTags([]);
-    setMatching(false);
-  };
-
-  if (matching) {
-    return (
-      <CenteredPanel>
-        <Loader2 className="spin" size={34} />
-        <h1>Finding your creators</h1>
-        <p>Your likes are being matched against creator aesthetics.</p>
-      </CenteredPanel>
-    );
-  }
-
-  if (isDone) {
-    return (
-      <div className="page-stack">
-        <section className="quiz-results">
-          <p className="eyebrow">Style quiz</p>
-          <h1>Your closest creator matches</h1>
-          <p className="lead">Based on the looks you saved, these profiles are the strongest starting points.</p>
-          <div className="creator-grid">
-            {matches.map((creator) => (
-              <CreatorCard key={creator.id} creator={creator} />
-            ))}
-          </div>
-          <div className="quick-actions">
-            <button className="button light" onClick={reset}>
-              <X size={18} />
-              Retake quiz
-            </button>
-            <Link className="button dark" to={`/creator/${matches[0]?.handle ?? creators[0].handle}`}>
-              <ArrowRight size={18} />
-              Open best match
-            </Link>
-          </div>
-        </section>
-      </div>
-    );
-  }
-
-  return (
-    <div className="quiz-shell">
-      <section className="quiz-card">
-        <div className="quiz-progress">
-          <span>
-            {index + 1} of {quizLooks.length}
-          </span>
-          <div>
-            <i style={{ width: `${((index + 1) / quizLooks.length) * 100}%` }} />
-          </div>
-        </div>
-        <img src={current.image} alt={current.title} />
-        <div className="quiz-caption">
-          <p className="eyebrow">Tap your instinct</p>
-          <h1>{current.title}</h1>
-          <p>{current.tags.join(" / ")}</p>
-        </div>
-        <div className="quiz-actions">
-          <button className="round-choice" title="Not my style" aria-label="Not my style" onClick={() => vote(false)}>
-            <X size={28} />
-          </button>
-          <button className="round-choice primary" title="Save this style" aria-label="Save this style" onClick={() => vote(true)}>
-            <Heart size={28} />
-          </button>
         </div>
       </section>
     </div>

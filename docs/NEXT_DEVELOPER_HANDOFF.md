@@ -1,6 +1,6 @@
 # FitCheck Next Developer Handoff
 
-Last updated: July 13, 2026
+Last updated: July 14, 2026
 
 Production URL: https://fit-check-ecru.vercel.app
 
@@ -11,6 +11,22 @@ Latest pushed implementation commit:
 ```
 
 ## Current State
+
+### Change 2026-07-14: Style Quiz Removed
+
+The Style Quiz has been removed from the product entirely. The implementation follows `docs/FITCHECK_PHASE2_SPEC.md`, Workstream A:
+
+- `StyleQuizPage`, `quizLooks`, `QuizLook`, and `.quiz-*` styles were deleted.
+- `/quiz` now redirects to `/` so old links do not 404.
+- Homepage and navigation quiz CTAs were removed.
+- README, project status, and QA checklist were updated.
+- No localStorage migration is needed because quiz progress was never persisted.
+
+Phase 2 status:
+
+- Workstream A is complete.
+- Trust sprint work is partially complete.
+- Real Supabase auth, the booking wizard, analytics, and edits-lite remain.
 
 FitCheck is a responsive React/Vite fashion-tech MVP with seeded creator data, local demo state, Supabase schema migrations, Vercel serverless API routes, and Stripe checkout/webhook scaffolding.
 

@@ -1,4 +1,4 @@
-import type { Booking, ClosetItem, Creator, DesignerPiece, Post, QuizLook, Review, Service } from "./types";
+import type { Booking, ClosetItem, Creator, DesignerPiece, Post, Review, Service } from "./types";
 import type { ProductEntitlement, Purchase, TasteProduct, TasteProductItem, TasteProductOutfit } from "./types/commerce";
 
 const mediaMap: Record<string, string> = {
@@ -725,45 +725,6 @@ export const bookingSeed: Booking[] = [
         },
       ],
     },
-  },
-];
-
-export const quizLooks: QuizLook[] = [
-  {
-    id: "quiz-01",
-    image: image("photo-1515886657613-9f3515b0c78f"),
-    title: "Clean tailoring",
-    tags: ["soft minimalist", "tailoring", "workwear"],
-  },
-  {
-    id: "quiz-02",
-    image: image("photo-1523398002811-999ca8dec234"),
-    title: "City layers",
-    tags: ["streetwear", "monochrome", "city"],
-  },
-  {
-    id: "quiz-03",
-    image: image("photo-1487412720507-e7ab37603c6f"),
-    title: "Romantic occasion",
-    tags: ["romantic", "occasionwear", "modest"],
-  },
-  {
-    id: "quiz-04",
-    image: image("photo-1512436991641-6745cdb1723f"),
-    title: "Textured vintage",
-    tags: ["dark academia", "vintage", "texture"],
-  },
-  {
-    id: "quiz-05",
-    image: image("photo-1503342217505-b0a15ec3261c"),
-    title: "Quiet weekend",
-    tags: ["soft minimalist", "capsule", "warm neutrals"],
-  },
-  {
-    id: "quiz-06",
-    image: image("photo-1485968579580-b6d095142e6e"),
-    title: "Travel uniform",
-    tags: ["travel", "tailoring", "capsule"],
   },
 ];
 

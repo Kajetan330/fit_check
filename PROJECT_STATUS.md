@@ -14,7 +14,7 @@
 - Repository remote is configured as `origin`.
 - Product direction is clear from the PDFs: a profile-first fashion creator platform with productised styling services.
 - Responsive Vite + React + TypeScript app is implemented.
-- Main customer flow works locally: discover creators, complete style quiz, view profile/post, sign in, book a service, and view booking.
+- Main customer flow works locally: discover creators, view profile/post, sign in, book a service, and view booking.
 - Mobile-ready navigation, PWA manifest metadata, and static deployment rewrites are included.
 - Creator Studio demo works with booking queue, status updates, earnings metrics, service catalogue, and lookbook assembly surface.
 - Closet, saved creators/posts, and bookings persist in `localStorage`.
@@ -42,7 +42,7 @@
 
 The practical MVP is a responsive web app that feels native on mobile and supports the main FitCheck journey:
 
-1. A customer discovers creators through curated surfaces, Rising Stars, filters, and a short style quiz.
+1. A customer discovers creators through curated surfaces, Rising Stars, and filters.
 2. A customer opens a creator profile and can inspect posts, portfolio work, services, designer pieces, and reviews.
 3. A customer books a service with a guided intake flow, mock uploads, clear price, turnaround, and escrow-style confirmation.
 4. A customer can revisit closet items, saved content, and booking history.
@@ -75,7 +75,6 @@ npm run dev
 - `npm run check` passes.
 - Dev server route smoke checks returned HTTP 200 for:
   - `/`
-  - `/quiz`
   - `/creator/amara-okafor`
   - `/post/post-amara-01`
   - `/book/amara-okafor/wardrobe-audit`
@@ -90,7 +89,6 @@ npm run dev
 ## Completed Features
 
 - Responsive Discover screen with search, aesthetic filters, featured creator, Rising Stars, and recent posts.
-- Visual style quiz with loading and match results.
 - Creator profile with hero, stats, follow action, pinned posts, tabs, services, portfolio, designer pieces, and reviews.
 - Single post page with tagged items and creator conversion path.
 - Mock sign-in and creator/customer role selection.
