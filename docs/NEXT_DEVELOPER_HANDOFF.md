@@ -7,8 +7,10 @@ Production URL: https://fit-check-ecru.vercel.app
 Latest pushed implementation commits before this handoff:
 
 ```text
+86ad8a0 feat: seed commerce catalog and guard paid edits
+8e65a52 fix: harden checkout and launch security
+23c8660 Real Supabase auth foundation, commerce freeze flag, funnel analytics, trust fixes
 e7d16f4 Remove style quiz; update handoff note + Phase 2 spec
-2da77e0 feat: scaffold creator commerce and paid edits
 ```
 
 ## Current State
