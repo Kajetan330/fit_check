@@ -74,7 +74,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(() => loadState());
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    // Identity is never persisted here: Supabase owns real sessions, and demo
+    // users are intentionally ephemeral per-tab.
+    const { user: _omitted, ...persistable } = state;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistable));
   }, [state]);
 
   // Real identity: mirror the Supabase session into app state. Demo sign-in

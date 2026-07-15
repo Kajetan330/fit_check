@@ -1328,7 +1328,7 @@ function BookingPage() {
           </div>
           <div className="escrow-note">
             <ShieldCheck size={18} />
-            Mock escrow holds payment until delivery approval.
+            Your payment is held and released only after you approve the delivery. You have 72 hours to approve, request the included revision, or report a problem.
           </div>
         </div>
       </aside>
@@ -2368,7 +2368,9 @@ function CreatorSignInPage() {
       setNotice("Magic link sent. The creator workspace also continues locally while onboarding is finished.");
     }
 
-    signIn(name, "creator", email);
+    if (!supabase || import.meta.env.DEV) {
+      signIn(name, "creator", email);
+    }
     setMode("studio");
     navigate(redirect);
   };
