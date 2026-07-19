@@ -31,6 +31,7 @@
 - Booking draft persistence is implemented for logged-out customers with text, selected closet IDs, and upload metadata only. Image blobs, signed URLs, and tokens are never persisted.
 - Additive Supabase migrations `0007_social_first.sql` and `0008_service_loop.sql` add primary offers, service context, attribution fields, waitlists, booking messages, revision requests, and approval timestamps.
 - Serverless endpoints now include `/api/create-booking`, `/api/referral-links`, `/api/track-event`, and `/api/cron/auto-approve`.
+- The older browser-priced booking checkout route is retired from deployment; production bookings use trusted Supabase booking IDs and `/api/create-commerce-checkout`.
 - The latest implementation handoff for future developers is tracked in `docs/NEXT_DEVELOPER_HANDOFF.md`.
 - The final finish plan is tracked in `docs/FINAL_FINISH_PLAN.md`.
 - Admin console, launch checklist, legal draft pages, profile draft editing, post composer, and PWA service worker are included.

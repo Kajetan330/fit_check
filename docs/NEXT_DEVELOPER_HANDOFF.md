@@ -50,7 +50,7 @@ Implemented the Phase 1-2 code-side rebrand:
 
 Implemented from the same-day technical review:
 
-- Legacy booking checkout (`api/create-checkout-session.ts`) now rate-limits requests and validates the creator/service/price against a server-side catalog before creating Stripe Checkout.
+- Legacy browser-priced booking checkout has been retired from deployment to stay inside Vercel Hobby's 12-function cap. Production bookings use `/api/create-booking` and `/api/create-commerce-checkout`; unsigned/demo fallback bookings stay local-only.
 - Trusted commerce checkout (`api/create-commerce-checkout.ts`) now fails closed when `VITE_APP_URL` is missing instead of falling back to wildcard CORS.
 - `supabase/migrations/0005_security_hardening.sql` consolidates profile role-update protection and restricts `commerce_events` inserts to authenticated users.
 - The service worker now skips caching Supabase-hosted URLs so signed URLs and auth/storage resources do not become stale.
@@ -205,7 +205,7 @@ Do this in small commits:
 2. Add typed Supabase query helpers for creators, services, and paid edits.
 3. Update storefront and paid-edit landing pages to read from Supabase, with fallback seeded data only for local demo mode.
 4. Wire signed media reads for `paid-product-media` where product/item media stops using public launch assets.
-5. Replace legacy booking checkout from browser-provided service details with the trusted `booking` path in `/api/create-commerce-checkout`.
+5. Keep legacy browser-priced checkout retired; production booking checkout should continue through the trusted `booking` path in `/api/create-commerce-checkout`.
 6. Wire creator Studio forms to Supabase writes and RLS.
 7. Add integration tests or scripted smoke tests for checkout, webhook, entitlement, signed media, controlled share links, and auth.
 

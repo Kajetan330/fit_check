@@ -70,7 +70,7 @@ payment_intent.payment_failed
 charge.refunded
 ```
 
-The legacy booking checkout function is at `api/create-checkout-session.ts` and validates service prices server-side. The trusted commerce checkout function is at `api/create-commerce-checkout.ts`. The webhook validates events and updates booking/payment records.
+Trusted booking and paid-edit checkout runs through `api/create-commerce-checkout.ts`; `api/create-booking.ts` creates booking rows from signed-in users and loads the service price server-side before checkout. The older browser-priced booking checkout route is intentionally not deployed on Hobby so the project stays within Vercel's 12-function limit. The webhook validates events and updates booking/payment records.
 
 `CRON_SECRET` gates `/api/cron/auto-approve`, which is scheduled daily at 09:00 UTC in `vercel.json` after `0008_service_loop.sql` is applied. Vercel Hobby only allows daily cron jobs; switch this to hourly only after upgrading the Vercel project to Pro.
 
