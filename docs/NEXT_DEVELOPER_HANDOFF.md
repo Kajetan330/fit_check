@@ -153,7 +153,7 @@ Real/scaffolded production controls:
 - `/api/create-booking` creates real booking UUID rows from signed-in users and loads service price from Supabase before checkout.
 - Paid-edit checkout is frozen behind `VITE_COMMERCE_ENABLED` until the database is ready.
 - `/api/track-event` records allowlisted source/campaign attribution without storing PII or brief text.
-- `/api/cron/auto-approve` is gated by `CRON_SECRET` and the `0008_service_loop.sql` approval columns.
+- `/api/cron/auto-approve` is gated by `CRON_SECRET` and the `0008_service_loop.sql` approval columns. It is scheduled daily at 09:00 UTC for Vercel Hobby compatibility; hourly auto-approval requires Vercel Pro.
 - Webhook processing records Stripe event IDs to reduce duplicate processing.
 - Controlled share links store SHA-256 token hashes, not raw tokens.
 - Private media access is mediated through signed URL APIs.

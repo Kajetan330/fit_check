@@ -13,3 +13,4 @@ pnpm-debug.log*
 STRIPE/
 supabase/environemnt.txt
 supabase/environment.txt
+.vercel/

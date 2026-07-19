@@ -46,7 +46,7 @@ returns no matches.
 - Storefront, services, and edits still render primarily from local seed data. Supabase seed data exists, but full Supabase-backed reads are still future work.
 - Service-specific referral-link saving is local-only until services render from Supabase UUIDs. Edit and storefront links are closer to production-ready because paid edit IDs are already UUID-shaped.
 - Paid-edit purchasing remains behind `VITE_COMMERCE_ENABLED`.
-- Auto-approval is inert until `CRON_SECRET` is configured and migration `0008_service_loop.sql` is applied.
+- Auto-approval is inert until `CRON_SECRET` is configured and migration `0008_service_loop.sql` is applied. The Vercel cron is daily at 09:00 UTC because the project is on Hobby; hourly scheduling requires Vercel Pro.
 - Email notifications, Stripe Connect payouts, dispute admin tooling, and real creator verification are not complete.
 
 ## Manual Next Steps

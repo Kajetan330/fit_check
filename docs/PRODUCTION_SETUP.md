@@ -72,7 +72,7 @@ charge.refunded
 
 The legacy booking checkout function is at `api/create-checkout-session.ts` and validates service prices server-side. The trusted commerce checkout function is at `api/create-commerce-checkout.ts`. The webhook validates events and updates booking/payment records.
 
-`CRON_SECRET` gates `/api/cron/auto-approve`, which is scheduled hourly in `vercel.json` after `0008_service_loop.sql` is applied.
+`CRON_SECRET` gates `/api/cron/auto-approve`, which is scheduled daily at 09:00 UTC in `vercel.json` after `0008_service_loop.sql` is applied. Vercel Hobby only allows daily cron jobs; switch this to hourly only after upgrading the Vercel project to Pro.
 
 ## 3. Deploy
 
