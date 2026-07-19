@@ -24,6 +24,8 @@ export interface Service {
   deliverables: string[];
   intakePrompts: string[];
   addOns: string[];
+  whoFor?: string[];
+  effortNote?: string;
 }
 
 export interface Creator {
@@ -47,6 +49,7 @@ export interface Creator {
   tastePrinciples: string[];
   storefrontHeadline: string;
   storefrontDescription: string;
+  primaryOfferType?: "service" | "edit" | "waitlist";
   featuredProductId?: string;
   featuredServiceId?: string;
   instagramUrl?: string;

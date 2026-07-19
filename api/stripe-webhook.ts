@@ -116,8 +116,12 @@ export default async function handler(req: any, res: any) {
 
             await supabase.from("commerce_events").insert({
               event_name: "checkout_completed",
+              creator_id: session.metadata?.creatorId || null,
               product_id: purchase.product_id,
               user_id: purchase.customer_id,
+              referral_code: session.metadata?.referralCode || null,
+              source: session.metadata?.source || null,
+              campaign: session.metadata?.campaign || null,
               metadata: { purchaseId: purchase.id },
             });
           }
@@ -148,6 +152,8 @@ export default async function handler(req: any, res: any) {
           service_id: session.metadata.serviceId || null,
           user_id: session.metadata.customerId || null,
           referral_code: session.metadata.referralCode || null,
+          source: session.metadata.source || null,
+          campaign: session.metadata.campaign || null,
           metadata: { bookingId: session.metadata.bookingId },
         });
 

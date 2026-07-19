@@ -41,6 +41,26 @@ export default async function handler(req: any, res: any) {
     return;
   }
 
+  const { data: booking, error: bookingError } = await supabase
+    .from("bookings")
+    .select("payment_status,stripe_checkout_session_id,updated_at")
+    .eq("id", bookingId)
+    .maybeSingle();
+
+  if (bookingError && bookingError.code !== "22P02") {
+    res.status(200).json({ paymentStatus: "unknown", message: bookingError.message });
+    return;
+  }
+
+  if (booking) {
+    res.status(200).json({
+      paymentStatus: booking.payment_status,
+      stripeCheckoutSessionId: booking.stripe_checkout_session_id,
+      updatedAt: booking.updated_at,
+    });
+    return;
+  }
+
   const { data, error } = await supabase
     .from("checkout_sessions")
     .select("payment_status,stripe_checkout_session_id,updated_at")

@@ -1,30 +1,57 @@
+import { appEnv } from "./env";
+
 const REFERRAL_KEY = "fitcheck:referral:v1";
 const REFERRAL_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+export const LAST_CREATOR_KEY = "fitcheck:last-creator:v1";
 
-interface StoredReferral {
+export type ShareDestination = { type: "service" | "edit"; idOrSlug: string };
+
+export interface StoredReferral {
   code: string;
+  creatorHandle?: string;
   source?: string;
   medium?: string;
   campaign?: string;
+  landingPath?: string;
   capturedAt: number;
 }
 
 const isRecent = (referral: StoredReferral) => Date.now() - referral.capturedAt < REFERRAL_TTL_MS;
 
+const currentLandingPath = () =>
+  typeof window === "undefined" ? undefined : `${window.location.pathname}${window.location.search}`;
+
+const creatorHandleFromPath = (path: string) => {
+  const match = path.match(/^\/(?:c|creator)\/([^/?#]+)/);
+  return match?.[1];
+};
+
+/**
+ * Attribution rule: first touch wins for the same creator for seven days.
+ * A fresh referral for a different creator replaces the stored referral, so
+ * social traffic remains attached to the creator whose link the visitor most
+ * recently opened.
+ */
 export function captureReferral(search: string) {
   if (typeof window === "undefined") return;
   const params = new URLSearchParams(search);
   const code = params.get("ref")?.trim();
+  const source = params.get("source") ?? params.get("utm_source") ?? undefined;
+  const campaign = params.get("campaign") ?? params.get("utm_campaign") ?? undefined;
+  const landingPath = currentLandingPath();
+  const creatorHandle = landingPath ? creatorHandleFromPath(landingPath) : undefined;
   const existing = getStoredReferral();
 
-  if (!code || (existing && isRecent(existing) && existing.code === code)) return;
-  if (existing && isRecent(existing) && !params.get("utm_campaign")) return;
+  if (!code && !source && !campaign) return;
+  if (existing && isRecent(existing) && existing.creatorHandle === creatorHandle) return;
 
   const referral: StoredReferral = {
-    code,
-    source: params.get("utm_source") ?? undefined,
+    code: code || existing?.code || "direct",
+    creatorHandle,
+    source,
     medium: params.get("utm_medium") ?? undefined,
-    campaign: params.get("utm_campaign") ?? undefined,
+    campaign,
+    landingPath,
     capturedAt: Date.now(),
   };
   localStorage.setItem(REFERRAL_KEY, JSON.stringify(referral));
@@ -41,6 +68,44 @@ export function getStoredReferral(): StoredReferral | null {
   } catch {
     return null;
   }
+}
+
+export function rememberLastCreator(handle: string) {
+  if (typeof window === "undefined" || !handle) return;
+  try {
+    localStorage.setItem(LAST_CREATOR_KEY, handle);
+  } catch {
+    // Non-critical continuity helper.
+  }
+}
+
+export function getLastCreator() {
+  if (typeof window === "undefined") return "";
+  try {
+    return localStorage.getItem(LAST_CREATOR_KEY) || "";
+  } catch {
+    return "";
+  }
+}
+
+export function createCreatorShareUrl(opts: {
+  handle: string;
+  destination?: ShareDestination;
+  source?: string;
+  campaign?: string;
+  referralCode?: string;
+}): string {
+  const base = opts.destination
+    ? opts.destination.type === "service"
+      ? `/c/${opts.handle}/service/${opts.destination.idOrSlug}`
+      : `/creator/${opts.handle}/edit/${opts.destination.idOrSlug}`
+    : `/c/${opts.handle}`;
+  const params = new URLSearchParams();
+  if (opts.referralCode) params.set("ref", opts.referralCode);
+  if (opts.source) params.set("source", opts.source);
+  if (opts.campaign) params.set("campaign", opts.campaign);
+  const query = params.toString();
+  return `${appEnv.appUrl}${base}${query ? `?${query}` : ""}`;
 }
 
 export function safeRedirectPath(value: string | null | undefined, fallback = "/") {
@@ -62,5 +127,5 @@ export function editSharePath(handle: string, slug: string) {
 }
 
 export function serviceSharePath(handle: string, serviceId: string) {
-  return `/creator/${handle}/service/${serviceId}`;
+  return `/c/${handle}/service/${serviceId}`;
 }

@@ -36,6 +36,8 @@ const fashionServices: Service[] = [
     deliverables: ["90-second creator note", "One outfit or purchase call", "One revision"],
     intakePrompts: ["What decision do you need help with?", "Where will you wear it?"],
     addOns: ["Rush reply", "Second option"],
+    whoFor: ["Fast purchase decisions", "One event outfit", "Followers who already trust the creator's eye"],
+    effortNote: "Best with 1-3 photos and a short decision prompt.",
   },
   {
     id: "style-diagnosis",
@@ -48,6 +50,8 @@ const fashionServices: Service[] = [
     deliverables: ["Written style read", "Reference board", "Palette and silhouette notes", "One revision"],
     intakePrompts: ["What feels off about your style right now?", "Which references feel closest?"],
     addOns: ["Voice walkthrough", "Occasion capsule"],
+    whoFor: ["Style resets", "Aesthetic transitions", "People who want a sharper repeatable direction"],
+    effortNote: "Best with a few current outfits and 2-3 reference images.",
   },
   {
     id: "wardrobe-audit",
@@ -60,6 +64,8 @@ const fashionServices: Service[] = [
     deliverables: ["Tagged closet inventory", "Keep, donate, repair calls", "8-12 styled outfits", "Voice walkthrough"],
     intakePrompts: ["What do you want your wardrobe to do better?", "Which pieces are hardest to wear?"],
     addOns: ["Rush delivery", "Extra 5 outfits", "Shopping gap list"],
+    whoFor: ["Closet cleanups", "No-buy months", "People with good pieces that are hard to combine"],
+    effortNote: "Best with clear photos of the pieces you actually wear.",
   },
   {
     id: "capsule-build",
@@ -72,6 +78,8 @@ const fashionServices: Service[] = [
     deliverables: ["8-15 linked pieces", "Budget tier guidance", "Fit and styling notes", "Affiliate-ready shopping list"],
     intakePrompts: ["What is the capsule for?", "What total budget should the edit respect?"],
     addOns: ["Plus-size alternatives", "Sustainable-only edit", "Designer piece integration"],
+    whoFor: ["Seasonal capsules", "Travel wardrobes", "Followers ready to buy with a clear budget"],
+    effortNote: "Best with your budget, sizes, no-go brands, and two references.",
   },
 ];
 
@@ -97,6 +105,7 @@ export const creators: Creator[] = [
     storefrontHeadline: "Make your everyday wardrobe feel finished.",
     storefrontDescription:
       "Amara sells tight seasonal edits and calm one-to-one styling for followers who want polished outfits without overbuying.",
+    primaryOfferType: "service",
     featuredProductId: "11111111-1111-4111-8111-111111111111",
     featuredServiceId: "quick-take",
     instagramUrl: "https://instagram.com/amara.styles",
@@ -130,6 +139,7 @@ export const creators: Creator[] = [
     storefrontHeadline: "Build the city uniform you actually repeat.",
     storefrontDescription:
       "Lena turns creator trust into compact shopping edits and outfit systems for followers with small closets and busy weeks.",
+    primaryOfferType: "edit",
     featuredProductId: "22222222-2222-4222-8222-222222222222",
     featuredServiceId: "capsule-build",
     instagramUrl: "https://instagram.com/lena.layers",
@@ -162,6 +172,7 @@ export const creators: Creator[] = [
     storefrontHeadline: "Occasionwear that photographs beautifully and still feels like you.",
     storefrontDescription:
       "Noor packages her event styling taste into wedding-guest edits and personal look selection for modest dressers.",
+    primaryOfferType: "service",
     featuredProductId: "33333333-3333-4333-8333-333333333333",
     featuredServiceId: "quick-take",
     instagramUrl: "https://instagram.com/noor.edits",
@@ -193,6 +204,7 @@ export const creators: Creator[] = [
     storefrontHeadline: "Find the secondhand pieces worth building around.",
     storefrontDescription:
       "Ivy monetises a sharp archive eye through weekly vintage edits, texture guides, and slow-fashion styling.",
+    primaryOfferType: "edit",
     featuredProductId: "44444444-4444-4444-8444-444444444444",
     featuredServiceId: "style-diagnosis",
     instagramUrl: "https://instagram.com/ivymakes",

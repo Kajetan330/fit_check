@@ -4,6 +4,7 @@ import { supabase } from "./supabase";
 
 const CALLBACK_PATH = "/auth/callback";
 export const AUTH_REDIRECT_KEY = "fitcheck-auth-redirect";
+export const RETURN_ROUTE_KEY = "fitcheck:return-route:v1";
 
 const callbackUrl = (redirect: string) =>
   `${window.location.origin}${CALLBACK_PATH}?next=${encodeURIComponent(redirect)}`;
@@ -11,18 +12,21 @@ const callbackUrl = (redirect: string) =>
 export function rememberAuthRedirect(redirect: string) {
   try {
     sessionStorage.setItem(AUTH_REDIRECT_KEY, redirect);
+    sessionStorage.setItem(RETURN_ROUTE_KEY, redirect);
   } catch {
     // sessionStorage unavailable (private mode edge cases) — callback falls back to "/"
   }
 }
 
-export function consumeAuthRedirect(): string {
+export function consumeAuthRedirect(fallback = "/"): string {
   try {
     const value = sessionStorage.getItem(AUTH_REDIRECT_KEY);
+    const returnRoute = sessionStorage.getItem(RETURN_ROUTE_KEY);
     sessionStorage.removeItem(AUTH_REDIRECT_KEY);
-    return value || "/";
+    sessionStorage.removeItem(RETURN_ROUTE_KEY);
+    return value || returnRoute || fallback;
   } catch {
-    return "/";
+    return fallback;
   }
 }
 

@@ -14,6 +14,8 @@ Create a Supabase project, then run:
 -- then paste and run supabase/migrations/0004_profiles.sql
 -- then paste and run supabase/migrations/0005_security_hardening.sql
 -- then paste and run supabase/migrations/0006_taste_item_verdict.sql
+-- then paste and run supabase/migrations/0007_social_first.sql
+-- then paste and run supabase/migrations/0008_service_loop.sql
 -- sign in once through the app so public.profiles has an owner row
 -- then paste and run supabase/seed/0001_seed_catalog.sql
 ```
@@ -51,6 +53,7 @@ Create a Stripe account and add:
 ```bash
 STRIPE_SECRET_KEY=
 STRIPE_WEBHOOK_SECRET=
+CRON_SECRET=
 ```
 
 Webhook endpoint:
@@ -68,6 +71,8 @@ charge.refunded
 ```
 
 The legacy booking checkout function is at `api/create-checkout-session.ts` and validates service prices server-side. The trusted commerce checkout function is at `api/create-commerce-checkout.ts`. The webhook validates events and updates booking/payment records.
+
+`CRON_SECRET` gates `/api/cron/auto-approve`, which is scheduled hourly in `vercel.json` after `0008_service_loop.sql` is applied.
 
 ## 3. Deploy
 

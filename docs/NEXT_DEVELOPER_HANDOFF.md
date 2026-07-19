@@ -2,7 +2,7 @@
 
 ByTaste is the new trade name for the project formerly called FitCheck. Preserve the existing `fitcheck-*` browser storage keys until a deliberate migration shim is added.
 
-Last updated: July 14, 2026
+Last updated: July 19, 2026
 
 Production URL: https://fit-check-ecru.vercel.app
 
@@ -17,6 +17,23 @@ e7d16f4 Remove style quiz; update handoff note + Phase 2 spec
 ```
 
 ## Current State
+
+### Change 2026-07-19: Social-First Pivot
+
+Implemented the social-first pivot from the July 19 specification while preserving existing booking, paid-edit, and Studio foundations:
+
+- `/` is now a marketing homepage with a seeded delivery walkthrough, creator-link note, creator proposition, trust cards, and the existing `#how-it-works` anchor.
+- Guest navigation no longer exposes a public directory or paid-edit deep link. It now shows Home, How it works, For creators, and Sign in.
+- Customer navigation now includes `/account`; creator navigation includes `/studio/share`.
+- Creator storefronts resolve one primary offer, show proof from real seeded sources only, and render a mobile sticky CTA.
+- Booking auth moved to the Review step. Logged-out visitors can complete service, goal, and photo steps first; drafts persist text, closet IDs, and upload metadata only.
+- `/studio/share` adds canonical storefront links, QR generation, direct offer links, tracked-link generation, and honest empty stats.
+- New endpoints: `/api/create-booking`, `/api/referral-links`, `/api/track-event`, and `/api/cron/auto-approve`.
+- Checkout and webhook attribution now carry `source` and `campaign` where migration `0007_social_first.sql` has been applied.
+- New migrations: `0007_social_first.sql` and `0008_service_loop.sql`.
+- Full report: `docs/SOCIAL_FIRST_IMPLEMENTATION_REPORT_2026-07-19.md`.
+
+Manual follow-up: run migrations `0007` and `0008`, rerun the catalog seed, add `CRON_SECRET` in Vercel before relying on auto-approval, and keep `VITE_COMMERCE_ENABLED` off until paid edit purchases are fully tested.
 
 ### Change 2026-07-14: ByTaste Rebrand
 
@@ -61,7 +78,7 @@ Implemented from `docs/BYTASTE_PHASE2_SPEC.md` with a bookings-first launch deci
 - **Funnel analytics**: `@vercel/analytics` is mounted in `main.tsx`; events include `creator_profile_viewed`, `edit_viewed`, `edit_checkout_clicked`, `booking_started`, `checkout_redirected`, `auth_gate_shown`, `signin_google_clicked`, `signin_magic_link_sent`, and `auth_completed`.
 - **Homepage**: new `#how-it-works` section with three steps, including the payment-hold language. Guest nav "How it works" points at that section.
 
-Remaining from the Phase 2 spec: booking wizard guest-draft preservation (D1), profile restructure (B5), and Supabase-backed creator/service/paid-edit data.
+Remaining from the Phase 2 spec after the social-first pass: Supabase-backed creator/service/paid-edit reads, creator Studio writes, real analytics tables in Studio, service-loop action endpoints/UI, and Stripe Connect payouts.
 
 ### Change 2026-07-14: Style Quiz Removed
 
@@ -133,8 +150,10 @@ Real/scaffolded production controls:
 - Paid edit access is modeled through `product_entitlements`.
 - Paid edit reader access calls the entitlement API in Supabase-configured environments.
 - Checkout prices are designed to load server-side from Supabase.
-- Legacy booking checkout has server-side service price validation while the real booking UUID flow is being finished.
+- `/api/create-booking` creates real booking UUID rows from signed-in users and loads service price from Supabase before checkout.
 - Paid-edit checkout is frozen behind `VITE_COMMERCE_ENABLED` until the database is ready.
+- `/api/track-event` records allowlisted source/campaign attribution without storing PII or brief text.
+- `/api/cron/auto-approve` is gated by `CRON_SECRET` and the `0008_service_loop.sql` approval columns.
 - Webhook processing records Stripe event IDs to reduce duplicate processing.
 - Controlled share links store SHA-256 token hashes, not raw tokens.
 - Private media access is mediated through signed URL APIs.
@@ -145,10 +164,10 @@ Still prototype/demo:
 
 - Most visible app data still comes from `src/data.ts` and `localStorage`.
 - Creator Studio forms do not yet write to Supabase.
-- Booking creation still has legacy demo behavior unless a real booking UUID exists.
+- Booking creation still falls back to the legacy demo checkout path when Supabase is not configured.
 - Storefront and paid-edit landing pages still read from seeded frontend data first, even though Supabase seed data now exists.
 - Static share pages are generated SVG/HTML cards for seeded data only.
-- The booking wizard still needs guest-draft preservation and the progressive conversion pass.
+- Service-specific saved referral links are local-only until storefront services read from Supabase UUIDs.
 
 ## Required Manual Setup Before The Next Full Test
 
@@ -156,10 +175,13 @@ Still prototype/demo:
 2. Run `supabase/migrations/0004_profiles.sql` in the Supabase SQL Editor.
 3. Run `supabase/migrations/0005_security_hardening.sql` in the Supabase SQL Editor.
 4. Run `supabase/migrations/0006_taste_item_verdict.sql` in the Supabase SQL Editor.
-5. Sign in once through the app so `public.profiles` has at least one auth-backed owner row.
-6. Run `supabase/seed/0001_seed_catalog.sql` in the Supabase SQL Editor.
-7. Enable Google provider in Supabase Auth if you want the Google button live.
-8. Verify these commerce tables exist:
+5. Run `supabase/migrations/0007_social_first.sql` in the Supabase SQL Editor.
+6. Run `supabase/migrations/0008_service_loop.sql` in the Supabase SQL Editor.
+7. Sign in once through the app so `public.profiles` has at least one auth-backed owner row.
+8. Run `supabase/seed/0001_seed_catalog.sql` in the Supabase SQL Editor.
+9. Enable Google provider in Supabase Auth if you want the Google button live.
+10. Add `CRON_SECRET` in Vercel before relying on auto-approval.
+11. Verify these commerce tables exist:
    - `taste_products`
    - `taste_product_items`
    - `taste_product_outfits`
@@ -169,8 +191,8 @@ Still prototype/demo:
    - `creator_referral_links`
    - `commerce_events`
    - `stripe_events`
-9. Verify `taste_product_items.verdict` exists.
-10. Verify the `paid-product-media` storage bucket exists.
+12. Verify `taste_product_items.verdict`, `creator_profiles.primary_offer_type`, `commerce_events.source`, and `bookings.approval_deadline` exist.
+13. Verify the `paid-product-media` storage bucket exists.
 11. Only after 0003 is applied and seeded, set `VITE_COMMERCE_ENABLED=true` in Vercel if paid-edit purchasing should launch.
 12. Test paid-edit checkout using a real `taste_products.id`.
 13. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.

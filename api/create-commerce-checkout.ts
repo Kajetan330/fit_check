@@ -8,9 +8,12 @@ const setCorsHeaders = (res: any, appUrl: string) => {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 };
 
-const isUuid = (value: unknown) =>
+const isUuid = (value: unknown): value is string =>
   typeof value === "string" &&
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+
+const isSlug = (value: unknown): value is string => typeof value === "string" && /^[a-z0-9-]{1,80}$/.test(value);
+const cleanOptionalSlug = (value: unknown) => (isSlug(value) ? value : null);
 
 export default async function handler(req: any, res: any) {
   const appUrl = process.env.VITE_APP_URL;
@@ -47,6 +50,8 @@ export default async function handler(req: any, res: any) {
   }
 
   const { checkoutType, referenceId, referralCode } = req.body || {};
+  const source = cleanOptionalSlug(req.body?.source);
+  const campaign = cleanOptionalSlug(req.body?.campaign);
   if ((checkoutType !== "taste_product" && checkoutType !== "booking") || !isUuid(referenceId)) {
     res.status(400).json({ message: "Invalid checkout request." });
     return;
@@ -107,6 +112,8 @@ export default async function handler(req: any, res: any) {
         creatorId: booking.creator_id,
         customerId: user.id,
         referralCode: typeof referralCode === "string" ? referralCode : "",
+        source: source ?? "",
+        campaign: campaign ?? "",
       },
       success_url: `${appUrl}/bookings/${booking.id}?checkout=success`,
       cancel_url: `${appUrl}/bookings/${booking.id}?checkout=cancelled`,
@@ -114,10 +121,24 @@ export default async function handler(req: any, res: any) {
 
     const { error: updateError } = await supabase
       .from("bookings")
-      .update({ stripe_checkout_session_id: session.id })
+      .update({
+        stripe_checkout_session_id: session.id,
+        source,
+        campaign,
+        referral_code: typeof referralCode === "string" ? referralCode : null,
+      })
       .eq("id", booking.id);
 
-    if (updateError) {
+    if (updateError?.code === "42703") {
+      const { error: retryError } = await supabase
+        .from("bookings")
+        .update({ stripe_checkout_session_id: session.id })
+        .eq("id", booking.id);
+      if (retryError) {
+        res.status(500).json({ message: retryError.message });
+        return;
+      }
+    } else if (updateError) {
       res.status(500).json({ message: updateError.message });
       return;
     }
@@ -128,6 +149,8 @@ export default async function handler(req: any, res: any) {
       service_id: booking.service_id,
       user_id: user.id,
       referral_code: typeof referralCode === "string" ? referralCode : null,
+      source,
+      campaign,
     });
 
     res.status(200).json({ url: session.url });
@@ -167,19 +190,29 @@ export default async function handler(req: any, res: any) {
         .maybeSingle()
     : { data: null };
 
-  const { data: purchase, error: purchaseError } = await supabase
+  const purchaseInsert = {
+    customer_id: user.id,
+    product_id: product.id,
+    payment_status: "requires_payment",
+    amount_cents: product.price_cents,
+    currency: product.currency,
+    referral_creator_id: referral?.creator_id ?? null,
+    referral_code: referral?.code ?? null,
+    source,
+    campaign,
+  };
+  let { data: purchase, error: purchaseError } = await supabase
     .from("purchases")
-    .insert({
-      customer_id: user.id,
-      product_id: product.id,
-      payment_status: "requires_payment",
-      amount_cents: product.price_cents,
-      currency: product.currency,
-      referral_creator_id: referral?.creator_id ?? null,
-      referral_code: referral?.code ?? null,
-    })
+    .insert(purchaseInsert)
     .select("id")
     .single();
+
+  if (purchaseError?.code === "42703") {
+    const { source: _source, campaign: _campaign, ...legacyPurchaseInsert } = purchaseInsert;
+    const retry = await supabase.from("purchases").insert(legacyPurchaseInsert).select("id").single();
+    purchase = retry.data;
+    purchaseError = retry.error;
+  }
 
   if (purchaseError || !purchase) {
     res.status(500).json({ message: purchaseError?.message || "Purchase could not be created." });
@@ -209,6 +242,8 @@ export default async function handler(req: any, res: any) {
       creatorId: product.creator_id,
       customerId: user.id,
       referralCode: referral?.code ?? "",
+      source: source ?? "",
+      campaign: campaign ?? "",
     },
     success_url: `${appUrl}/library/edits/${purchase.id}?checkout=success`,
     cancel_url: `${appUrl}/library?checkout=cancelled`,
@@ -230,6 +265,8 @@ export default async function handler(req: any, res: any) {
     product_id: product.id,
     user_id: user.id,
     referral_code: referral?.code ?? null,
+    source,
+    campaign,
   });
 
   res.status(200).json({ url: session.url });

@@ -36,7 +36,9 @@ export async function createCommerceCheckout({
       body: JSON.stringify({
         checkoutType,
         referenceId,
-        referralCode: referral?.code,
+        referralCode: referral?.code === "direct" ? undefined : referral?.code,
+        source: referral?.source,
+        campaign: referral?.campaign,
       }),
     });
     const payload = (await response.json()) as { url?: string; message?: string };

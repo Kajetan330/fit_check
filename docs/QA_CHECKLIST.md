@@ -43,7 +43,7 @@ npm run check
 ## Brand And Media
 
 - Verify no external stock image URLs remain in source.
-- Verify `public/assets/media/` images render on Discover, profiles, posts, closet, and lookbook.
+- Verify `public/assets/media/` images render on the marketing homepage, creator storefronts, posts, closet, and lookbook.
 - Verify `public/brand/bytaste-mark.svg`, `bytaste-wordmark.svg`, and `public/icon.svg` open correctly.
 
 ## Responsive Checks

@@ -251,6 +251,34 @@ begin
     active = excluded.active,
     updated_at = now();
 
+  update public.creator_profiles
+  set primary_offer_type = case handle
+    when 'lena-park' then 'edit'
+    when 'ivy-marlowe' then 'edit'
+    else 'service'
+  end,
+  updated_at = now()
+  where handle in ('amara-okafor', 'lena-park', 'noor-hassan', 'ivy-marlowe');
+
+  update public.services
+  set
+    who_for = case slug
+      when 'quick-take' then array['Fast purchase decisions', 'One event outfit', 'Followers who already trust the creator eye']::text[]
+      when 'style-diagnosis' then array['Style resets', 'Aesthetic transitions', 'People who want a sharper repeatable direction']::text[]
+      when 'wardrobe-audit' then array['Closet cleanups', 'No-buy months', 'People with good pieces that are hard to combine']::text[]
+      when 'capsule-build' then array['Seasonal capsules', 'Travel wardrobes', 'Followers ready to buy with a clear budget']::text[]
+      else who_for
+    end,
+    effort_note = case slug
+      when 'quick-take' then 'Best with 1-3 photos and a short decision prompt.'
+      when 'style-diagnosis' then 'Best with a few current outfits and 2-3 reference images.'
+      when 'wardrobe-audit' then 'Best with clear photos of the pieces you actually wear.'
+      when 'capsule-build' then 'Best with your budget, sizes, no-go brands, and two references.'
+      else effort_note
+    end,
+    updated_at = now()
+  where creator_id in (amara_id, lena_id, noor_id, ivy_id);
+
   insert into public.taste_products (
     id,
     creator_id,
