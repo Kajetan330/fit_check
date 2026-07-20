@@ -2,7 +2,7 @@ import type { ProductEntitlement, Purchase } from "./types/commerce";
 
 export type Role = "customer" | "creator" | "admin";
 export type AppMode = "browse" | "studio";
-export type BookingStatus = "intake" | "in_progress" | "ready" | "completed";
+export type BookingStatus = "intake" | "in_progress" | "ready" | "completed" | "revision_requested" | "disputed" | "cancelled";
 
 export interface User {
   name: string;
@@ -25,6 +25,12 @@ export interface Service {
   intakePrompts: string[];
   addOns: string[];
   whoFor?: string[];
+  notFor?: string[];
+  youSend?: string;
+  youReceive?: string;
+  customerEffortMins?: number;
+  revisionTerms?: string;
+  exampleResultImage?: string;
   effortNote?: string;
 }
 

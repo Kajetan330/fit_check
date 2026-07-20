@@ -62,23 +62,26 @@ import {
   tasteProductPreviewItems,
   tasteProductPreviewOutfits,
 } from "./data";
-import { useAppState } from "./state";
+import { demoMode, useAppState } from "./state";
 import { ShareButton } from "./features/sharing/ShareButton";
 import { track } from "@vercel/analytics";
 import QRCode from "qrcode";
 import { consumeAuthRedirect, sendMagicLink, signInWithGoogle } from "./lib/auth";
 import { trackEvent } from "./lib/analytics";
-import { createRemoteBooking, recordBookingUpload } from "./lib/bookings";
+import { claimDraftUploads, createRemoteBooking, uploadDraftImage } from "./lib/bookings";
 import { createCommerceCheckout, isCommerceEnabled } from "./lib/commerce";
+import { useCurrentCreator, type CurrentCreatorState } from "./hooks/useCurrentCreator";
 import { PAYMENT_HOLD_COPY } from "./lib/copy";
-import { clearDraft, loadDraft, saveDraft, type BookingStep } from "./lib/drafts";
+import { clearDraft, createDraftToken, loadDraft, saveDraft, type BookingStep } from "./lib/drafts";
+import { appEnv } from "./lib/env";
 import { getProductionHealth, type ProductionHealth } from "./lib/health";
-import { createCheckoutSession, getCheckoutStatus } from "./lib/payments";
+import { createCheckoutSession } from "./lib/payments";
 import { getPaidEditAccess, type PaidEditAccessResult } from "./lib/paidEditAccess";
 import {
   captureReferral,
   createCreatorShareUrl,
-  creatorSharePath,
+  creatorShareImagePath,
+  creatorSharePagePath,
   editSharePath,
   getLastCreator,
   getStoredReferral,
@@ -97,6 +100,8 @@ const compactNumber = new Intl.NumberFormat("en-US", { notation: "compact", maxi
 const productMoney = (cents: number, currency: string) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: currency.toUpperCase(), maximumFractionDigits: 0 }).format(cents / 100);
 const formatFollowerCount = (value: number) => compactNumber.format(value);
+const supportMailto = (subject: string) =>
+  appEnv.supportEmail ? `mailto:${appEnv.supportEmail}?subject=${encodeURIComponent(subject)}` : "";
 
 const formatDate = (value: string) =>
   new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value));
@@ -113,6 +118,9 @@ const statusLabel: Record<Booking["status"], string> = {
   in_progress: "In progress",
   ready: "Ready to review",
   completed: "Completed",
+  revision_requested: "Revision requested",
+  disputed: "Problem reported",
+  cancelled: "Cancelled",
 };
 
 const paymentLabel: Record<NonNullable<Booking["paymentStatus"]>, string> = {
@@ -250,7 +258,6 @@ function AppShell() {
           ]
         : [
             ["/", "Home"],
-            ["/#how-it-works", "How it works"],
             ["/apply", "For creators"],
             ["/signin", "Sign in"],
           ];
@@ -258,7 +265,6 @@ function AppShell() {
 
   const navIconFor = (label: string) => {
     if (label === "Home") return <Sparkles size={19} />;
-    if (label === "How it works") return <ShieldCheck size={19} />;
     if (label === "For creators" || label === "Storefront" || label === "Account") return <UserRound size={19} />;
     if (label === "Sign in") return <UserRound size={19} />;
     if (label === "Library" || label === "Edits") return <Bookmark size={19} />;
@@ -319,6 +325,8 @@ function AppShell() {
         <Outlet />
       </main>
 
+      {!location.pathname.startsWith("/studio") ? <AppFooter /> : null}
+
       <nav className="bottom-nav" aria-label="Mobile navigation">
         {mobileNavItems.map(([to, label]) => (
           <NavLink key={to} to={to}>
@@ -334,8 +342,8 @@ function AppShell() {
 function MarketingHomePage() {
   const { hash } = useLocation();
   useEffect(() => {
-    if (hash === "#how-it-works") {
-      document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" });
+    if (hash === "#example-result") {
+      document.getElementById("example-result")?.scrollIntoView({ behavior: "smooth" });
     }
   }, [hash]);
 
@@ -343,11 +351,42 @@ function MarketingHomePage() {
     <div className="page-stack marketing">
       <HomeHero />
       <SampleResultSection />
-      <ArrivedFromCreatorNote />
       <CreatorPropositionSection />
       <TrustSection />
-      <HowItWorksSection />
     </div>
+  );
+}
+
+function AppFooter() {
+  const contactHref = supportMailto("ByTaste support request");
+  const reportHref = supportMailto("ByTaste problem report");
+
+  return (
+    <footer className="app-footer">
+      <div className="app-footer-inner">
+        <div className="app-footer-brand">
+          <h2>Product</h2>
+          <Link to="/">Home</Link>
+          <Link to="/apply">For creators</Link>
+        </div>
+        <div className="app-footer-column">
+          <h2>Policies</h2>
+          <Link to="/legal/privacy">Privacy</Link>
+          <Link to="/legal/terms">Terms</Link>
+          <Link to="/legal/refunds">Refunds & cancellations</Link>
+          <Link to="/legal/creator-terms">Creator terms</Link>
+        </div>
+        <div className="app-footer-column">
+          <h2>Support</h2>
+          {contactHref ? <a href={contactHref}>Contact</a> : <span>Contact available after support email setup</span>}
+          {reportHref ? <a href={reportHref}>Report a problem</a> : <span>Use the booking problem form when available</span>}
+        </div>
+        <div className="app-footer-column">
+          <h2>Company</h2>
+          <span>&copy; {new Date().getFullYear()} ByTaste</span>
+        </div>
+      </div>
+    </footer>
   );
 }
 
@@ -366,15 +405,18 @@ function HomeHero() {
             Create your storefront
             <ArrowRight size={18} />
           </Link>
-          <a className="button light" href="#how-it-works">
-            How it works
+          <a className="button light" href="#example-result">
+            See an example result
           </a>
         </div>
+        <VisitorSplitRow />
       </div>
       <div className="marketing-hero-panel" aria-label="ByTaste service preview">
         <div>
           <span>Shared creator link</span>
-          <strong>bytaste.com/c/amara-okafor</strong>
+          <strong>
+            Your personal ByTaste link <em>/c/your-handle</em>
+          </strong>
         </div>
         <div>
           <span>Follower action</span>
@@ -389,56 +431,87 @@ function HomeHero() {
   );
 }
 
+function VisitorSplitRow() {
+  const lastCreatorHandle = getLastCreator();
+  const lastCreator = lastCreatorHandle ? getCreator(lastCreatorHandle) : undefined;
+
+  return (
+    <div className="visitor-split-row">
+      <article>
+        <h2>I received a creator link</h2>
+        {lastCreator ? (
+          <Link className="text-button" to={`/c/${lastCreator.handle}`}>
+            Return to {firstName(lastCreator.displayName)}
+            <ArrowRight size={16} />
+          </Link>
+        ) : (
+          <p>Open the link your creator shared. It goes straight to their storefront.</p>
+        )}
+      </article>
+      <article>
+        <h2>I'm a creator</h2>
+        <Link className="text-button" to="/apply">
+          Create a storefront
+          <ArrowRight size={16} />
+        </Link>
+      </article>
+    </div>
+  );
+}
+
 function SampleResultSection() {
   const booking = bookingSeed.find((item) => item.deliverable) ?? bookingSeed[0];
   const creator = getCreator(booking.creatorHandle);
   const wardrobe = closetSeed.filter((item) => booking.closetItemIds.includes(item.id)).slice(0, 8);
 
   return (
-    <section className="sample-result">
-      <SectionHeading eyebrow="Sample result" title="A real seeded delivery walkthrough" />
-      <div className="sample-result-grid">
-        <article className="detail-panel">
-          <p className="eyebrow">Brief</p>
-          <h2>{booking.brief}</h2>
-          <p>{booking.budget}</p>
-          <span className="voice-label">{creator?.displayName ?? "Creator"} / {booking.serviceTitle}</span>
-        </article>
-        <article className="detail-panel">
-          <p className="eyebrow">Wardrobe uploaded</p>
-          <div className="sample-wardrobe-grid">
-            {wardrobe.map((item) => (
-              <figure key={item.id}>
-                <img src={item.image} alt={item.name} />
-                <figcaption>{item.name}</figcaption>
-              </figure>
-            ))}
-          </div>
-        </article>
-        <article className="detail-panel">
-          <p className="eyebrow">Result</p>
-          <h2>{booking.deliverable?.title}</h2>
-          <p>{booking.deliverable?.voiceNoteLabel}</p>
-          <div className="sample-outfits">
-            {booking.deliverable?.outfits.map((outfit) => (
-              <div key={outfit.id}>
-                <img src={outfit.image} alt={outfit.title} />
-                <strong>{outfit.title}</strong>
-                <span>{outfit.notes}</span>
-              </div>
-            ))}
-          </div>
-        </article>
+    <section className="sample-result case-study" id="example-result">
+      <SectionHeading eyebrow="Example result" title="What a private styling delivery can look like" />
+      <div className="case-study-step">
+        <p className="eyebrow">1. The problem</p>
+        <blockquote>{booking.brief}</blockquote>
+        <span className="voice-label">{creator?.displayName ?? "Creator"} / {booking.serviceTitle}</span>
       </div>
-      <p className="sample-result-foot">Delivered in 3 days / 1 revision included / payment held until approval.</p>
-    </section>
-  );
-}
-
-function ArrivedFromCreatorNote() {
-  return (
-    <section className="creator-link-note">
-      <p>Received a ByTaste link from a creator? Open it to see their services and book directly.</p>
+      <div className="case-study-step">
+        <p className="eyebrow">2. What she sent</p>
+        <div className="sample-wardrobe-grid">
+          {wardrobe.map((item) => (
+            <figure key={item.id}>
+              <img src={item.image} alt={item.name} />
+              <figcaption>{item.name}</figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+      <div className="case-study-step">
+        <p className="eyebrow">3. Creator reasoning</p>
+        <ul className="reasoning-list">
+          <li>Keep the strongest neutral base and make the shoes do the polish.</li>
+          <li>Repeat the same trouser shape so every top has an obvious partner.</li>
+          <li>Buy only the two missing finishers instead of rebuilding the whole closet.</li>
+        </ul>
+      </div>
+      <div className="case-study-step">
+        <p className="eyebrow">4. The result</p>
+        <div className="sample-outfits">
+          {booking.deliverable?.outfits.map((outfit) => (
+            <div key={outfit.id}>
+              <img src={outfit.image} alt={outfit.title} />
+              <strong>{outfit.title}</strong>
+              <span>{outfit.notes}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="case-study-step">
+        <p className="eyebrow">5. What changed</p>
+        <div className="fact-row">
+          <span>2 suggested buys</span>
+          <span>3 outfit formulas</span>
+          <span>1 included revision</span>
+          <span>Payment held until approval</span>
+        </div>
+      </div>
     </section>
   );
 }
@@ -502,31 +575,6 @@ function TrustSection() {
   );
 }
 
-function HowItWorksSection() {
-  return (
-    <section className="section-block" id="how-it-works">
-      <SectionHeading eyebrow="How it works" title="From creator link to approved delivery" />
-      <div className="how-steps">
-        <div className="how-step">
-          <span className="how-step-number">1</span>
-          <h3>Open a creator link</h3>
-          <p>Creators share one storefront for services, paid edits, and the offer they want followers to book first.</p>
-        </div>
-        <div className="how-step">
-          <span className="how-step-number">2</span>
-          <h3>Send a private brief</h3>
-          <p>Choose a service, add your goal, and attach closet photos so the creator can style your real wardrobe.</p>
-        </div>
-        <div className="how-step">
-          <span className="how-step-number">3</span>
-          <h3>Approve the delivery</h3>
-          <p>Payment is held until you approve. Every service includes one revision round within 72 hours.</p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 function CreatorRedirectPage() {
   const { handle = "" } = useParams();
   return <Navigate to={`/creator/${handle}`} replace />;
@@ -565,6 +613,29 @@ function resolvePrimaryOffer(creator: Creator, products = creatorTasteProducts(c
 }
 
 function PrimaryOfferCTA({ creator, offer, compact = false }: { creator: Creator; offer: PrimaryOffer; compact?: boolean }) {
+  const { state } = useAppState();
+  const [waitlistEmail, setWaitlistEmail] = useState(state.user?.email ?? "");
+  const [waitlistMessage, setWaitlistMessage] = useState("");
+
+  const joinWaitlist = async (event: FormEvent) => {
+    event.preventDefault();
+    if (!waitlistEmail.trim()) {
+      setWaitlistMessage("Add your email to join the waitlist.");
+      return;
+    }
+    try {
+      const response = await fetch("/api/booking-actions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "waitlist", creatorHandle: creator.handle, email: waitlistEmail.trim() }),
+      });
+      const payload = (await response.json()) as { message?: string };
+      setWaitlistMessage(response.ok ? "You're on the waitlist." : payload.message || "Waitlist is not available yet.");
+    } catch {
+      setWaitlistMessage("Waitlist is not available yet.");
+    }
+  };
+
   if (offer.kind === "service") {
     const minService = cheapestActiveService(creator);
     return (
@@ -595,23 +666,34 @@ function PrimaryOfferCTA({ creator, offer, compact = false }: { creator: Creator
   }
 
   return (
-    <a className={`button dark ${compact ? "small" : ""}`} href={`mailto:support@bytaste.com?subject=Join ${creator.displayName}'s waitlist`}>
-      Join the waitlist
-    </a>
+    <form className={`waitlist-inline ${compact ? "compact" : ""}`} onSubmit={joinWaitlist}>
+      {!compact ? (
+        <input
+          type="email"
+          value={waitlistEmail}
+          onChange={(event) => setWaitlistEmail(event.target.value)}
+          placeholder="you@example.com"
+          aria-label="Email for waitlist"
+        />
+      ) : null}
+      <button className={`button dark ${compact ? "small" : ""}`} type="submit">
+        Notify me when appointments open
+      </button>
+      {waitlistMessage && !compact ? <span>{waitlistMessage}</span> : null}
+    </form>
   );
 }
 
 function CreatorProofBlock({ creator, reviews }: { creator: Creator; reviews: ReturnType<typeof creatorReviews> }) {
+  if (!demoMode || !reviews.length) return null;
+
   return (
     <section className="section-block">
       <SectionHeading eyebrow="Proof" title="What followers can verify" />
       <div className="metric-grid">
-        {reviews.length ? (
-          <Metric icon={<Star size={19} />} label="Sample reviews" value={`${creator.rating.toFixed(2)} / ${reviews.length}`} />
-        ) : null}
+        <Metric icon={<Star size={19} />} label="Example reviews" value={`${creator.rating.toFixed(2)} / ${reviews.length}`} />
         <Metric icon={<Clock3 size={19} />} label="Typical turnaround" value={creator.avgTurnaround} />
         <Metric icon={<BadgeCheck size={19} />} label="Social status" value={creator.socialVerifiedAt ? "Verified" : "Pending"} />
-        <Metric icon={<UserRound size={19} />} label="Audience" value={formatFollowerCount(creator.followerCount)} />
       </div>
     </section>
   );
@@ -711,10 +793,10 @@ function CreatorProfilePage() {
           </div>
         </div>
         <div className="profile-stats">
-          <Stat label="Rating" value={creator.rating.toFixed(2)} />
-          <Stat label="Sample reviews" value={String(reviews.length || creator.reviewCount)} />
-          <Stat label="Avg turn" value={creator.avgTurnaround} />
-          <Stat label="Audience" value={formatFollowerCount(creator.followerCount)} />
+          <Stat label="Services" value={String(creator.services.length)} />
+          <Stat label="From" value={money.format(cheapestActiveService(creator).price)} />
+          <Stat label="Typical turn" value={creator.avgTurnaround} />
+          <Stat label="Status" value={creator.socialVerifiedAt ? "Verified" : "Pending"} />
         </div>
         <div className="profile-actions">
           <PrimaryOfferCTA creator={creator} offer={primaryOffer} />
@@ -724,7 +806,7 @@ function CreatorProfilePage() {
           <ShareButton
             title={`${creator.displayName} on ByTaste`}
             text={creator.tasteSignature}
-            url={sharePageUrl(creatorSharePath(creator.handle))}
+            url={sharePageUrl(creatorSharePagePath(creator.handle))}
           />
         </div>
       </section>
@@ -771,7 +853,7 @@ function CreatorProfilePage() {
         </article>
       </section>
 
-      <CompletedResultBlock creator={creator} />
+      {demoMode ? <CompletedResultBlock creator={creator} /> : null}
       <CreatorProofBlock creator={creator} reviews={reviews} />
 
       <section className="section-block">
@@ -785,7 +867,7 @@ function CreatorProfilePage() {
 
       <section className="section-block">
         <SectionHeading eyebrow="Reviews" title="Customer proof" />
-        {reviews.length ? (
+        {reviews.length && demoMode ? (
           <div className="review-grid">
             {reviews.map((review) => (
               <article className="review-card" key={review.id}>
@@ -1030,6 +1112,9 @@ function ServiceDetailPage() {
   const { handle = "", serviceSlug = "" } = useParams();
   const creator = getCreator(handle);
   const service = getService(handle, serviceSlug);
+  const serviceReview = !demoMode
+    ? creatorReviews(handle).find((review) => review.serviceTitle === service?.title)
+    : undefined;
 
   useEffect(() => {
     if (handle && serviceSlug) {
@@ -1042,7 +1127,7 @@ function ServiceDetailPage() {
   }
 
   return (
-    <div className="booking-page">
+    <div className="booking-page service-detail-page">
       <aside className="booking-summary">
         <CreatorMini creator={creator} />
         <ShareButton
@@ -1059,27 +1144,81 @@ function ServiceDetailPage() {
           <span>{service.priceLabel}</span>
           <span>{service.turnaround}</span>
         </div>
-        <div className="service-deliverables">
-          {service.deliverables.map((deliverable) => (
-            <span key={deliverable}>
-              <Check size={16} />
-              {deliverable}
-            </span>
-          ))}
+        <div className="service-fit-grid">
+          {service.whoFor?.length ? (
+            <div>
+              <h2>Best for</h2>
+              <div className="principle-list">
+                {service.whoFor.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
+          {service.notFor?.length ? (
+            <div>
+              <h2>Not ideal for</h2>
+              <div className="principle-list muted">
+                {service.notFor.map((item) => (
+                  <span key={item}>{item}</span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
-        <div className="detail-panel">
-          <h2>Intake prompts</h2>
-          <div className="principle-list">
-            {service.intakePrompts.map((prompt) => (
-              <span key={prompt}>{prompt}</span>
-            ))}
-          </div>
+        {service.exampleResultImage ? (
+          <img className="service-example-image" src={service.exampleResultImage} alt={`${service.title} example result`} />
+        ) : null}
+        <div className="service-detail-grid">
+          <article className="detail-panel">
+            <h2>What you receive</h2>
+            <p>{service.youReceive ?? service.summary}</p>
+            <div className="service-deliverables">
+              {service.deliverables.map((deliverable) => (
+                <span key={deliverable}>
+                  <Check size={16} />
+                  {deliverable}
+                </span>
+              ))}
+            </div>
+          </article>
+          <article className="detail-panel">
+            <h2>What you send</h2>
+            <p>{service.youSend ?? service.intakePrompts.join(" ")}</p>
+            {service.customerEffortMins ? <p>About {service.customerEffortMins} minutes of your time.</p> : null}
+          </article>
+          <article className="detail-panel">
+            <h2>When it arrives</h2>
+            <p>{service.turnaround}</p>
+            <p>{service.revisionTerms ?? "One revision within 72 hours is included."}</p>
+          </article>
+          <article className="detail-panel">
+            <h2>Price & protection</h2>
+            <p>{service.priceLabel}</p>
+            <p>{PAYMENT_HOLD_COPY}</p>
+            <Link className="text-button" to="/legal/refunds">
+              Refunds & cancellations
+              <ArrowRight size={16} />
+            </Link>
+          </article>
         </div>
+        {serviceReview ? (
+          <article className="review-card">
+            <div className="stars" aria-label={`${serviceReview.rating} star review`}>
+              {Array.from({ length: serviceReview.rating }).map((_, idx) => (
+                <Star key={idx} size={16} fill="currentColor" />
+              ))}
+            </div>
+            <p>{serviceReview.text}</p>
+            <strong>{serviceReview.customerName}</strong>
+          </article>
+        ) : null}
         <Link className="button dark" to={`/book/${creator.handle}/${service.id}`}>
-          Start booking
+          Start your private brief
           <ArrowRight size={18} />
         </Link>
       </section>
+      <StickyOfferBar creator={creator} offer={{ kind: "service", service }} />
     </div>
   );
 }
@@ -1087,6 +1226,8 @@ function ServiceDetailPage() {
 function CustomerLibraryPage() {
   const { state } = useAppState();
   const location = useLocation();
+  const lastCreatorHandle = getLastCreator() || state.bookings[0]?.creatorHandle;
+  const lastCreator = lastCreatorHandle ? getCreator(lastCreatorHandle) : undefined;
 
   if (!state.user) {
     return (
@@ -1110,9 +1251,13 @@ function CustomerLibraryPage() {
           <h1>Your paid edits and lookbooks</h1>
           <p className="lead">A customer-owned surface for purchases and delivered one-to-one services.</p>
         </div>
-        <Link className="button light" to="/">
-          Find more creators
-        </Link>
+        {lastCreator ? (
+          <Link className="button light" to={`/c/${lastCreator.handle}`}>
+            Return to {firstName(lastCreator.displayName)}
+          </Link>
+        ) : (
+          <span className="setup-note compact">Open the creator link you received.</span>
+        )}
       </section>
 
       <section className="section-block">
@@ -1410,22 +1555,25 @@ function BookingPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [selectedCloset, setSelectedCloset] = useState<string[]>(state.closet.slice(0, 3).map((item) => item.id));
+  const [draftToken, setDraftToken] = useState(() => createDraftToken());
   const [form, setForm] = useState({
     occasion: "",
     budget: "",
     notes: "",
     constraints: "",
   });
-  const [uploads, setUploads] = useState<Array<{ id: string; file: File; previewUrl: string }>>([]);
-  const [restoredUploads, setRestoredUploads] = useState<Array<{ name: string; size: number; localId: string }>>([]);
+  const [uploads, setUploads] = useState<
+    Array<{ id: string; file: File; previewUrl: string; uploadId?: string; status: "local" | "uploading" | "uploaded" | "failed"; error?: string }>
+  >([]);
+  const [restoredUploads, setRestoredUploads] = useState<Array<{ name: string; size: number; localId: string; uploadId?: string }>>([]);
   const uploadsRef = useRef(uploads);
 
-  const steps: Array<{ id: BookingStep; label: string }> = [
-    { id: "service", label: "Service" },
-    { id: "goal", label: "Your goal" },
-    { id: "photos", label: "Photos" },
-    { id: "review", label: "Review" },
-    { id: "pay", label: "Pay" },
+  const steps: Array<{ id: BookingStep; label: string; helper: string }> = [
+    { id: "service", label: "Service", helper: "Confirm scope" },
+    { id: "goal", label: "Your goal", helper: "Tell the creator what matters" },
+    { id: "photos", label: "Photos", helper: "Add private context" },
+    { id: "review", label: "Review", helper: "Sign in and check details" },
+    { id: "pay", label: "Pay", helper: "Payment held until approval" },
   ];
   const currentStepIndex = steps.findIndex((item) => item.id === step);
 
@@ -1455,6 +1603,7 @@ function BookingPage() {
         notes: draft.answers.notes ?? "",
         constraints: draft.answers.constraints ?? "",
       });
+      setDraftToken(draft.draftToken);
       if (draft.closetItemIds.length) setSelectedCloset(draft.closetItemIds);
       setRestoredUploads(draft.uploads);
     }
@@ -1467,6 +1616,7 @@ function BookingPage() {
       version: 1,
       handle: creator.handle,
       serviceId: service.id,
+      draftToken,
       step,
       answers: form,
       closetItemIds: selectedCloset,
@@ -1476,11 +1626,12 @@ function BookingPage() {
           name: upload.file.name,
           size: upload.file.size,
           localId: upload.id,
+          uploadId: upload.uploadId,
         })),
       ],
       updatedAt: new Date().toISOString(),
     });
-  }, [creator, draftReady, form, restoredUploads, selectedCloset, service, step, uploads]);
+  }, [creator, draftReady, draftToken, form, restoredUploads, selectedCloset, service, step, uploads]);
 
   if (!creator || !service) {
     return <NotFoundPanel title="Service not found" text="This booking link does not match an active creator service." />;
@@ -1495,14 +1646,31 @@ function BookingPage() {
   const addUploads = (files: FileList | null) => {
     if (!files?.length) return;
     setRestoredUploads([]);
-    setUploads((current) => [
-      ...current,
-      ...Array.from(files).map((file) => ({
-        id: `${Date.now()}-${file.name}-${file.size}`,
-        file,
-        previewUrl: URL.createObjectURL(file),
-      })),
-    ]);
+    const newUploads = Array.from(files).map((file) => ({
+      id: `${Date.now()}-${file.name}-${file.size}`,
+      file,
+      previewUrl: URL.createObjectURL(file),
+      status: supabase ? ("uploading" as const) : ("local" as const),
+    }));
+    setUploads((current) => [...current, ...newUploads]);
+    if (supabase) {
+      newUploads.forEach((upload) => {
+        void uploadDraftImage(upload.file, draftToken).then((result) => {
+          setUploads((current) =>
+            current.map((item) =>
+              item.id === upload.id
+                ? {
+                    ...item,
+                    uploadId: result.uploadId,
+                    status: result.ok ? "uploaded" : "failed",
+                    error: result.ok ? undefined : result.message,
+                  }
+                : item,
+            ),
+          );
+        });
+      });
+    }
   };
 
   const removeUpload = (uploadId: string) => {
@@ -1566,6 +1734,14 @@ function BookingPage() {
     };
 
     if (supabase && state.user.supabaseId) {
+      const failedUpload = uploads.find((upload) => upload.status === "failed");
+      const pendingUpload = uploads.find((upload) => upload.status === "uploading");
+      if (failedUpload || pendingUpload) {
+        setSubmitting(false);
+        setError(failedUpload?.error || "Wait for photo uploads to finish before checkout.");
+        return;
+      }
+
       const remote = await createRemoteBooking({
         creatorHandle: creator.handle,
         serviceId: service.id,
@@ -1580,15 +1756,11 @@ function BookingPage() {
       }
 
       id = remote.bookingId;
-      for (const upload of uploads) {
-        try {
-          const uploaded = await uploadPrivateImage(upload.file, state.user.email ?? state.user.name);
-          if (uploaded.storagePath) {
-            await recordBookingUpload(id, uploaded.storagePath, upload.file.type);
-          }
-        } catch (uploadError) {
+      if (uploads.some((upload) => upload.uploadId) || restoredUploads.some((upload) => upload.uploadId)) {
+        const claimed = await claimDraftUploads(draftToken, id);
+        if (!claimed.ok) {
           setSubmitting(false);
-          setError(uploadError instanceof Error ? uploadError.message : "Upload failed.");
+          setError(claimed.message);
           return;
         }
       }
@@ -1643,7 +1815,8 @@ function BookingPage() {
         <div className="stepper" aria-label="Booking progress">
           {steps.map((item, index) => (
             <span key={item.id} className={index <= currentStepIndex ? "active" : ""}>
-              {index < currentStepIndex ? <Check size={15} /> : item.label}
+              {index < currentStepIndex ? <Check size={15} /> : <strong>{item.label}</strong>}
+              <small>{item.helper}</small>
             </span>
           ))}
         </div>
@@ -1752,6 +1925,7 @@ function BookingPage() {
             <label className="upload-box">
               <Upload size={22} />
               <span>{uploads.length ? `${uploads.length} local file(s) selected` : "Add more photos for this booking"}</span>
+              <small>Only you and the booked creator can view these photos.</small>
               <input
                 type="file"
                 multiple
@@ -1774,6 +1948,15 @@ function BookingPage() {
                     <div>
                       <strong>{upload.file.name}</strong>
                       <span>{Math.round(upload.file.size / 1024)} KB</span>
+                      <span>
+                        {upload.status === "uploading"
+                          ? "Uploading securely..."
+                          : upload.status === "uploaded"
+                            ? "Ready for checkout"
+                            : upload.status === "failed"
+                              ? upload.error || "Upload failed"
+                              : "Selected on this device"}
+                      </span>
                       <div className="service-actions">
                         <button className="button light small" type="button" onClick={() => moveUpload(upload.id, -1)} disabled={index === 0}>
                           Up
@@ -2091,9 +2274,13 @@ function AccountPage() {
         <article className="detail-panel">
           <h2>Support</h2>
           <p>Need help with a booking, revision, payment, or account?</p>
-          <a className="button light" href="mailto:support@bytaste.com">
-            Contact support
-          </a>
+          {supportMailto("ByTaste account support") ? (
+            <a className="button light" href={supportMailto("ByTaste account support")}>
+              Contact support
+            </a>
+          ) : (
+            <p>Support contact will appear here once the support email is configured.</p>
+          )}
         </article>
       </section>
     </div>
@@ -2102,7 +2289,7 @@ function AccountPage() {
 
 function BookingDetailPage() {
   const { bookingId = "" } = useParams();
-  const { state, updateBookingPaymentStatus } = useAppState();
+  const { state, updateBookingPaymentStatus, updateBookingStatus } = useAppState();
   const [params] = useSearchParams();
   const [checkoutSync, setCheckoutSync] = useState<"idle" | "checking" | "synced" | "pending">("idle");
   const booking = state.bookings.find((item) => item.id === bookingId);
@@ -2110,6 +2297,11 @@ function BookingDetailPage() {
 
   useEffect(() => {
     if (!booking || checkoutResult !== "success" || booking.paymentStatus === "paid") return;
+    if (!supabase || !state.user?.supabaseId) {
+      setCheckoutSync("pending");
+      return;
+    }
+    const db = supabase;
 
     let active = true;
     let attempts = 0;
@@ -2120,22 +2312,27 @@ function BookingDetailPage() {
       attempts += 1;
       setCheckoutSync("checking");
 
-      const result = await getCheckoutStatus(booking.id);
+      const { data, error } = await db
+        .from("bookings")
+        .select("payment_status")
+        .eq("id", booking.id)
+        .maybeSingle();
       if (!active) return;
+      const paymentStatus = error ? "unknown" : data?.payment_status ?? "unknown";
 
-      if (result.paymentStatus === "paid" && booking.paymentStatus !== "paid") {
+      if (paymentStatus === "paid" && booking.paymentStatus !== "paid") {
         updateBookingPaymentStatus(booking.id, "paid");
         setCheckoutSync("synced");
         return;
       }
 
-      if (result.paymentStatus === "failed" && booking.paymentStatus !== "failed") {
+      if (paymentStatus === "failed" && booking.paymentStatus !== "failed") {
         updateBookingPaymentStatus(booking.id, "failed");
         setCheckoutSync("synced");
         return;
       }
 
-      if (result.paymentStatus === "refunded" && booking.paymentStatus !== "refunded") {
+      if (paymentStatus === "refunded" && booking.paymentStatus !== "refunded") {
         updateBookingPaymentStatus(booking.id, "refunded");
         setCheckoutSync("synced");
         return;
@@ -2154,13 +2351,15 @@ function BookingDetailPage() {
       active = false;
       if (timeoutId) window.clearTimeout(timeoutId);
     };
-  }, [booking, checkoutResult, updateBookingPaymentStatus]);
+  }, [booking, checkoutResult, state.user?.supabaseId, updateBookingPaymentStatus]);
 
   if (!booking) {
     return <NotFoundPanel title="Booking not found" text="This booking is not in your local ByTaste workspace." />;
   }
 
   const creator = getCreator(booking.creatorHandle);
+  const approved = booking.status === "completed";
+  const canApprove = booking.status === "ready";
 
   return (
     <div className="booking-detail">
@@ -2207,6 +2406,44 @@ function BookingDetailPage() {
         </div>
       </section>
 
+      <section className="section-block service-loop-panel">
+        <SectionHeading eyebrow="Delivery review" title="Approve, request revision or report a problem" />
+        <p>
+          When the creator delivers, approve the result, request the included revision, or report a problem before the
+          approval window closes.
+        </p>
+        {canApprove ? (
+          <div className="quick-actions">
+            <button className="button dark" onClick={() => updateBookingStatus(booking.id, "completed")}>
+              <ShieldCheck size={18} />
+              Approve delivery
+            </button>
+            <button className="button light">
+              <FileText size={18} />
+              Request revision
+            </button>
+            <button className="button light">
+              <AlertTriangle size={18} />
+              Report a problem
+            </button>
+          </div>
+        ) : (
+          <p className="setup-note compact">
+            Controls appear when a delivery is ready. Messaging and dispute actions are backed by the production
+            booking action endpoint once migration 0009 is applied.
+          </p>
+        )}
+        {approved && creator ? (
+          <div className="retention-actions">
+            <Link className="button dark" to={`/book/${creator.handle}/${booking.serviceId}`}>
+              Rebook this service
+            </Link>
+            <button className="button light">Ask a follow-up</button>
+            <button className="button light">Notify me when new appointments open</button>
+          </div>
+        ) : null}
+      </section>
+
       {booking.deliverable ? (
         <section className="section-block">
           <SectionHeading
@@ -2245,7 +2482,8 @@ function BookingDetailPage() {
 
 function StudioPage() {
   const { state, updateBookingStatus, saveCreatorDraft, addStudioPost } = useAppState();
-  const baseCreator = creators[0];
+  const currentCreator = useCurrentCreator();
+  const baseCreator = currentCreator.status === "ready" ? currentCreator.creator : creators[0];
   const creator = applyCreatorDraft(baseCreator, state.creatorDrafts[baseCreator.handle]);
   const [profileDraft, setProfileDraft] = useState({
     displayName: creator.displayName,
@@ -2260,27 +2498,15 @@ function StudioPage() {
     tags: "",
   });
 
-  if (!state.user || state.user.role !== "creator") {
-    return (
-      <CenteredPanel>
-        <LayoutDashboard size={34} />
-        <h1>Creator Studio</h1>
-        <p>Creator tools require a creator account. Sign in as a creator or apply for access.</p>
-        <div className="quick-actions centered">
-          <Link className="button dark" to="/creator/signin">
-            <Sparkles size={18} />
-            Creator sign in
-          </Link>
-          <Link className="button light" to="/apply">
-            Apply as creator
-          </Link>
-        </div>
-      </CenteredPanel>
-    );
-  }
+  if (currentCreator.status !== "ready") return <StudioCreatorStatePanel state={currentCreator} />;
 
-  const activeBookings = state.bookings.filter((booking) => booking.status !== "completed");
-  const monthlyRevenue = state.bookings.reduce((total, booking) => total + booking.price, 0);
+  const activeBookings = state.bookings.filter(
+    (booking) => booking.creatorHandle === creator.handle && booking.status !== "completed",
+  );
+  const monthlyRevenue = state.bookings
+    .filter((booking) => booking.creatorHandle === creator.handle)
+    .reduce((total, booking) => total + booking.price, 0);
+  const studioName = state.user?.name ?? creator.displayName;
   const publishPost = (event: FormEvent) => {
     event.preventDefault();
     if (!postDraft.title.trim()) return;
@@ -2309,7 +2535,7 @@ function StudioPage() {
       <section className="workspace-header studio">
         <div>
           <p className="eyebrow">Studio</p>
-          <h1>Good evening, {state.user.name}</h1>
+          <h1>Good evening, {studioName}</h1>
           <p className="lead">Bookings, profile content, and lookbook assembly for {creator.displayName}.</p>
         </div>
         <Link className="button light" to={`/creator/${creator.handle}`}>
@@ -2502,7 +2728,8 @@ function RequireCreatorPanel() {
 
 function StorefrontStudioPage() {
   const { state, saveCreatorDraft } = useAppState();
-  const baseCreator = creators[0];
+  const currentCreator = useCurrentCreator();
+  const baseCreator = currentCreator.status === "ready" ? currentCreator.creator : creators[0];
   const creator = applyCreatorDraft(baseCreator, state.creatorDrafts[baseCreator.handle]);
   const [draft, setDraft] = useState({
     displayName: creator.displayName,
@@ -2511,7 +2738,7 @@ function StorefrontStudioPage() {
     aesthetics: creator.aesthetics.join(", "),
   });
 
-  if (state.user?.role !== "creator") return <RequireCreatorPanel />;
+  if (currentCreator.status !== "ready") return <StudioCreatorStatePanel state={currentCreator} />;
 
   return (
     <div className="page-stack">
@@ -2574,11 +2801,11 @@ function StorefrontStudioPage() {
 }
 
 function StudioEditsPage() {
-  const { state } = useAppState();
-  const creator = creators[0];
+  const currentCreator = useCurrentCreator();
+  const creator = currentCreator.status === "ready" ? currentCreator.creator : creators[0];
   const products = creatorTasteProducts(creator.handle);
 
-  if (state.user?.role !== "creator") return <RequireCreatorPanel />;
+  if (currentCreator.status !== "ready") return <StudioCreatorStatePanel state={currentCreator} />;
 
   return (
     <div className="page-stack">
@@ -2601,6 +2828,37 @@ function StudioEditsPage() {
   );
 }
 
+function StudioCreatorStatePanel({ state }: { state: CurrentCreatorState }) {
+  if (state.status === "loading") {
+    return (
+      <CenteredPanel>
+        <Loader2 className="spin" size={34} />
+        <h1>Loading Studio</h1>
+        <p>Checking the creator profile attached to this account.</p>
+      </CenteredPanel>
+    );
+  }
+
+  if (state.status === "not_creator") {
+    return <NotFoundPanel title="Page not found" text="That route is not part of this account." />;
+  }
+
+  if (state.status === "no_profile") {
+    return (
+      <CenteredPanel>
+        <LayoutDashboard size={34} />
+        <h1>Your storefront isn't set up yet</h1>
+        <p>Apply for creator access or finish onboarding before opening Studio.</p>
+        <Link className="button dark" to="/apply">
+          Creator application
+        </Link>
+      </CenteredPanel>
+    );
+  }
+
+  return <RequireCreatorPanel />;
+}
+
 const shareChannels = ["instagram_bio", "instagram_story", "tiktok", "youtube", "x", "newsletter", "dm", "other"];
 
 const slugifyCampaign = (value: string) =>
@@ -2613,7 +2871,9 @@ const slugifyCampaign = (value: string) =>
 function StudioSharePage() {
   const { state } = useAppState();
   const user = state.user;
-  const creator = applyCreatorDraft(creators[0], state.creatorDrafts[creators[0].handle]);
+  const currentCreator = useCurrentCreator();
+  const baseCreator = currentCreator.status === "ready" ? currentCreator.creator : creators[0];
+  const creator = applyCreatorDraft(baseCreator, state.creatorDrafts[baseCreator.handle]);
   const products = creatorTasteProducts(creator.handle);
   const [copied, setCopied] = useState("");
   const [channel, setChannel] = useState("instagram_bio");
@@ -2698,13 +2958,14 @@ function StudioSharePage() {
           ? { destinationType: "service", destinationId: selectedOffer.idOrSlug }
           : { destinationType: "storefront" };
 
-    const response = await fetch("/api/referral-links", {
+    const response = await fetch("/api/create-share-link", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
       body: JSON.stringify({
+        kind: "referral",
         code: localCode,
         ...endpointBody,
         campaign: campaignSlug || undefined,
@@ -2720,7 +2981,7 @@ function StudioSharePage() {
     setBuilderMessage("Tracked link saved.");
   };
 
-  if (user?.role !== "creator") return <RequireCreatorPanel />;
+  if (currentCreator.status !== "ready") return <StudioCreatorStatePanel state={currentCreator} />;
 
   return (
     <div className="page-stack">
@@ -2753,7 +3014,13 @@ function StudioSharePage() {
         <article className="detail-panel qr-card">
           <p className="eyebrow">QR preview</p>
           <canvas ref={canvasRef} width={220} height={220} aria-label="Storefront QR code" />
-          <img src={creatorSharePath(creator.handle)} alt={`${creator.displayName} share preview`} />
+          <img
+            src={creatorShareImagePath(creator.handle, creator.cover)}
+            alt={`${creator.displayName} share preview`}
+            width={220}
+            height={140}
+            loading="lazy"
+          />
         </article>
       </section>
 
@@ -2888,12 +3155,12 @@ function EditEditorPage() {
 }
 
 function StudioAnalyticsPage() {
-  const { state } = useAppState();
-  const creator = creators[0];
+  const currentCreator = useCurrentCreator();
+  const creator = currentCreator.status === "ready" ? currentCreator.creator : creators[0];
   const products = creatorTasteProducts(creator.handle);
   const gross = products.reduce((total, product) => total + product.priceCents, 0) / 100;
 
-  if (state.user?.role !== "creator") return <RequireCreatorPanel />;
+  if (currentCreator.status !== "ready") return <StudioCreatorStatePanel state={currentCreator} />;
 
   return (
     <div className="page-stack">
@@ -2907,7 +3174,7 @@ function StudioAnalyticsPage() {
       <section className="metric-grid">
         <Metric icon={<Globe2 size={19} />} label="Storefront views" value="1.2k" />
         <Metric icon={<CreditCard size={19} />} label="Checkout starts" value="84" />
-        <Metric icon={<WalletCards size={19} />} label="Mock gross" value={money.format(gross)} />
+        <Metric icon={<WalletCards size={19} />} label="Manual payout estimate" value={money.format(gross)} />
         <Metric icon={<Bookmark size={19} />} label="Products" value={String(products.length)} />
       </section>
       <div className="setup-note">
@@ -3119,7 +3386,7 @@ function CreatorApplyPage() {
       <CenteredPanel>
         <Check size={34} />
         <h1>Application received</h1>
-        <p>Your creator profile is in mock review. Approved creators get Studio access and a public ByTaste URL.</p>
+        <p>Your creator profile is in review. Approved creators get Studio access and a public ByTaste URL.</p>
         <Link className="button dark" to="/studio">
           Open Studio
         </Link>

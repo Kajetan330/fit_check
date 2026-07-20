@@ -1,6 +1,7 @@
 import Stripe from "stripe";
 import { getRequester } from "./_auth.js";
 import { rateLimit } from "./_rateLimit.js";
+import { sendBookingEmail } from "./_email.js";
 
 const setCorsHeaders = (res: any, appUrl: string) => {
   res.setHeader("Access-Control-Allow-Origin", appUrl);
@@ -123,6 +124,7 @@ export default async function handler(req: any, res: any) {
       .from("bookings")
       .update({
         stripe_checkout_session_id: session.id,
+        activated_at: new Date().toISOString(),
         source,
         campaign,
         referral_code: typeof referralCode === "string" ? referralCode : null,
@@ -152,6 +154,8 @@ export default async function handler(req: any, res: any) {
       source,
       campaign,
     });
+
+    await sendBookingEmail("booking_created", booking.id);
 
     res.status(200).json({ url: session.url });
     return;

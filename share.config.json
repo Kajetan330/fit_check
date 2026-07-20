@@ -1,0 +1,62 @@
+{
+  "creators": {
+    "amara-okafor": {
+      "name": "Amara Okafor",
+      "taste": "Warm minimalism with one precise statement.",
+      "description": "Soft minimalist wardrobes with practical polish and warm-weather tailoring.",
+      "image": "/assets/media/bytaste-media-03.jpg"
+    },
+    "lena-park": {
+      "name": "Lena Park",
+      "taste": "Modular city layers that earn their space.",
+      "description": "Sharp city uniforms, modular layers, and capsule systems for small closets.",
+      "image": "/assets/media/bytaste-media-08.jpg"
+    },
+    "noor-hassan": {
+      "name": "Noor Hassan",
+      "taste": "Elegant coverage, saturated color, camera-ready proportions.",
+      "description": "Modest occasionwear, elegant proportions, and color stories that photograph beautifully.",
+      "image": "/assets/media/bytaste-media-13.jpg"
+    },
+    "ivy-marlowe": {
+      "name": "Ivy Marlowe",
+      "taste": "Texture-led vintage with a designer eye.",
+      "description": "Dark academia, thrifted tailoring, and designer drops for people who love texture.",
+      "image": "/assets/media/bytaste-media-14.jpg"
+    }
+  },
+  "edits": {
+    "amara-okafor/copenhagen-2027-edit": {
+      "handle": "amara-okafor",
+      "slug": "copenhagen-2027-edit",
+      "title": "Copenhagen 2027 Edit",
+      "description": "Twenty warm-minimal pieces Amara would actually buy now.",
+      "price": "$19",
+      "image": "/assets/media/bytaste-media-03.jpg"
+    },
+    "lena-park/rainy-city-capsule": {
+      "handle": "lena-park",
+      "slug": "rainy-city-capsule",
+      "title": "Rainy City Capsule",
+      "description": "A compact weatherproof edit for small closets.",
+      "price": "$15",
+      "image": "/assets/media/bytaste-media-09.jpg"
+    },
+    "noor-hassan/wedding-guest-under-200": {
+      "handle": "noor-hassan",
+      "slug": "wedding-guest-under-200",
+      "title": "Wedding Guest Dresses Under $200",
+      "description": "Modest, camera-ready options with accessory formulas.",
+      "price": "$17",
+      "image": "/assets/media/bytaste-media-11.jpg"
+    },
+    "ivy-marlowe/vintage-listings-worth-buying": {
+      "handle": "ivy-marlowe",
+      "slug": "vintage-listings-worth-buying",
+      "title": "Vintage Listings Worth Buying This Week",
+      "description": "Texture, tailoring, and repairable finds before they disappear.",
+      "price": "$12",
+      "image": "/assets/media/bytaste-media-12.jpg"
+    }
+  }
+}

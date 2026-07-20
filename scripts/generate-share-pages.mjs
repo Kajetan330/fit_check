@@ -1,76 +1,13 @@
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public", "share");
 const appUrl = "https://fit-check-ecru.vercel.app";
-
-const creators = [
-  {
-    handle: "amara-okafor",
-    name: "Amara Okafor",
-    taste: "Warm minimalism with one precise statement.",
-    description: "Soft minimalist wardrobes with practical polish and warm-weather tailoring.",
-    image: "/assets/media/bytaste-media-03.jpg",
-  },
-  {
-    handle: "lena-park",
-    name: "Lena Park",
-    taste: "Modular city layers that earn their space.",
-    description: "Sharp city uniforms, modular layers, and capsule systems for small closets.",
-    image: "/assets/media/bytaste-media-08.jpg",
-  },
-  {
-    handle: "noor-hassan",
-    name: "Noor Hassan",
-    taste: "Elegant coverage, saturated color, camera-ready proportions.",
-    description: "Modest occasionwear, elegant proportions, and color stories that photograph beautifully.",
-    image: "/assets/media/bytaste-media-13.jpg",
-  },
-  {
-    handle: "ivy-marlowe",
-    name: "Ivy Marlowe",
-    taste: "Texture-led vintage with a designer eye.",
-    description: "Dark academia, thrifted tailoring, and designer drops for people who love texture.",
-    image: "/assets/media/bytaste-media-14.jpg",
-  },
-];
-
-const edits = [
-  {
-    handle: "amara-okafor",
-    slug: "copenhagen-2027-edit",
-    title: "Copenhagen 2027 Edit",
-    description: "Twenty warm-minimal pieces Amara would actually buy now.",
-    price: "$19",
-    image: "/assets/media/bytaste-media-03.jpg",
-  },
-  {
-    handle: "lena-park",
-    slug: "rainy-city-capsule",
-    title: "Rainy City Capsule",
-    description: "A compact weatherproof edit for small closets.",
-    price: "$15",
-    image: "/assets/media/bytaste-media-09.jpg",
-  },
-  {
-    handle: "noor-hassan",
-    slug: "wedding-guest-under-200",
-    title: "Wedding Guest Dresses Under $200",
-    description: "Modest, camera-ready options with accessory formulas.",
-    price: "$17",
-    image: "/assets/media/bytaste-media-11.jpg",
-  },
-  {
-    handle: "ivy-marlowe",
-    slug: "vintage-listings-worth-buying",
-    title: "Vintage Listings Worth Buying This Week",
-    description: "Texture, tailoring, and repairable finds before they disappear.",
-    price: "$12",
-    image: "/assets/media/bytaste-media-12.jpg",
-  },
-];
+const shareConfig = JSON.parse(readFileSync(join(root, "share.config.json"), "utf8"));
+const creators = Object.entries(shareConfig.creators).map(([handle, creator]) => ({ handle, ...creator }));
+const edits = Object.values(shareConfig.edits);
 
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, (char) => {

@@ -2,7 +2,7 @@
 
 ByTaste is the new trade name for the project formerly called FitCheck. Preserve the existing `fitcheck-*` browser storage keys until a deliberate migration shim is added.
 
-Last updated: July 19, 2026
+Last updated: July 20, 2026
 
 Production URL: https://fit-check-ecru.vercel.app
 
@@ -18,22 +18,41 @@ e7d16f4 Remove style quiz; update handoff note + Phase 2 spec
 
 ## Current State
 
+### Change 2026-07-20: Launch Hardening And Service Loop Foundations
+
+Implemented the next hardening pass while keeping Vercel Hobby at exactly 12 deployed functions:
+
+- Production customer demo state is now disabled by default through `demoMode`; seeded closet/bookings/purchases/entitlements are stripped from persisted production state while local demo mode can still show them with `VITE_DEMO_MODE=true`.
+- Homepage copy now points creator-link visitors to the example result instead of a public directory or old `#how-it-works` flow. Guest nav is Home, For creators, and Sign in.
+- Service detail pages now show best-fit/not-fit guidance, what the customer sends, what they receive, effort estimate, revision terms, example media, and a sticky mobile booking CTA.
+- Booking uploads now use draft-token uploads through `/api/draft-uploads`; checkout is blocked until uploads finish, and authenticated booking creation claims draft uploads into booking storage.
+- Booking detail now polls Supabase booking payment status directly after checkout success instead of using the retired `/api/checkout-status` function, and it exposes delivery review actions.
+- `/api/booking-actions` centralizes waitlist, message, delivery, revision, approval, dispute, and review actions with rate limiting and best-effort transactional email hooks.
+- `/api/referral-links` was folded into `/api/create-share-link` behind `kind: "referral"`, and `/api/checkout-status` was removed to preserve the function cap.
+- `/api/cron/auto-approve` now sends 24-hour approval reminders, auto-approves only delivered bookings, and cleans stale inactive bookings plus unclaimed draft uploads.
+- `share.config.json` is now the source for generated static share pages, with a local fallback OG image at `public/brand/bytaste-og-default.png`.
+- New migration: `supabase/migrations/0009_launch_hardening.sql` adds draft uploads, review verification, delivery email timestamps, inactive-booking tracking, creator styling fields, service-detail fields, and expanded commerce-event names.
+- Optional email env vars are documented: `RESEND_API_KEY`, `EMAIL_FROM`, and `VITE_SUPPORT_EMAIL`.
+- Full report: `docs/LAUNCH_HARDENING_REPORT_2026-07-20.md`.
+
+Manual follow-up: run migration `0009_launch_hardening.sql`, rerun `supabase/seed/0001_seed_catalog.sql`, set `VITE_SUPPORT_EMAIL`, set `CRON_SECRET` before relying on cron, optionally set `RESEND_API_KEY`/`EMAIL_FROM` for transactional email, and test the logged-out-to-checkout booking flow on mobile.
+
 ### Change 2026-07-19: Social-First Pivot
 
 Implemented the social-first pivot from the July 19 specification while preserving existing booking, paid-edit, and Studio foundations:
 
-- `/` is now a marketing homepage with a seeded delivery walkthrough, creator-link note, creator proposition, trust cards, and the existing `#how-it-works` anchor.
-- Guest navigation no longer exposes a public directory or paid-edit deep link. It now shows Home, How it works, For creators, and Sign in.
+- `/` is now a marketing homepage with a seeded delivery walkthrough, creator proposition, trust cards, and an `#example-result` anchor.
+- Guest navigation no longer exposes a public directory or paid-edit deep link. It now shows Home, For creators, and Sign in.
 - Customer navigation now includes `/account`; creator navigation includes `/studio/share`.
 - Creator storefronts resolve one primary offer, show proof from real seeded sources only, and render a mobile sticky CTA.
 - Booking auth moved to the Review step. Logged-out visitors can complete service, goal, and photo steps first; drafts persist text, closet IDs, and upload metadata only.
 - `/studio/share` adds canonical storefront links, QR generation, direct offer links, tracked-link generation, and honest empty stats.
-- New endpoints: `/api/create-booking`, `/api/referral-links`, `/api/track-event`, and `/api/cron/auto-approve`.
+- New endpoints at that stage: `/api/create-booking`, `/api/track-event`, and `/api/cron/auto-approve`. Referral links now live inside `/api/create-share-link`.
 - Checkout and webhook attribution now carry `source` and `campaign` where migration `0007_social_first.sql` has been applied.
 - New migrations: `0007_social_first.sql` and `0008_service_loop.sql`.
 - Full report: `docs/SOCIAL_FIRST_IMPLEMENTATION_REPORT_2026-07-19.md`.
 
-Manual follow-up: run migrations `0007` and `0008`, rerun the catalog seed, add `CRON_SECRET` in Vercel before relying on auto-approval, and keep `VITE_COMMERCE_ENABLED` off until paid edit purchases are fully tested.
+Manual follow-up from this pass is superseded by the July 20 note above: run through `0009`, rerun the catalog seed, add `CRON_SECRET` in Vercel before relying on auto-approval, and keep `VITE_COMMERCE_ENABLED` off until paid edit purchases are fully tested.
 
 ### Change 2026-07-14: ByTaste Rebrand
 
@@ -76,7 +95,7 @@ Implemented from `docs/BYTASTE_PHASE2_SPEC.md` with a bookings-first launch deci
 - **Commerce freeze**: paid-edit purchasing is gated behind `VITE_COMMERCE_ENABLED` in `src/lib/commerce.ts`. Until the flag is `true` in Vercel, the buy button renders as "Paid edits launch soon" and checkout cannot start. Bookings are unaffected. Flip it on only after migration 0003 is applied and seeded.
 - **Trust fixes**: `/launch` now renders NotFound for non-admins. Paid-edit reader internals are DEV-only. Edit-page and sign-in copy no longer mention Supabase, entitlements, or demo auth in customer-facing production surfaces.
 - **Funnel analytics**: `@vercel/analytics` is mounted in `main.tsx`; events include `creator_profile_viewed`, `edit_viewed`, `edit_checkout_clicked`, `booking_started`, `checkout_redirected`, `auth_gate_shown`, `signin_google_clicked`, `signin_magic_link_sent`, and `auth_completed`.
-- **Homepage**: new `#how-it-works` section with three steps, including the payment-hold language. Guest nav "How it works" points at that section.
+- **Homepage**: this originally added `#how-it-works`; the July 20 pass replaced that with the current `#example-result` flow.
 
 Remaining from the Phase 2 spec after the social-first pass: Supabase-backed creator/service/paid-edit reads, creator Studio writes, real analytics tables in Studio, service-loop action endpoints/UI, and Stripe Connect payouts.
 
@@ -122,22 +141,32 @@ The app still supports the original demo journey. Do not remove the seeded/local
 - `src/types.ts` and `src/types/commerce.ts` - app and commerce domain models.
 - `src/state.tsx` - local MVP state store plus Supabase auth session mirroring.
 - `src/lib/auth.ts` - Supabase Google OAuth, magic-link auth, redirect preservation, sign-out, and session-to-user mapping.
+- `src/lib/bookings.ts` and `src/lib/drafts.ts` - booking creation helpers, draft-token upload helpers, and guest draft persistence.
 - `src/lib/commerce.ts` - frontend helper for trusted commerce checkout and `VITE_COMMERCE_ENABLED` freeze flag.
 - `src/lib/paidEditAccess.ts` - frontend helper for entitlement-gated paid edit reads.
 - `src/lib/sharing.ts` - referral capture, safe redirects, and share URL helpers.
+- `src/hooks/useCurrentCreator.ts` - Studio creator scoping helper for real creator-owned rows with local demo fallback.
+- `src/lib/repositories/` - Supabase reader/mapping helpers for creator storefront data.
 - `src/features/sharing/ShareButton.tsx` - Web Share API with clipboard/manual fallback.
+- `api/booking-actions.ts` - booking service-loop actions, waitlist capture, reviews, disputes, delivery/revision status updates, and best-effort email hooks.
 - `api/create-commerce-checkout.ts` - trusted checkout endpoint. Browser should send only trusted IDs, not price/title.
 - `api/stripe-webhook.ts` - Stripe webhook with idempotency and paid-edit entitlement handling.
 - `api/paid-edit-access.ts` - entitlement-gated paid edit read API.
-- `api/create-share-link.ts` and `api/shared-resource.ts` - controlled share-link creation and read flow.
+- `api/create-share-link.ts` and `api/shared-resource.ts` - controlled share-link creation, referral-link creation, and read flow.
+- `api/draft-uploads.ts` - anonymous draft-token upload plus authenticated claim into booking storage.
+- `api/_email.ts` and `api/_emailTemplates.ts` - optional Resend transactional email helper; no email route is deployed.
 - `api/media/signed-url.ts` - authorised private media signed URL flow.
 - `supabase/migrations/0003_paid_edits_and_entitlements.sql` - paid edit, purchase, entitlement, referral, share, and commerce-event schema.
 - `supabase/migrations/0004_profiles.sql` - Supabase auth profile table, signup trigger, RLS, and role guard.
 - `supabase/migrations/0005_security_hardening.sql` - profile role hardening and commerce-event insert policy consolidation.
 - `supabase/migrations/0006_taste_item_verdict.sql` - chosen/rejected product item verdict field.
+- `supabase/migrations/0007_social_first.sql` - creator primary offers, share attribution, and referral fields.
+- `supabase/migrations/0008_service_loop.sql` - booking messages, revision requests, disputes, and approval timestamps.
+- `supabase/migrations/0009_launch_hardening.sql` - draft uploads, inactive checkout cleanup, delivery email timestamps, service-detail fields, and review verification.
 - `supabase/config.toml` - Supabase CLI local project config.
 - `supabase/seed/0001_seed_catalog.sql` - idempotent Supabase seed for the launch catalog.
 - `scripts/generate-share-pages.mjs` - build-time static share/OG page generator.
+- `share.config.json` - source data for generated static share pages.
 - `docs/COMMERCE_IMPLEMENTATION_STATUS.md` - implementation status for the commerce slice.
 - `docs/BYTASTE_PHASE2_SPEC.md` - Phase 2 plan and acceptance criteria.
 - `docs/RECENT_CHANGES_REPORT_2026-07-14.md` - concise report of the recent product, auth, commerce, and hardening changes.

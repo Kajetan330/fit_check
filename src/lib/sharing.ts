@@ -1,4 +1,5 @@
 import { appEnv } from "./env";
+import shareConfig from "../../share.config.json";
 
 const REFERRAL_KEY = "fitcheck:referral:v1";
 const REFERRAL_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -118,8 +119,16 @@ export function sharePageUrl(path: string) {
   return `${window.location.origin}${path}`;
 }
 
-export function creatorSharePath(handle: string) {
+export function creatorSharePagePath(handle: string) {
   return `/share/creator-${handle}.html`;
+}
+
+export function creatorShareImagePath(handle: string, fallback?: string) {
+  return (
+    (shareConfig.creators as Record<string, { image?: string }>)[handle]?.image ||
+    fallback ||
+    "/brand/bytaste-og-default.png"
+  );
 }
 
 export function editSharePath(handle: string, slug: string) {

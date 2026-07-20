@@ -276,6 +276,48 @@ begin
       when 'capsule-build' then 'Best with your budget, sizes, no-go brands, and two references.'
       else effort_note
     end,
+    not_for = case slug
+      when 'quick-take' then array['Full closet rebuilds', 'Multi-event capsules']::text[]
+      when 'style-diagnosis' then array['Urgent event decisions', 'Full shopping lists']::text[]
+      when 'wardrobe-audit' then array['Instant replies', 'Occasions needing only one outfit']::text[]
+      when 'capsule-build' then array['No-buy styling', 'One-piece verdicts']::text[]
+      else not_for
+    end,
+    you_send = case slug
+      when 'quick-take' then 'One outfit question plus up to five photos of the piece, outfit, or occasion context.'
+      when 'style-diagnosis' then 'Three to six current outfit photos, two references, and what feels off right now.'
+      when 'wardrobe-audit' then 'Clear photos of the closet pieces you actually wear, plus your goal and budget boundaries.'
+      when 'capsule-build' then 'Budget, sizes, style references, no-go brands, and what the capsule must cover.'
+      else you_send
+    end,
+    you_receive = case slug
+      when 'quick-take' then 'A clear creator verdict, three specific styling changes, and one purchase or wear-with call.'
+      when 'style-diagnosis' then 'A written style read with palette, silhouette, texture, and next-step direction.'
+      when 'wardrobe-audit' then 'Keep, repair, donate, and outfit calls built from your real wardrobe.'
+      when 'capsule-build' then 'A focused shopping edit with budget tiers, styling notes, and substitution logic.'
+      else you_receive
+    end,
+    customer_effort_mins = case slug
+      when 'quick-take' then 8
+      when 'style-diagnosis' then 15
+      when 'wardrobe-audit' then 30
+      when 'capsule-build' then 20
+      else customer_effort_mins
+    end,
+    revision_terms = case slug
+      when 'quick-take' then 'One clarification within 72 hours is included.'
+      when 'style-diagnosis' then 'One clarification within 72 hours is included.'
+      when 'wardrobe-audit' then 'One revision within the original closet scope is included.'
+      when 'capsule-build' then 'One substitution pass within 72 hours is included.'
+      else revision_terms
+    end,
+    example_result_image = case slug
+      when 'quick-take' then '/assets/media/bytaste-media-02.jpg'
+      when 'style-diagnosis' then '/assets/media/bytaste-media-16.jpg'
+      when 'wardrobe-audit' then '/assets/media/bytaste-media-11.jpg'
+      when 'capsule-build' then '/assets/media/bytaste-media-09.jpg'
+      else example_result_image
+    end,
     updated_at = now()
   where creator_id in (amara_id, lena_id, noor_id, ivy_id);
 

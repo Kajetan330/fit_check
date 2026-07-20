@@ -16,17 +16,19 @@ Create a Supabase project, then run:
 -- then paste and run supabase/migrations/0006_taste_item_verdict.sql
 -- then paste and run supabase/migrations/0007_social_first.sql
 -- then paste and run supabase/migrations/0008_service_loop.sql
+-- then paste and run supabase/migrations/0009_launch_hardening.sql
 -- sign in once through the app so public.profiles has an owner row
 -- then paste and run supabase/seed/0001_seed_catalog.sql
 ```
 
-The seed mirrors the current creator catalog into Supabase: creator profiles, service prices, paid edits, product picks, outfit formulas, and referral links. It is idempotent. If it reports that it was skipped, create one auth-backed profile first, then rerun it.
+The seed mirrors the current creator catalog into Supabase: creator profiles, service prices, service-detail guidance, paid edits, product picks, outfit formulas, and referral links. It is idempotent. If it reports that it was skipped, create one auth-backed profile first, then rerun it.
 
 Add these frontend variables in Vercel and `.env.local`:
 
 ```bash
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
+VITE_SUPPORT_EMAIL=
 ```
 
 Add this server-only variable in Vercel:
@@ -73,6 +75,17 @@ charge.refunded
 Trusted booking and paid-edit checkout runs through `api/create-commerce-checkout.ts`; `api/create-booking.ts` creates booking rows from signed-in users and loads the service price server-side before checkout. The older browser-priced booking checkout route is intentionally not deployed on Hobby so the project stays within Vercel's 12-function limit. The webhook validates events and updates booking/payment records.
 
 `CRON_SECRET` gates `/api/cron/auto-approve`, which is scheduled daily at 09:00 UTC in `vercel.json` after `0008_service_loop.sql` is applied. Vercel Hobby only allows daily cron jobs; switch this to hourly only after upgrading the Vercel project to Pro.
+
+After `0009_launch_hardening.sql`, the cron also sends 24-hour approval reminders and cleans stale inactive bookings plus unclaimed draft uploads. It requires `CRON_SECRET` before production use.
+
+Optional transactional email:
+
+```bash
+RESEND_API_KEY=
+EMAIL_FROM=
+```
+
+The email helper is best-effort and is called from booking actions, checkout, webhooks, and cron. If these values are absent, booking flows still work without email.
 
 ## 3. Deploy
 

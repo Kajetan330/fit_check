@@ -1,5 +1,6 @@
 import Stripe from "stripe";
 import { getSupabaseAdmin } from "./_supabaseAdmin.js";
+import { sendBookingEmail } from "./_email.js";
 
 export const config = {
   api: {
@@ -156,6 +157,8 @@ export default async function handler(req: any, res: any) {
           campaign: session.metadata.campaign || null,
           metadata: { bookingId: session.metadata.bookingId },
         });
+
+        await sendBookingEmail("payment_completed", session.metadata.bookingId);
 
         res.status(200).json({ received: true });
         return;

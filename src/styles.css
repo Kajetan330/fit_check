@@ -216,6 +216,42 @@ p {
   gap: 34px;
 }
 
+.app-footer {
+  border-top: 1px solid var(--line);
+  background: #fffaf8;
+}
+
+.app-footer-inner {
+  display: grid;
+  grid-template-columns: 1.2fr repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  width: min(1180px, calc(100% - 36px));
+  margin: 0 auto;
+  padding: 38px 0;
+}
+
+.app-footer-brand,
+.app-footer-column {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.app-footer h2 {
+  color: var(--ink);
+  font-size: 0.84rem;
+  text-transform: uppercase;
+}
+
+.app-footer a {
+  color: var(--stone);
+  font-weight: 800;
+}
+
+.app-footer a:hover {
+  color: var(--ink);
+}
+
 .eyebrow {
   color: var(--ink);
   font-size: 0.76rem;
@@ -1008,6 +1044,54 @@ p {
   align-content: start;
 }
 
+.service-fit-grid,
+.service-detail-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.service-fit-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.service-detail-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.service-fit-grid article,
+.service-detail-grid article,
+.case-study-step,
+.service-loop-panel,
+.retention-actions {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+
+.service-example-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  object-fit: cover;
+}
+
+.fact-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+
+.fact-row span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .post-detail {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 340px;
@@ -1161,7 +1245,7 @@ p {
 }
 
 .stepper span {
-  display: inline-flex;
+  display: inline-grid;
   align-items: center;
   justify-content: center;
   min-width: 104px;
@@ -1174,6 +1258,16 @@ p {
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 900;
+  text-align: center;
+}
+
+.stepper small {
+  display: block;
+  margin-top: 3px;
+  color: inherit;
+  font-size: 0.68rem;
+  font-weight: 750;
+  opacity: 0.72;
 }
 
 .stepper span.active {
@@ -1280,6 +1374,7 @@ select:focus {
 .upload-box {
   position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
@@ -1289,6 +1384,13 @@ select:focus {
   background: #f8f3f3;
   color: var(--ink);
   font-weight: 850;
+  text-align: center;
+}
+
+.upload-box small {
+  max-width: 34ch;
+  color: var(--muted);
+  font-weight: 750;
 }
 
 .upload-box input {
@@ -1404,6 +1506,17 @@ select:focus {
 .status-pill.completed {
   background: #efedf8;
   color: #4b3490;
+}
+
+.status-pill.revision_requested {
+  background: #fff1d5;
+  color: #835200;
+}
+
+.status-pill.disputed,
+.status-pill.cancelled {
+  background: #fbe7e4;
+  color: #9e2f24;
 }
 
 .booking-detail {
@@ -1721,6 +1834,22 @@ select:focus {
   font-size: 1.08rem;
 }
 
+.visitor-split-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.visitor-split-row article {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: white;
+}
+
 .sample-result,
 .sample-result-grid,
 .sample-outfits,
@@ -1774,6 +1903,34 @@ select:focus {
   font-weight: 900;
 }
 
+.case-study {
+  scroll-margin-top: 96px;
+}
+
+.case-study blockquote {
+  margin: 0;
+  padding-left: 14px;
+  border-left: 3px solid var(--claret);
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 1.28rem;
+  line-height: 1.22;
+}
+
+.reasoning-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--ink);
+}
+
+.principle-list.muted span {
+  border-color: var(--line);
+  background: #f8f3f3;
+  color: var(--stone);
+}
+
 .creator-link-note {
   padding: 28px;
   border: 1px solid var(--line);
@@ -1812,6 +1969,25 @@ select:focus {
 
 .sticky-offer-bar {
   display: none;
+}
+
+.waitlist-inline {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.waitlist-inline.compact {
+  grid-template-columns: 1fr;
+}
+
+.service-loop-panel {
+  background: #fffaf8;
+}
+
+.retention-actions {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--paper);
 }
 
 .upload-preview-grid,
@@ -1972,6 +2148,11 @@ select:focus {
   .sample-result-grid,
   .share-grid,
   .storefront-offer-grid,
+  .service-fit-grid,
+  .service-detail-grid,
+  .visitor-split-row,
+  .app-footer-inner,
+  .retention-actions,
   .post-detail,
   .apply-page {
     grid-template-columns: 1fr;
@@ -2230,37 +2411,3 @@ select:focus {
   }
 }
 
-.how-steps {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-}
-
-.how-step h3 {
-  margin: 10px 0 6px;
-  font-size: 1.05rem;
-}
-
-.how-step p {
-  margin: 0;
-  color: var(--text-soft, #555);
-  font-size: 0.95rem;
-  line-height: 1.5;
-}
-
-.how-step-number {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid currentColor;
-  font-weight: 600;
-}
-
-@media (max-width: 720px) {
-  .how-steps {
-    grid-template-columns: 1fr;
-  }
-}

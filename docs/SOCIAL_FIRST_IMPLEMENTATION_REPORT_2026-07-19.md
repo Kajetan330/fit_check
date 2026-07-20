@@ -4,6 +4,8 @@ Date: 2026-07-19
 
 Baseline: `origin/main` at `46d8be8`.
 
+Update on 2026-07-20: `/api/checkout-status` was retired; checkout success now polls Supabase booking payment status directly. `/api/referral-links` was folded into `/api/create-share-link` with `kind: "referral"` so the project stays within Vercel Hobby's 12-function limit.
+
 ## What Changed
 
 - Replaced the public discovery homepage with a social-first marketing homepage.
@@ -22,8 +24,8 @@ Baseline: `origin/main` at `46d8be8`.
 - Added client event helper `src/lib/analytics.ts` that sends approved events to `/api/track-event` and Vercel Analytics.
 - Added trusted `/api/create-booking`; it loads service price from Supabase before creating a booking.
 - Extended `/api/create-commerce-checkout` and Stripe webhook handling to carry source/campaign attribution where the new schema exists.
-- Updated `/api/checkout-status` to read real `bookings` payment status before falling back to deprecated `checkout_sessions`.
-- Added `/api/referral-links`, `/api/track-event`, and `/api/cron/auto-approve`.
+- At the time, `/api/checkout-status` and `/api/referral-links` existed. They are now superseded by direct Supabase payment polling and `/api/create-share-link`.
+- Added `/api/track-event` and `/api/cron/auto-approve`.
 - Added additive migrations:
   - `0007_social_first.sql`
   - `0008_service_loop.sql`

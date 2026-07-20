@@ -4,10 +4,11 @@ export interface GuestBookingDraft {
   version: 1;
   handle: string;
   serviceId: string;
+  draftToken: string;
   step: BookingStep;
   answers: Record<string, string>;
   closetItemIds: string[];
-  uploads: Array<{ name: string; size: number; localId: string }>;
+  uploads: Array<{ name: string; size: number; localId: string; uploadId?: string }>;
   updatedAt: string;
 }
 
@@ -15,6 +16,12 @@ const DRAFT_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const draftKey = (handle: string, serviceId: string) =>
   `fitcheck:guest-booking-draft:v1:${handle}:${serviceId}`;
+
+export function createDraftToken() {
+  const bytes = new Uint8Array(32);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
 
 const isBookingStep = (value: unknown): value is BookingStep =>
   value === "service" || value === "goal" || value === "photos" || value === "review" || value === "pay";
@@ -48,6 +55,10 @@ export function loadDraft(handle: string, serviceId: string): GuestBookingDraft 
       version: 1,
       handle,
       serviceId,
+      draftToken:
+        typeof parsed.draftToken === "string" && /^[a-f0-9]{64}$/i.test(parsed.draftToken)
+          ? parsed.draftToken
+          : createDraftToken(),
       step: parsed.step,
       answers: parsed.answers && typeof parsed.answers === "object" ? parsed.answers : {},
       closetItemIds: Array.isArray(parsed.closetItemIds) ? parsed.closetItemIds.filter(Boolean) : [],
@@ -58,6 +69,7 @@ export function loadDraft(handle: string, serviceId: string): GuestBookingDraft 
               name: item.name,
               size: item.size,
               localId: item.localId || `${item.name}-${item.size}`,
+              uploadId: typeof item.uploadId === "string" ? item.uploadId : undefined,
             }))
         : [],
       updatedAt: parsed.updatedAt,

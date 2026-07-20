@@ -14,23 +14,23 @@
 - Repository remote is configured as `origin`.
 - Product direction is clear from the PDFs: a profile-first fashion creator platform with productised styling services.
 - Responsive Vite + React + TypeScript app is implemented.
-- Main customer flow works locally: open a creator-shared link, view storefront/service/edit pages, draft a booking before auth, sign in, pay, and view booking.
+- Main customer flow works locally: open a creator-shared link, view storefront/service/edit pages, draft a booking before auth, upload draft images, sign in, pay, and view booking.
 - Mobile-ready navigation, PWA manifest metadata, and static deployment rewrites are included.
 - Creator Studio demo works with booking queue, status updates, earnings metrics, service catalogue, and lookbook assembly surface.
-- Closet, saved creators/posts, and bookings persist in `localStorage`.
+- Local demo state persists in `localStorage` for development. Production strips seeded customer demo rows unless `VITE_DEMO_MODE=true`.
 - Supabase schema, RLS policies, storage buckets, and production setup docs are included.
 - Stripe checkout and webhook Vercel function scaffolding is included.
-- Stripe checkout session status persistence is scaffolded through `checkout_sessions` and `/api/checkout-status`.
+- Stripe checkout session status persistence is scaffolded through Supabase booking/payment rows; the older `/api/checkout-status` route has been removed to preserve the Vercel Hobby function cap.
 - Production health checks are exposed through `/api/health` and shown on `/launch` without displaying secret values.
 - Creator-led commerce architecture is scaffolded with paid edits, entitlement tables, share-link hashing, trusted checkout endpoints, generated share metadata pages, and storefront/library routes.
 - Paid-edit reader access now uses `/api/paid-edit-access` whenever Supabase is configured, so production access depends on real purchases and entitlements instead of local state.
 - Supabase CLI config and an idempotent catalog seed are included for creators, services, paid edits, item picks, outfit formulas, and referral links.
 - The visible product brand is now ByTaste/BYTASTE, while internal `fitcheck-*` browser storage keys remain for saved-state continuity.
 - Taste-product items support a `chosen` or `rejected` verdict across the frontend model, demo data, Supabase migration, seed data, API mapping, and paid-edit cards.
-- Social-first pivot is implemented in the app shell: no public creator directory on `/`, guest nav focuses on Home/How it works/For creators/Sign in, storefronts resolve one primary offer, and creators have a `/studio/share` link centre with QR and tracked-link generation.
+- Social-first pivot is implemented in the app shell: no public creator directory on `/`, guest nav focuses on Home/For creators/Sign in, storefronts resolve one primary offer, and creators have a `/studio/share` link centre with QR and tracked-link generation.
 - Booking draft persistence is implemented for logged-out customers with text, selected closet IDs, and upload metadata only. Image blobs, signed URLs, and tokens are never persisted.
-- Additive Supabase migrations `0007_social_first.sql` and `0008_service_loop.sql` add primary offers, service context, attribution fields, waitlists, booking messages, revision requests, and approval timestamps.
-- Serverless endpoints now include `/api/create-booking`, `/api/referral-links`, `/api/track-event`, and `/api/cron/auto-approve`.
+- Additive Supabase migrations `0007_social_first.sql`, `0008_service_loop.sql`, and `0009_launch_hardening.sql` add primary offers, service context, attribution fields, waitlists, draft uploads, booking messages, revision requests, reviews, delivery email timestamps, approval timestamps, and cleanup metadata.
+- Serverless endpoints now include `/api/create-booking`, `/api/create-share-link`, `/api/draft-uploads`, `/api/booking-actions`, `/api/track-event`, and `/api/cron/auto-approve`.
 - The older browser-priced booking checkout route is retired from deployment; production bookings use trusted Supabase booking IDs and `/api/create-commerce-checkout`.
 - The latest implementation handoff for future developers is tracked in `docs/NEXT_DEVELOPER_HANDOFF.md`.
 - The final finish plan is tracked in `docs/FINAL_FINISH_PLAN.md`.
@@ -66,7 +66,7 @@ Launch focus is fashion only. Beauty, hair, skincare, paid subscriptions, real A
 - TypeScript
 - React Router
 - Lucide React icons
-- Static seeded data plus `localStorage` persistence
+- Static seeded data plus gated local demo state persistence
 - Optional Supabase client when environment variables are present
 - Stripe serverless checkout/webhook functions
 - Checkout session persistence through Supabase
@@ -102,7 +102,7 @@ npm run dev
 - Single post page with tagged items and creator conversion path.
 - Mock sign-in and creator/customer role selection.
 - Guided booking intake with service recap, goal, photos, review/auth, pay, local draft persistence, image previews, accessible reorder controls, payment-hold confirmation, and booking creation.
-- Customer closet with filtering and add-item flow.
+- Customer closet with filtering and add-item flow in demo mode.
 - Bookings list and booking detail with timeline and delivered lookbook state.
 - Creator Studio with active queue, booking status actions, metrics, services, and atelier-style workbench.
 - Creator Share centre with canonical storefront link, QR code, direct offer links, tracked-link builder, and honest empty analytics state.
@@ -118,7 +118,7 @@ npm run dev
 - Supabase-backed paid-edit reader guard with loading, missing purchase, pending payment, refunded, revoked, and network states.
 - Trusted Supabase booking creation endpoint that loads price from the database before checkout, plus schema-tolerant checkout attribution.
 - Server-side attribution endpoint and Stripe webhook checkout-completed attribution.
-- Service-loop schema and cron-gated auto-approval endpoint scaffold.
+- Service-loop schema, booking action endpoint, optional email helper, draft upload endpoint, and cron-gated reminder/auto-approval/cleanup scaffold.
 - PWA service worker for production shell caching.
 - Local original media assets replacing external image URLs.
 - Brand assets and brand usage notes.
@@ -133,7 +133,7 @@ npm run dev
 
 - Create Supabase and Stripe projects and add live credentials.
 - Run Supabase migrations `0001_initial_schema.sql` and `0002_checkout_sessions.sql`, then verify RLS/storage policies.
-- Run Supabase migrations `0003_paid_edits_and_entitlements.sql`, `0004_profiles.sql`, `0005_security_hardening.sql`, `0006_taste_item_verdict.sql`, `0007_social_first.sql`, and `0008_service_loop.sql`, then run `seed/0001_seed_catalog.sql` after at least one auth profile exists.
+- Run Supabase migrations `0003_paid_edits_and_entitlements.sql`, `0004_profiles.sql`, `0005_security_hardening.sql`, `0006_taste_item_verdict.sql`, `0007_social_first.sql`, `0008_service_loop.sql`, and `0009_launch_hardening.sql`, then run `seed/0001_seed_catalog.sql` after at least one auth profile exists.
 - Replace local demo persistence with Supabase reads/writes in the app state layer.
 - Move storefront/service/edit reads from local seed data to Supabase so creator-owned rows become the source of truth.
 - Connect real upload/storage for closet and booking images.

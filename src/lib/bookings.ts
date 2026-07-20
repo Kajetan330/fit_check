@@ -50,3 +50,56 @@ export async function recordBookingUpload(bookingId: string, storagePath: string
     content_type: contentType ?? null,
   });
 }
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+
+export async function uploadDraftImage(file: File, draftToken: string): Promise<{ ok: boolean; uploadId?: string; message: string }> {
+  try {
+    const data = await fileToBase64(file);
+    const response = await fetch("/api/draft-uploads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        draftToken,
+        contentType: file.type || "image/jpeg",
+        data,
+      }),
+    });
+    const payload = (await response.json()) as { uploadId?: string; message?: string };
+    if (!response.ok || !payload.uploadId) {
+      return { ok: false, message: payload.message || "Draft upload failed." };
+    }
+    return { ok: true, uploadId: payload.uploadId, message: "Uploaded." };
+  } catch {
+    return { ok: false, message: "Draft upload could not be reached." };
+  }
+}
+
+export async function claimDraftUploads(draftToken: string, bookingId: string): Promise<{ ok: boolean; claimed: number; message: string }> {
+  try {
+    const { data } = supabase ? await supabase.auth.getSession() : { data: { session: null } };
+    const token = data.session?.access_token;
+    const response = await fetch("/api/draft-uploads", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ draftToken, bookingId }),
+    });
+    const payload = (await response.json()) as { claimed?: number; message?: string };
+    if (!response.ok) {
+      return { ok: false, claimed: 0, message: payload.message || "Draft uploads could not be claimed." };
+    }
+    return { ok: true, claimed: payload.claimed ?? 0, message: "Draft uploads claimed." };
+  } catch {
+    return { ok: false, claimed: 0, message: "Draft uploads could not be reached." };
+  }
+}

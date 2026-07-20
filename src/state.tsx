@@ -5,27 +5,33 @@ import { supabaseSignOut, userFromSession } from "./lib/auth";
 import { supabase } from "./lib/supabase";
 
 const STORAGE_KEY = "fitcheck-state-v1";
+export const demoMode = import.meta.env.DEV || import.meta.env.VITE_DEMO_MODE === "true";
+const SEED_IDS = new Set(
+  [...bookingSeed, ...closetSeed, ...purchaseSeed, ...entitlementSeed].map((item) => item.id),
+);
 
 const defaultState: AppState = {
   user: null,
-  savedCreatorHandles: ["amara-okafor"],
-  savedPostIds: ["post-amara-01"],
-  closet: closetSeed,
-  bookings: bookingSeed,
-  creatorApplications: [
-    {
-      id: "application-demo-01",
-      handle: "city-archive",
-      aesthetic: "plus-size city capsule",
-      links: "instagram.com/cityarchive",
-      status: "reviewing",
-      createdAt: "2026-07-01",
-    },
-  ],
+  savedCreatorHandles: [],
+  savedPostIds: [],
+  closet: demoMode ? closetSeed : [],
+  bookings: demoMode ? bookingSeed : [],
+  creatorApplications: demoMode
+    ? [
+        {
+          id: "application-demo-01",
+          handle: "city-archive",
+          aesthetic: "plus-size city capsule",
+          links: "instagram.com/cityarchive",
+          status: "reviewing",
+          createdAt: "2026-07-01",
+        },
+      ]
+    : [],
   creatorDrafts: {},
   studioPosts: [],
-  purchases: purchaseSeed,
-  entitlements: entitlementSeed,
+  purchases: demoMode ? purchaseSeed : [],
+  entitlements: demoMode ? entitlementSeed : [],
 };
 
 interface AppStateContextValue {
@@ -52,18 +58,20 @@ const loadState = (): AppState => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState;
     const parsed = JSON.parse(raw) as Partial<AppState>;
+    const closet = parsed.closet ?? defaultState.closet;
+    const bookings = parsed.bookings ?? defaultState.bookings;
+    const purchases = parsed.purchases ?? defaultState.purchases;
+    const entitlements = parsed.entitlements ?? defaultState.entitlements;
     return {
       ...defaultState,
       ...parsed,
-      closet: parsed.closet?.length ? parsed.closet : defaultState.closet,
-      bookings: parsed.bookings?.length ? parsed.bookings : defaultState.bookings,
-      creatorApplications: parsed.creatorApplications?.length
-        ? parsed.creatorApplications
-        : defaultState.creatorApplications,
+      closet: demoMode ? closet : closet.filter((item) => !SEED_IDS.has(item.id)),
+      bookings: demoMode ? bookings : bookings.filter((item) => !SEED_IDS.has(item.id)),
+      creatorApplications: parsed.creatorApplications ?? defaultState.creatorApplications,
       creatorDrafts: parsed.creatorDrafts ?? defaultState.creatorDrafts,
       studioPosts: parsed.studioPosts ?? defaultState.studioPosts,
-      purchases: parsed.purchases?.length ? parsed.purchases : defaultState.purchases,
-      entitlements: parsed.entitlements?.length ? parsed.entitlements : defaultState.entitlements,
+      purchases: demoMode ? purchases : purchases.filter((item) => !SEED_IDS.has(item.id)),
+      entitlements: demoMode ? entitlements : entitlements.filter((item) => !SEED_IDS.has(item.id)),
     };
   } catch {
     return defaultState;
