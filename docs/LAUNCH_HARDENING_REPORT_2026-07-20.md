@@ -14,6 +14,7 @@ Date: 2026-07-20
 - Extended the cron job to send approval reminders, auto-approve only delivered bookings, and clean stale inactive bookings plus unclaimed draft uploads.
 - Added best-effort Resend email helpers. No email route is deployed, and booking flows continue if email env vars are missing.
 - Moved generated share-page data into `share.config.json` and added a local fallback OG image.
+- Tightened the Vercel SPA rewrite so deleted or unknown `/api/*` routes no longer return the frontend shell.
 - Added `supabase/migrations/0009_launch_hardening.sql` and updated the catalog seed with service-detail fields.
 
 ## Verification
