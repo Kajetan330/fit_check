@@ -30,7 +30,7 @@ begin
     select
       users.id,
       coalesce(users.raw_user_meta_data ->> 'full_name', split_part(users.email, '@', 1), 'ByTaste creator'),
-      'creator'
+      'creator'::public.user_role
     from auth.users as users
     order by users.created_at
     limit 1
@@ -49,7 +49,10 @@ begin
   end if;
 
   update public.profiles
-  set role = case when role = 'admin' then 'admin' else 'creator' end
+  set role = case
+    when role = 'admin'::public.user_role then 'admin'::public.user_role
+    else 'creator'::public.user_role
+  end
   where id = owner_id;
 
   insert into public.creator_profiles (
