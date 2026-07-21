@@ -16,6 +16,7 @@ Date: 2026-07-20
 - Moved generated share-page data into `share.config.json` and added a local fallback OG image.
 - Tightened the Vercel SPA rewrite so deleted or unknown `/api/*` routes no longer return the frontend shell.
 - Added `supabase/migrations/0009_launch_hardening.sql` and updated the catalog seed with service-detail fields.
+- Updated the seed so it creates a profile for the first existing `auth.users` row when `public.profiles` is empty, then marks that owner as a creator unless already admin.
 
 ## Verification
 
@@ -25,7 +26,7 @@ Date: 2026-07-20
 ## Manual Follow-Up
 
 - Run `supabase/migrations/0009_launch_hardening.sql` in Supabase.
-- Rerun `supabase/seed/0001_seed_catalog.sql`.
+- Rerun `supabase/seed/0001_seed_catalog.sql`. If at least one Supabase Auth user exists, the seed now creates/uses the needed owner profile automatically.
 - Set `VITE_SUPPORT_EMAIL` in Vercel.
 - Set `CRON_SECRET` before relying on cron.
 - Optional: set `RESEND_API_KEY` and `EMAIL_FROM` for transactional email.

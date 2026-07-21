@@ -17,11 +17,11 @@ Create a Supabase project, then run:
 -- then paste and run supabase/migrations/0007_social_first.sql
 -- then paste and run supabase/migrations/0008_service_loop.sql
 -- then paste and run supabase/migrations/0009_launch_hardening.sql
--- sign in once through the app so public.profiles has an owner row
+-- sign in once through the app so auth.users has an owner row
 -- then paste and run supabase/seed/0001_seed_catalog.sql
 ```
 
-The seed mirrors the current creator catalog into Supabase: creator profiles, service prices, service-detail guidance, paid edits, product picks, outfit formulas, and referral links. It is idempotent. If it reports that it was skipped, create one auth-backed profile first, then rerun it.
+The seed mirrors the current creator catalog into Supabase: creator profiles, service prices, service-detail guidance, paid edits, product picks, outfit formulas, and referral links. It is idempotent. If `public.profiles` is empty but at least one `auth.users` row exists, it creates the missing profile row for the first auth user and marks that profile as `creator` unless it is already `admin`. If it reports that it was skipped, sign in once through the app, then rerun it.
 
 Add these frontend variables in Vercel and `.env.local`:
 

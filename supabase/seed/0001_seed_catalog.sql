@@ -1,9 +1,9 @@
 -- ByTaste catalog seed.
 --
--- Run after migrations 0001-0005. The seed intentionally attaches the demo
--- creator catalog to an existing Supabase profile instead of inserting auth
--- users by hand. If the project has no signed-in profile yet, create one
--- through the app or Supabase Auth first, then rerun this file.
+-- Run after migrations 0001-0009. The seed attaches the demo creator catalog
+-- to an existing Supabase profile. If the profiles table is empty but
+-- auth.users already has a user, it creates a matching profile for the first
+-- auth user so projects migrated after initial sign-in can still seed cleanly.
 
 do $$
 declare
@@ -26,9 +26,31 @@ begin
   limit 1;
 
   if owner_id is null then
-    raise notice 'ByTaste seed skipped: create at least one Supabase auth profile, then rerun supabase/seed/0001_seed_catalog.sql.';
+    insert into public.profiles (id, display_name, role)
+    select
+      users.id,
+      coalesce(users.raw_user_meta_data ->> 'full_name', split_part(users.email, '@', 1), 'ByTaste creator'),
+      'creator'
+    from auth.users as users
+    order by users.created_at
+    limit 1
+    on conflict (id) do nothing;
+
+    select id
+      into owner_id
+    from public.profiles
+    order by created_at
+    limit 1;
+  end if;
+
+  if owner_id is null then
+    raise notice 'ByTaste seed skipped: create at least one Supabase auth user, then rerun supabase/seed/0001_seed_catalog.sql.';
     return;
   end if;
+
+  update public.profiles
+  set role = case when role = 'admin' then 'admin' else 'creator' end
+  where id = owner_id;
 
   insert into public.creator_profiles (
     id,
