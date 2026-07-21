@@ -45,7 +45,7 @@
 - There was no application implementation.
 - There was no package setup, run instructions, routing, UI, data model, or deployment path.
 - There was no backend, authentication provider, payment provider, image upload service, or moderation pipeline.
-- Real Supabase/Stripe production wiring exists, but several new social-first migrations and manual dashboard steps still need to be run before every paid workflow is live.
+- Real Supabase/Stripe production wiring exists. Production Supabase migrations `0003` through `0009` and the launch catalog seed are complete as of 2026-07-21; manual dashboard/env steps remain before every paid workflow is launch-ready.
 
 ## Implemented MVP
 
@@ -131,9 +131,8 @@ npm run dev
 
 ### Priority 1
 
-- Create Supabase and Stripe projects and add live credentials.
-- Run Supabase migrations `0001_initial_schema.sql` and `0002_checkout_sessions.sql`, then verify RLS/storage policies.
-- Run Supabase migrations `0003_paid_edits_and_entitlements.sql`, `0004_profiles.sql`, `0005_security_hardening.sql`, `0006_taste_item_verdict.sql`, `0007_social_first.sql`, `0008_service_loop.sql`, and `0009_launch_hardening.sql`, then run `seed/0001_seed_catalog.sql` after at least one auth profile exists.
+- Add remaining Vercel env vars: `VITE_SUPPORT_EMAIL`, `CRON_SECRET`, and optionally `RESEND_API_KEY` / `EMAIL_FROM`.
+- Keep `VITE_COMMERCE_ENABLED` off until paid-edit checkout, webhook, entitlement, and attribution are tested end to end.
 - Replace local demo persistence with Supabase reads/writes in the app state layer.
 - Move storefront/service/edit reads from local seed data to Supabase so creator-owned rows become the source of truth.
 - Connect real upload/storage for closet and booking images.

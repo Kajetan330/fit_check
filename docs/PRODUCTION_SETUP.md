@@ -23,6 +23,8 @@ Create a Supabase project, then run:
 
 The seed mirrors the current creator catalog into Supabase: creator profiles, service prices, service-detail guidance, paid edits, product picks, outfit formulas, and referral links. It is idempotent. If `public.profiles` is empty but at least one `auth.users` row exists, it creates the missing profile row for the first auth user and marks that profile as `creator` unless it is already `admin`. If it reports that it was skipped, sign in once through the app, then rerun it.
 
+Current production status for `glykxoqtqxnrnqdosovo`, verified 2026-07-21: migrations `0003` through `0009` are applied, and the catalog seed populated 4 creator profiles, 4 taste products, 11 taste product items, and 1 rejected item. New environments still need the full setup sequence above.
+
 Add these frontend variables in Vercel and `.env.local`:
 
 ```bash

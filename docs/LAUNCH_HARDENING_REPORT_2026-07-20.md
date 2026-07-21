@@ -22,11 +22,11 @@ Date: 2026-07-20
 
 - `npm run check` passes.
 - Deployed function count is 12 non-underscore Vercel functions.
+- Production Supabase project `glykxoqtqxnrnqdosovo` has migrations `0003` through `0009` applied and verified as of 2026-07-21.
+- Production seed verification as of 2026-07-21: `creator_profiles` = 4, `taste_products` = 4, `taste_product_items` = 11, rejected items = 1.
 
 ## Manual Follow-Up
 
-- Run `supabase/migrations/0009_launch_hardening.sql` in Supabase.
-- Rerun `supabase/seed/0001_seed_catalog.sql`. If at least one Supabase Auth user exists, the seed now creates/uses the needed owner profile automatically.
 - Set `VITE_SUPPORT_EMAIL` in Vercel.
 - Set `CRON_SECRET` before relying on cron.
 - Optional: set `RESEND_API_KEY` and `EMAIL_FROM` for transactional email.

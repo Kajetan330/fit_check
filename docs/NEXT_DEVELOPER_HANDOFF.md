@@ -35,7 +35,7 @@ Implemented the next hardening pass while keeping Vercel Hobby at exactly 12 dep
 - Optional email env vars are documented: `RESEND_API_KEY`, `EMAIL_FROM`, and `VITE_SUPPORT_EMAIL`.
 - Full report: `docs/LAUNCH_HARDENING_REPORT_2026-07-20.md`.
 
-Manual follow-up: run migration `0009_launch_hardening.sql`, rerun `supabase/seed/0001_seed_catalog.sql`, set `VITE_SUPPORT_EMAIL`, set `CRON_SECRET` before relying on cron, optionally set `RESEND_API_KEY`/`EMAIL_FROM` for transactional email, and test the logged-out-to-checkout booking flow on mobile.
+Production database follow-up is complete as of 2026-07-21: migrations `0003` through `0009` were applied, and the seed populated 4 creator profiles, 4 taste products, 11 taste product items, and 1 rejected item. Remaining manual follow-up: set `VITE_SUPPORT_EMAIL`, set `CRON_SECRET` before relying on cron, optionally set `RESEND_API_KEY`/`EMAIL_FROM` for transactional email, and test the logged-out-to-checkout booking flow on mobile.
 
 ### Change 2026-07-19: Social-First Pivot
 
@@ -52,7 +52,7 @@ Implemented the social-first pivot from the July 19 specification while preservi
 - New migrations: `0007_social_first.sql` and `0008_service_loop.sql`.
 - Full report: `docs/SOCIAL_FIRST_IMPLEMENTATION_REPORT_2026-07-19.md`.
 
-Manual follow-up from this pass is superseded by the July 20 note above: run through `0009`, rerun the catalog seed, add `CRON_SECRET` in Vercel before relying on auto-approval, and keep `VITE_COMMERCE_ENABLED` off until paid edit purchases are fully tested.
+Manual follow-up from this pass is superseded by the July 20/21 notes above: the production Supabase migrations and seed are complete; add `CRON_SECRET` in Vercel before relying on auto-approval, and keep `VITE_COMMERCE_ENABLED` off until paid edit purchases are fully tested.
 
 ### Change 2026-07-14: ByTaste Rebrand
 
@@ -200,17 +200,12 @@ Still prototype/demo:
 
 ## Required Manual Setup Before The Next Full Test
 
-1. Run `supabase/migrations/0003_paid_edits_and_entitlements.sql` in the Supabase SQL Editor.
-2. Run `supabase/migrations/0004_profiles.sql` in the Supabase SQL Editor.
-3. Run `supabase/migrations/0005_security_hardening.sql` in the Supabase SQL Editor.
-4. Run `supabase/migrations/0006_taste_item_verdict.sql` in the Supabase SQL Editor.
-5. Run `supabase/migrations/0007_social_first.sql` in the Supabase SQL Editor.
-6. Run `supabase/migrations/0008_service_loop.sql` in the Supabase SQL Editor.
-7. Sign in once through the app so `public.profiles` has at least one auth-backed owner row.
-8. Run `supabase/seed/0001_seed_catalog.sql` in the Supabase SQL Editor.
-9. Enable Google provider in Supabase Auth if you want the Google button live.
-10. Add `CRON_SECRET` in Vercel before relying on auto-approval.
-11. Verify these commerce tables exist:
+1. Production Supabase migrations `0003` through `0009` and `supabase/seed/0001_seed_catalog.sql` are complete for project `glykxoqtqxnrnqdosovo` as of 2026-07-21.
+2. Enable Google provider in Supabase Auth if you want the Google button live.
+3. Add `CRON_SECRET` in Vercel before relying on auto-approval.
+4. Add `VITE_SUPPORT_EMAIL` in Vercel.
+5. Optional: add `RESEND_API_KEY` and `EMAIL_FROM` for transactional email.
+6. Verify these commerce tables exist when provisioning any new database:
    - `taste_products`
    - `taste_product_items`
    - `taste_product_outfits`
@@ -220,11 +215,11 @@ Still prototype/demo:
    - `creator_referral_links`
    - `commerce_events`
    - `stripe_events`
-12. Verify `taste_product_items.verdict`, `creator_profiles.primary_offer_type`, `commerce_events.source`, and `bookings.approval_deadline` exist.
-13. Verify the `paid-product-media` storage bucket exists.
-11. Only after 0003 is applied and seeded, set `VITE_COMMERCE_ENABLED=true` in Vercel if paid-edit purchasing should launch.
-12. Test paid-edit checkout using a real `taste_products.id`.
-13. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.
+7. Verify `taste_product_items.verdict`, `creator_profiles.primary_offer_type`, `commerce_events.source`, and `bookings.approval_deadline` exist when provisioning any new database.
+8. Verify the `paid-product-media` storage bucket exists.
+9. Keep `VITE_COMMERCE_ENABLED` off until paid-edit checkout, webhook, entitlement, and attribution are tested end to end.
+10. Test paid-edit checkout using a real `taste_products.id`.
+11. Confirm Stripe webhook creates or activates the matching `product_entitlements` row.
 
 ## Recommended Next Engineering Phase
 
